@@ -73,8 +73,7 @@ const HeroSection: React.FC = () => {
             />
             
             <Select
-            prefix={<EnvironmentOutlined className="text-gray-400" />}
-              // mode="multiple"
+              mode="multiple"
               showSearch
               size="large"
               placeholder="Chọn tỉnh, thành phố"

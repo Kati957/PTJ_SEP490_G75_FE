@@ -1,0 +1,27 @@
+.jodit-wysiwyg ul,
+.jodit-wysiwyg ol {
+  padding-left: 24px !important;
+  margin: 8px 0 !important;
+}
+
+.jodit-wysiwyg ul > li {
+  list-style-type: disc !important;
+}
+
+.jodit-wysiwyg ol > li {
+  list-style-type: decimal !important;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 24px;
+  margin: 8px 0;
+}
+
+.prose ul > li {
+  list-style-type: disc;
+}
+
+.prose ol > li {
+  list-style-type: decimal;
+}
