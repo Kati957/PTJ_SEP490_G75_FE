@@ -11,3 +11,9 @@ export interface LoginResponse {
   expiresIn: number;
   user: User;
 }
+
+export interface RegisterJobSeekerPayload {
+  email: string;
+  password: string;
+  fullName?: string;
+}

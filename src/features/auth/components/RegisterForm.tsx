@@ -1,23 +1,32 @@
 import React, { useState } from 'react';
-import { Button, Input, Checkbox, Form, message } from 'antd';
+import { Button, Input, Checkbox, Form, message, Alert } from 'antd';
 import { GoogleOutlined, LinkedinOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import baseService from '../../../services/baseService';
+import type { RegisterJobSeekerPayload } from '../types';
 
 const RegisterForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
 
   // Hàm xử lý khi submit form đăng ký
-  const onRegisterFinish = (values: any) => {
+  const onRegisterFinish = async (values: any) => {
     setLoading(true);
-    console.log('Đăng ký với thông tin:', values);
-    setTimeout(() => {
+    try {
+      const payload: RegisterJobSeekerPayload = {
+        email: values.email,
+        password: values.password,
+        fullName: values.fullName,
+      };
+      await baseService.post('/Auth/register/jobseeker', payload);
+      setSuccess(true);
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Đã có lỗi xảy ra trong quá trình đăng ký.');
+    } finally {
       setLoading(false);
-      message.success('Đăng ký thành công! Vui lòng đăng nhập.');
-      // Chuyển về trang đăng nhập sau khi đăng ký thành công
-      navigate('/login');
-    }, 1500);
+    }
   };
 
     // Hàm xử lý khi submit form thất bại
@@ -25,6 +34,23 @@ const RegisterForm: React.FC = () => {
     console.log('Lỗi:', errorInfo);
     message.error('Vui lòng kiểm tra lại thông tin!');
   };
+
+  if (success) {
+    return (
+      <div className="w-full bg-white p-8 rounded-lg shadow-lg text-center">
+        <Alert
+          message="Đăng ký thành công!"
+          description="Vui lòng kiểm tra hộp thư email của bạn để xác thực tài khoản trước khi đăng nhập."
+          type="success"
+          showIcon
+          className='mb-4'
+        />
+        <Button type="primary" onClick={() => navigate('/login')}>
+          Tới trang đăng nhập
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-white p-8 rounded-lg shadow-lg">
@@ -39,8 +65,8 @@ const RegisterForm: React.FC = () => {
         layout="vertical"
       >
         <Form.Item
-          name="fullname"
-          rules={[{ required: true, message: 'Vui lòng nhập họ tên!' }]}
+          name="fullName"
+          rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
         >
           <Input size="large" placeholder="Họ và tên" />
         </Form.Item>

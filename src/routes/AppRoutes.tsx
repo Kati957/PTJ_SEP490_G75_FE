@@ -13,6 +13,8 @@ import { ROLES } from '../constants/roles';
 import UnauthorizedPage from '../pages/common/UnauthorizedPage';
 import EmployerJobsPage from '../pages/employer/EmployerJobsPage';
 import PostJobPage from '../pages/employer/PostJobPage';
+import VerifySuccessPage from '../features/auth/pages/VerifySuccessPage';
+import VerifyFailedPage from '../features/auth/pages/VerifyFailedPage';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -24,6 +26,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="register" element={<JobSeekerLoginPage />} />
         <Route path="nha-tuyen-dung" element={<EmployerPage />} /> 
         <Route path="unauthorized" element={<UnauthorizedPage />} />
+        <Route path="verify-success" element={<VerifySuccessPage />} />
+        <Route path="verify-failed" element={<VerifyFailedPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       <Route element={<DashboardLayout />}>
