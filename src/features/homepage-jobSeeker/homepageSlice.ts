@@ -1,7 +1,19 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import type { DataHomepage, JobCategory, Employer, Job } from '../../types'; // Thêm Employer
- // Import Job interface
- // Import Job interface
+import { getFeaturedJobs } from './services';
+
+// Async thunk để lấy dữ liệu featured jobs từ API
+export const fetchFeaturedJobs = createAsyncThunk(
+  'homepage/fetchFeaturedJobs',
+  async (_, { rejectWithValue }) => {
+    try {
+      const jobs = await getFeaturedJobs();
+      return jobs;
+    } catch (error) {
+      return rejectWithValue('Failed to fetch featured jobs.');
+    }
+  }
+);
 
 // Mock data for featured jobs
 const mockFeaturedJobs: Job[] = [
@@ -203,7 +215,7 @@ const mockJobCategories: JobCategory[] = [
 ];
 
 // Mock data for top employers
-const mockTopEmployers: Employer[] = [
+const mockTopEmployers: Employer[] = [ 
   {
     id: 'emp1',
     name: 'Công Ty TNHH Aeon Delight Việt Nam',
@@ -260,10 +272,12 @@ const mockTopEmployers: Employer[] = [
   },
 ];
 
-const initialState: DataHomepage = {
+const initialState = {
   featuredJobs: mockFeaturedJobs,
   jobCategories: mockJobCategories,
   topEmployers: mockTopEmployers,
+  loading: false,
+  error: null as string | null,
 };
 
 const homepageSlice = createSlice({
@@ -274,7 +288,24 @@ const homepageSlice = createSlice({
       state.featuredJobs = action.payload.featuredJobs;
       state.jobCategories = action.payload.jobCategories;
       state.topEmployers = action.payload.topEmployers;
+      state.loading = false;
+      state.error = null
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchFeaturedJobs.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchFeaturedJobs.fulfilled, (state, action: PayloadAction<Job[]>) => {
+        state.loading = false;
+        state.featuredJobs = action.payload;
+      })
+      .addCase(fetchFeaturedJobs.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
   },
 });
 

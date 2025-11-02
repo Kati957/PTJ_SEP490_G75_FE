@@ -1,10 +1,8 @@
 import baseService from '../../services/baseService';
-import type { LoginResponse } from './types';
+import type { LoginResponse, User, MeApiResponse } from './types';
 
 /**
  * Gọi API đăng nhập cho người tìm việc.
- * @param credentials - Thông tin email và password từ form.
- * @returns Promise chứa thông tin đăng nhập thành công.
  */
 export const loginJobSeeker = (credentials: any): Promise<LoginResponse> => {
   const requestBody = {
@@ -13,4 +11,21 @@ export const loginJobSeeker = (credentials: any): Promise<LoginResponse> => {
     deviceInfo: 'WebApp' 
   };
   return baseService.post('/Auth/login', requestBody);
+};
+
+/**
+ * Gọi API để lấy thông tin người dùng hiện tại (dựa trên token).
+ */
+export const me = async (): Promise<User> => {
+  const response = await baseService.get<MeApiResponse>('/Auth/me');
+  
+  const user: User = {
+    id: parseInt(response.id, 10),
+    username: response.username,
+    email: '',
+    roles: response.roles,
+    verified: response.verified.toLowerCase() === 'true',
+  };
+
+  return user;
 };

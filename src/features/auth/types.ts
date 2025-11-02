@@ -17,3 +17,13 @@ export interface RegisterJobSeekerPayload {
   password: string;
   fullName?: string;
 }
+
+/**
+ * Kiểu dữ liệu trả về từ API /Auth/me.
+ */
+export interface MeApiResponse {
+  id: string;
+  username: string;
+  verified: string;
+  roles: string[];
+}

@@ -2,27 +2,31 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks';
 import type { Role } from '../constants/roles';
+import { Spin } from 'antd';
 
 interface ProtectedRouteProps {
   allowedRoles: Role[];
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, status } = useAuth();
 
-  console.log('PROTECTED ROUTE CHECK:', { isAuthenticated, user, allowedRoles });
+  if (status === 'idle' || status === 'loading') {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
-    console.log('REASON: Not authenticated. Redirecting to /login');
     return <Navigate to="/login" replace />;
   }
 
-  if (user && allowedRoles.includes(user.role)) {
-    console.log('REASON: Success. Access granted.');
+  if (user && user.roles.some((role) => allowedRoles.includes(role))) {
     return <Outlet />;
   }
 
-  console.log('REASON: Wrong role. Redirecting to /unauthorized');
   return <Navigate to="/unauthorized" replace />;
 };
 
