@@ -1,7 +1,7 @@
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../features/auth/hooks';
-import type { Role } from '../constants/roles';
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../features/auth/hooks";
+import type { Role } from "../constants/roles";
 import { Spin } from 'antd';
 
 interface ProtectedRouteProps {

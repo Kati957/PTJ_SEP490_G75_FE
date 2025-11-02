@@ -1,0 +1,100 @@
+import React from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../features/auth/hooks";
+import { Button, Dropdown, Avatar, message } from "antd";
+import {
+  UserOutlined,
+  DownOutlined,
+  LogoutOutlined,
+  MenuFoldOutlined,
+} from "@ant-design/icons";
+import { ROLES } from "../../constants/roles";
+import { useDispatch } from "react-redux";
+import { logout } from "../../features/auth/slice";
+import { removeAccessToken } from "../../services/baseService";
+
+const LogoWhite = "/vite.svg";
+
+interface EmployerHeaderProps {
+  onToggleSidebar?: () => void;
+}
+
+export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
+  onToggleSidebar,
+}) => {
+  const { user } = useAuth();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    removeAccessToken();
+    navigate("/nha-tuyen-dung");
+    message.success("Đăng xuất thành công!");
+  };
+
+  const dropdownItems = [
+    {
+      key: "1",
+      label: <NavLink to="/nha-tuyen-dung/ho-so">Hồ sơ của tôi</NavLink>,
+    },
+    {
+      key: "2",
+      label: "Đăng xuất",
+      icon: <LogoutOutlined />,
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
+
+  return (
+    <header
+      className="bg-blue-900 text-white shadow-md py-4 px-6 flex items-center justify-between sticky top-0 z-10"
+      style={{ height: "68px" }}
+    >
+      <div className="flex items-center gap-3">
+        {onToggleSidebar && (
+          <Button
+            type="text"
+            icon={<MenuFoldOutlined style={{ color: "white", fontSize: 18 }} />}
+            onClick={onToggleSidebar}
+          />
+        )}
+
+        <img src={LogoWhite} alt="Logo" className="h-8 mr-2" />
+        <NavLink
+          to="/"
+          className="text-white hover:text-gray-200 text-sm font-medium"
+        >
+          Trang chủ
+        </NavLink>
+      </div>
+
+      <div className="flex items-center space-x-5">
+        {user &&
+        (user.roles.includes(ROLES.EMPLOYER) ||
+          user.roles.includes(ROLES.ADMIN)) ? (
+          <Dropdown menu={{ items: dropdownItems }} placement="bottomRight" arrow>
+            <a
+              onClick={(e) => e.preventDefault()}
+              className="flex items-center space-x-2 text-white hover:text-gray-200"
+            >
+              <Avatar size="small" icon={<UserOutlined />} className="bg-blue-600" />
+              <span className="font-medium">{user.username}</span>
+              <DownOutlined style={{ fontSize: "10px" }} />
+            </a>
+          </Dropdown>
+        ) : (
+          <NavLink
+            to="/nha-tuyen-dung/register"
+            className="text-white hover:text-gray-200 text-sm font-medium"
+          >
+            Đăng ký
+          </NavLink>
+        )}
+      </div>
+    </header>
+  );
+};
+
+export default EmployerHeader;
