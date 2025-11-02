@@ -19,6 +19,8 @@ import PostJobPage from '../pages/employer/PostJobPage';
 import ProtectedRoute from './ProtectedRoute';
 import ManagePostingsPage from '../features/jobSeekerPosting/pages/ManagePostingsPage';
 import CreatePostingPage from '../features/jobSeekerPosting/pages/CreatePostingPage';
+import EmployerRegisterPage from '../features/employer-auth/pages/EmployerRegisterPage';
+import EmployerLayout from '../pages/employer/EmployerLayout';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -30,7 +32,6 @@ export const AppRoutes: React.FC = () => {
         <Route path="viec-lam/:slug" element={<JobListPage />} />
         <Route path="login" element={<JobSeekerLoginPage />} />
         <Route path="register" element={<JobSeekerLoginPage />} />
-        <Route path="nha-tuyen-dung" element={<EmployerPage />} /> 
         <Route path="unauthorized" element={<UnauthorizedPage />} />
         <Route path="verify-success" element={<VerifySuccessPage />} />
         <Route path="verify-failed" element={<VerifyFailedPage />} />
@@ -43,24 +44,33 @@ export const AppRoutes: React.FC = () => {
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>
-      <Route element={<DashboardLayout />}>
 
-        {/* Protected Routes for Employers */}
+      <Route path="nha-tuyen-dung" element={<EmployerLayout />}>
+        <Route index element={<EmployerPage />} />
+        <Route path="register" element={<EmployerRegisterPage />} />
+      </Route>
+
+      <Route element={<DashboardLayout />}>
         <Route element={<ProtectedRoute allowedRoles={[ROLES.EMPLOYER]} />}>
-          <Route path="nha-tuyen-dung/dashboard" element={<EmployerDashboard />} />
-          <Route path="nha-tuyen-dung/cong-viec" element={<EmployerJobsPage />} />
+          <Route
+            path="nha-tuyen-dung/dashboard"
+            element={<EmployerDashboard />}
+          />
+          <Route
+            path="nha-tuyen-dung/cong-viec"
+            element={<EmployerJobsPage />}
+          />
           <Route path="nha-tuyen-dung/dang-tin" element={<PostJobPage />} />
         </Route>
-        <Route element={<ProtectedRoute allowedRoles={[ROLES.JOB_SEEKER]} />}>
-        </Route>
+        <Route
+          element={<ProtectedRoute allowedRoles={[ROLES.JOB_SEEKER]} />}
+        ></Route>
 
         {/* Protected Routes for Admin */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
           {/* <Route path="admin/dashboard" element={<AdminDashboard />} /> */}
         </Route>
-
       </Route>
-      
     </Routes>
   );
 };

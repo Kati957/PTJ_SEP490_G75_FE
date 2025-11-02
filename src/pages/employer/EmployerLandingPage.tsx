@@ -1,7 +1,7 @@
 import React from 'react';
-import { EmployerBanner } from '../../features/employer/components/EmployerBanner';
-import { ServiceList } from '../../features/employer/components/ServiceList';
-import { WhyChoose } from '../../features/employer/components/WhyChoose';
+import { EmployerBanner } from '../../features/employer-landingpage/components/EmployerBanner';
+import { ServiceList } from '../../features/employer-landingpage/components/ServiceList';
+import { WhyChoose } from '../../features/employer-landingpage/components/WhyChoose';
 import { HandbookSection } from '../../features/article/components/HandbookSection';
 import { EmployerLoginForm } from '../../features/auth/components/EmployerLoginForm';
 import { OfficeLocations } from '../../components/Contact/OfficeLocations';

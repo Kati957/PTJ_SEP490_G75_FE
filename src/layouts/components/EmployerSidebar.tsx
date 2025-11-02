@@ -32,7 +32,7 @@ interface SidebarProps {
   isOpen: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const { user } = useAuth();
   const location = useLocation();
 
@@ -40,7 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   // Mục menu chính
   const employerItems: MenuItem[] = [
     getItem(
-      <NavLink to="/nha-tuyen-dung/dashboard">My CareerLink</NavLink>,
+      <NavLink to="/nha-tuyen-dung/dashboard">My PTJob</NavLink>,
       "/nha-tuyen-dung/dashboard",
       <HomeOutlined />
     ),
@@ -90,16 +90,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   ];
 
   const getMenuItems = (): MenuItem[] => {
-    if (!user) return [];
-    switch (user.role) {
-      case ROLES.EMPLOYER:
-        return [...employerItems, ...supportItems];
-      case ROLES.ADMIN:
-        return []; //  menu admin
-      default:
-        return []; //  menu job seeker
-    }
-  };
+  if (!user) return [];
+
+  if (user.roles.includes(ROLES.EMPLOYER)) {
+    return [...employerItems, ...supportItems];
+  }
+
+  if (user.roles.includes(ROLES.ADMIN)) {
+    return [];
+  }
+
+  return [];
+};
+
 
   const defaultOpenKey = employerItems.find((item) =>
     item && 'children' in item && Array.isArray(item.children) &&
@@ -134,13 +137,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             }`}
           >
             <Avatar size={40} icon={<UserOutlined />} className="bg-blue-600">
-              {user.name.charAt(0).toUpperCase()}
+              {user.username.charAt(0).toUpperCase()}
             </Avatar>
 
             {isOpen && (
               <div>
                 <div className="font-semibold text-sm text-gray-800">
-                  {user.name}
+                  {user.username}
                 </div>
                 <div className="text-xs text-gray-500">{user.email}</div>
               </div>
