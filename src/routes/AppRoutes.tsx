@@ -21,6 +21,7 @@ import ManagePostingsPage from '../features/jobSeekerPosting/pages/ManagePosting
 import CreatePostingPage from '../features/jobSeekerPosting/pages/CreatePostingPage';
 import EmployerRegisterPage from '../features/employer-auth/pages/EmployerRegisterPage';
 import EmployerLayout from '../pages/employer/EmployerLayout';
+import SavedJobsPage from '../features/savedJob/pages/SavedJobsPage';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -40,6 +41,7 @@ export const AppRoutes: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={[ROLES.JOB_SEEKER]} />}>
           <Route path="quan-ly-bai-dang" element={<ManagePostingsPage />} />
           <Route path="tao-bai-dang-tim-viec" element={<CreatePostingPage />} />
+          <Route path="viec-lam-da-luu" element={<SavedJobsPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

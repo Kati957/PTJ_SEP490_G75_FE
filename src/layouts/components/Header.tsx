@@ -39,7 +39,7 @@ const jobSeekerNavLinks = [
   {
     icon: <HeartOutlined />,
     text: 'Việc đã lưu',
-    path: '/viec-da-luu'
+    path: '/viec-lam-da-luu'
   },
   {
     icon: <SendOutlined />,

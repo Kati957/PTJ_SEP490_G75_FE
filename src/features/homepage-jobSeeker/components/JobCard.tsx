@@ -6,9 +6,11 @@ import type { Job } from '../../../types';
 
 interface JobCardProps {
   job: Job;
+  isSaved?: boolean; // Tùy chọn: cho biết công việc đã được lưu hay chưa
+  onSaveToggle?: (jobId: string) => void; // Tùy chọn: hàm xử lý khi nhấn nút lưu
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job }) => {
+const JobCard: React.FC<JobCardProps> = ({ job, isSaved, onSaveToggle }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -29,14 +31,15 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
             {job.title}
           </h3>
           <button
-            className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
+            className={`absolute top-4 right-4 text-gray-400 hover:text-red-500 ${isSaved ? 'text-red-500' : ''}`}
             onClick={(e) => {
-              e.stopPropagation(); // Prevent card click event
-              // Add to favorites logic here
-              console.log('Add to favorites', job.id);
+              e.stopPropagation(); // Ngăn sự kiện click của card
+              if (onSaveToggle) {
+                onSaveToggle(job.id);
+              }
             }}
           >
-            <i className="far fa-heart"></i>
+            <i className={`${isSaved ? 'fas' : 'far'} fa-heart`}></i>
           </button>
         </div>
         

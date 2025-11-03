@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Card, Tag } from 'antd';
+import { Button, Card } from 'antd';
+import { useDispatch, useSelector } from 'react-redux';
+import { saveJob, unsaveJob } from '../../savedJob/services';
+import type { AppDispatch, RootState } from '../../../app/store';
 import { mockJobs } from '../mockData'; // Assuming similar jobs are in mockData
 import JobCard from '../../homepage-jobSeeker/components/JobCard';
 
@@ -65,11 +68,48 @@ const mockJobDetail = {
 const JobDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const dispatch: AppDispatch = useDispatch();
+  const { jobs: savedJobs } = useSelector((state: RootState) => state.savedJobs);
   const [job, setJob] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSticky, setIsSticky] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const navRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Kiểm tra xem công việc hiện tại có trong danh sách đã lưu không
+    if (job && savedJobs.some(savedJob => savedJob.id === job.id)) {
+      setIsSaved(true);
+    } else {
+      setIsSaved(false);
+    }
+  }, [job, savedJobs]);
+
+  const handleSaveToggle = async () => {
+    if (!job) return;
+
+    if (isSaved) {
+      await unsaveJob(job.id);
+      setIsSaved(false);
+      // Cần dispatch action để cập nhật store nếu cần
+    } else {
+      await saveJob(job.id);
+      setIsSaved(true);
+      // Cần dispatch action để cập nhật store nếu cần
+    }
+  };
+
+  const handleSimilarJobSaveToggle = async (jobId: string) => {
+    const jobIsSaved = savedJobs.some(j => j.id === jobId);
+    if (jobIsSaved) {
+      await unsaveJob(jobId);
+    } else {
+      await saveJob(jobId);
+    }
+    // Optionally, dispatch an action to refetch saved jobs to keep the UI consistent
+    // dispatch(fetchSavedJobs());
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -144,7 +184,9 @@ const JobDetailPage: React.FC = () => {
 
           <div className="flex space-x-4 mb-6">
             <Button type="primary" size="large" className="bg-blue-600">Nộp đơn ngay</Button>
-            <Button size="large">Lưu</Button>
+            <Button size="large" onClick={handleSaveToggle} icon={isSaved ? <i className="fas fa-heart text-red-500"></i> : <i className="far fa-heart"></i>}>
+              {isSaved ? 'Đã lưu' : 'Lưu'}
+            </Button>
           </div>
 
           {/* Sticky Nav */}
@@ -217,7 +259,14 @@ const JobDetailPage: React.FC = () => {
         <div className="lg:col-span-1 space-y-4">
           <Card title="Việc làm tương tự">
             <div className="space-y-4">
-              {mockJobs.slice(0, 5).map(j => <JobCard key={j.id} job={j} />)}
+              {mockJobs.slice(0, 5).map(j => (
+                <JobCard 
+                  key={j.id} 
+                  job={j} 
+                  isSaved={savedJobs.some(sj => sj.id === j.id)}
+                  onSaveToggle={() => handleSimilarJobSaveToggle(j.id)}
+                />
+              ))}
             </div>
           </Card>
         </div>
@@ -232,7 +281,9 @@ const JobDetailPage: React.FC = () => {
               <p className="text-gray-600">{job.company}</p>
             </div>
             <div className="flex space-x-4">
-              <Button size="large">Lưu</Button>
+              <Button size="large" onClick={handleSaveToggle} icon={isSaved ? <i className="fas fa-heart text-red-500"></i> : <i className="far fa-heart"></i>}>
+                {isSaved ? 'Đã lưu' : 'Lưu'}
+              </Button>
               <Button type="primary" size="large" className="bg-blue-600">Nộp đơn ngay</Button>
             </div>
           </div>

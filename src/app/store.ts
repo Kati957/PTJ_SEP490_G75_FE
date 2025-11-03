@@ -5,13 +5,15 @@ import { combineReducers } from 'redux';
 import authReducer from '../features/auth/slice';
 import homepageReducer from '../features/homepage-jobSeeker/homepageSlice';
 import findJobReducer from '../features/findJob-jobSeeker/slice';
-import jobSeekerPostingReducer from '../features/jobSeekerPosting/slice';;
+import jobSeekerPostingReducer from '../features/jobSeekerPosting/slice';
+import savedJobsReducer from '../features/savedJob/slice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
   homepage: homepageReducer,
   findJob: findJobReducer,
-  jobSeekerPosting: jobSeekerPostingReducer
+  jobSeekerPosting: jobSeekerPostingReducer,
+  savedJobs: savedJobsReducer
 });
 
 export const store = configureStore({
