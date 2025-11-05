@@ -1,6 +1,6 @@
 import axios from 'axios';
 import baseService from '../../services/baseService';
-import type { CreateJobSeekerPostPayload, Province, JobSeekerPost } from './types';
+import type { CreateJobSeekerPostPayload, Province, JobSeekerPost, GetJobByIdResponse } from './types';
 
 const PROVINCES_API_URL = 'https://provinces.open-api.vn/api/p/';
 
@@ -44,4 +44,8 @@ export const getPostsByUserId = async (userId: number): Promise<JobSeekerPost[]>
         return response.data;
     }
     return [];
+};
+
+export const getJobById = async (id: number): Promise<GetJobByIdResponse> => {
+  return await baseService.get<GetJobByIdResponse>(`/EmployerPost/${id}`);
 };

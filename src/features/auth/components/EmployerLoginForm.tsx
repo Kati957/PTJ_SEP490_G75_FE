@@ -19,7 +19,7 @@ export const EmployerLoginForm: React.FC = () => {
       const response = await loginJobSeeker(values);
       const { accessToken, user } = response;
 
-      user.roles = [ROLES.EMPLOYER];
+      //.roles = [ROLES.EMPLOYER];
 
       setAccessToken(accessToken);
       dispatch(loginSuccess({ user, token: accessToken }));

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const laptopImageUrl = 'https://via.placeholder.com/400x250?text=Demo+Laptop';
+const laptopImageUrl = 'https://res.cloudinary.com/demo/image/upload/w_400,h_250,c_fill/sample.jpg';
 
 export const WhyChoose: React.FC = () => {
   return (

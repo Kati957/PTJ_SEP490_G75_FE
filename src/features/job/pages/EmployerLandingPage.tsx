@@ -1,10 +1,10 @@
 import React from 'react';
-import { EmployerBanner } from '../../features/employer-landingpage/components/EmployerBanner';
-import { ServiceList } from '../../features/employer-landingpage/components/ServiceList';
-import { WhyChoose } from '../../features/employer-landingpage/components/WhyChoose';
-import { HandbookSection } from '../../features/article/components/HandbookSection';
-import { EmployerLoginForm } from '../../features/auth/components/EmployerLoginForm';
-import { OfficeLocations } from '../../components/Contact/OfficeLocations';
+import { EmployerBanner } from '../../employer-landingpage/components/EmployerBanner';
+import { ServiceList } from '../../employer-landingpage/components/ServiceList';
+import { WhyChoose } from '../../employer-landingpage/components/WhyChoose';
+import { HandbookSection } from '../../article/components/HandbookSection';
+import { EmployerLoginForm } from '../../auth/components/EmployerLoginForm';
+import { OfficeLocations } from '../../../components/Contact/OfficeLocations';
 
 const EmployerPage: React.FC = () => {
   return (

@@ -1,3 +1,5 @@
+import type { JobPostView } from "../job/jobTypes";
+
 /**
  * Đây là kiểu dữ liệu (payload) được sử dụng khi gửi yêu cầu tạo một bài đăng tìm việc mới.
  */
@@ -37,4 +39,9 @@ export interface JobSeekerPost {
   seekerName: string;
   createdAt: string;
   status: string;
+}
+
+export interface GetJobByIdResponse {
+  success: boolean;
+  data: JobPostView;
 }

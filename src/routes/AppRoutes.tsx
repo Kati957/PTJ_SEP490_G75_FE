@@ -4,7 +4,7 @@ import JobSeekerLoginPage from '../features/auth/pages/JobSeekerLoginPage';
 import { MainLayout } from '../layouts/MainLayout';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import JobSeekerHomePage from '../pages/JobSeekerHomePage'; 
-import EmployerPage from '../pages/employer/EmployerLandingPage';
+import EmployerPage from '../features/job/pages/EmployerLandingPage';
 import JobDetailPage from '../features/findJob-jobSeeker/pages/JobDetailPage';
 import JobListPage from '../features/findJob-jobSeeker/pages/JobListPage';
 import FindJobPage from '../features/findJob-jobSeeker/pages/FindJobPage';
@@ -15,12 +15,15 @@ import NotFoundPage from '../pages/common/NotFoundPage';
 import { ROLES } from '../constants/roles';
 import EmployerDashboard from '../pages/employer/EmployerDashboard';
 import EmployerJobsPage from '../pages/employer/EmployerJobsPage';
-import PostJobPage from '../pages/employer/PostJobPage';
+import PostJobPage from '../features/job/pages/PostJobPage';
 import ProtectedRoute from './ProtectedRoute';
 import ManagePostingsPage from '../features/jobSeekerPosting/pages/ManagePostingsPage';
 import CreatePostingPage from '../features/jobSeekerPosting/pages/CreatePostingPage';
 import EmployerRegisterPage from '../features/employer-auth/pages/EmployerRegisterPage';
 import EmployerLayout from '../pages/employer/EmployerLayout';
+import EditJobPage from '../features/job/pages/EditJobPage';
+import JobSeekerPostPage from '../features/candidate/pages/JobSeekerPostPage';
+import SavedTalentPage from '../features/candidate/pages/SavedTalentPage';
 import SavedJobsPage from '../features/savedJob-jobSeeker/pages/SavedJobsPage';
 
 export const AppRoutes: React.FC = () => {
@@ -63,6 +66,9 @@ export const AppRoutes: React.FC = () => {
             element={<EmployerJobsPage />}
           />
           <Route path="nha-tuyen-dung/dang-tin" element={<PostJobPage />} />
+          <Route path="/nha-tuyen-dung/sua-tin/:id" element={<EditJobPage />} />
+          <Route path="/nha-tuyen-dung/tim-kiem" element={<JobSeekerPostPage />} />
+          <Route path='/nha-tuyen-dung/tai-nang-da-xem' element={<SavedTalentPage />} />
         </Route>
         <Route
           element={<ProtectedRoute allowedRoles={[ROLES.JOB_SEEKER]} />}
