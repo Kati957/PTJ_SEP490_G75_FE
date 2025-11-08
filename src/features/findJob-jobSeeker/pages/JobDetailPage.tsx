@@ -1,85 +1,42 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Card } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
-import { saveJob, unsaveJob } from '../../savedJob-jobSeeker/services';
-import type { AppDispatch, RootState } from '../../../app/store';
-import { mockJobs } from '../mockData'; // Assuming similar jobs are in mockData
+import { Button, Card, message } from 'antd';
+import DOMPurify from 'dompurify';
+import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+import type { RootState } from '../../../app/store';
+import { mockJobs } from '../mockData';
 import JobCard from '../../homepage-jobSeeker/components/JobCard';
-
-// Mock detailed job data based on the image
-const mockJobDetail = {
-  id: '1',
-  title: 'NHÂN VIÊN LẬP TRÌNH CNC',
-  company: 'A-PRO TECHNOLOGY',
-  location: 'Thành phố Thủ Dầu Một, Bình Dương',
-  salary: 'Thương lượng',
-  experience: '2 - 5 năm kinh nghiệm',
-  postedDate: '2025-10-10',
-  deadline: '2025-11-21',
-  description: [
-    'Xây dựng tiến trình công việc.',
-    'Thiết kế và lập trình gia công chi tiết.',
-    'Lựa chọn dụng cụ cắt, đồ gá và chương trình gia công chi tiết.',
-    'Lựa chọn dụng cụ đo.',
-    'Vận hành máy phay CNC để kiểm tra và đường truyền chi tiết.',
-    'Xác định chế độ cắt.',
-    'Lập quy trình vận hành.',
-    'Chuẩn bị và bàn giao máy CNC và hướng dẫn.',
-    'Kiểm tra bản vẽ và các yêu cầu kỹ thuật của khách hàng.',
-    'Phân tích và xử lý các vấn đề kỹ thuật phát sinh.',
-    'Tiến hành chạy và chương trình để gia công chi tiết.',
-  ],
-  benefits: [
-    'Quà chúc mừng sinh nhật',
-    'Hỗ trợ ăn trưa và tăng ca tại công ty',
-    'Được hưởng chế độ BHXH, BHYT, BHTN theo quy định',
-    'Lương tháng 13',
-    '12 ngày nghỉ phép năm có lương',
-    'Có cơ hội được đào tạo ở nước ngoài',
-    'Môi trường làm việc hòa đồng, thân thiện',
-  ],
-  skills: [
-    'Yêu cầu có từ 2 năm trở lên kinh nghiệm sử dụng phần mềm Master Cam',
-    'Từng làm khuôn, tự chủ động trong công việc',
-    'Ưu tiên làm ngành xe đạp và giày da',
-  ],
-  jobDetails: {
-    'Mã việc làm': 'CNC',
-    'Cấp bậc': 'Nhân viên',
-    'Học vấn': 'Chứng chỉ',
-    'Kinh nghiệm': '2 - 5 năm kinh nghiệm',
-    'Giới tính': 'Nam',
-    'Ngành nghề': 'Kỹ thuật ứng dụng / Cơ khí', 
-  },
-  contact: {
-    address: 'Lô B-4, B-5, B-6, Đường Đại Đăng 3, KCN Đại Đăng, Phường Phú Tân, Thành phố Thủ Dầu Một, Bình Dương , Việt Nam',
-    note: 'Có nhu cầu vui lòng gửi cv qua email hoặc số zalo 0345673789 liên lạc zalo không kết bạn được nhưng vẫn nhắn tin được.',
-    language: 'Nhận hồ sơ bằng ngôn ngữ: Tiếng Việt',
-  },
-  aboutCompany: {
-    name: 'A-PRO TECHNOLOGY',
-    description: 'A-PRO TECHNOLOGY chuyên sản xuất, gia công các sản phẩm cơ khí chính xác, sản xuất và lắp ráp các loại linh kiện phụ tùng cho xe máy, xe ô tô, xe đạp điện, dụng cụ cầm tay, hàng gia dụng, hàng trang trí nội thất, hàng rào, lan can, cầu thang, cửa cổng, mái che, nhà xưởng, nhà thép tiền chế, các sản phẩm cơ khí xây dựng và các sản phẩm cơ khí khác.',
-    size: '1,000 - 4,999 nhân viên',
-    website: 'Liên hệ: Chị Lương',
-  },
-};
+import { fetchJobDetail } from '../jobDetailSlice';
+import { addSavedJob, fetchSavedJobs, removeSavedJob } from '../../savedJob-jobSeeker/slice';
 
 const JobDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch: AppDispatch = useDispatch();
-  const { jobs: savedJobs } = useSelector((state: RootState) => state.savedJobs);
-  const [job, setJob] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+
+  const { job, status, error } = useAppSelector((state: RootState) => state.jobDetail);
+  const { jobs: savedJobs } = useAppSelector((state: RootState) => state.savedJobs);
+  const jobSeekerId = useAppSelector((state: RootState) => state.auth.user?.id);
+
   const [isSticky, setIsSticky] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
   const navRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Kiểm tra xem công việc hiện tại có trong danh sách đã lưu không
-    if (job && savedJobs.some(savedJob => savedJob.id === job.id)) {
+    if (jobSeekerId) {
+      dispatch(fetchSavedJobs(jobSeekerId));
+    }
+  }, [dispatch, jobSeekerId]);
+
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchJobDetail(id));
+    }
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    if (job && savedJobs.some((savedJob) => savedJob.id === String(job.employerPostId))) {
       setIsSaved(true);
     } else {
       setIsSaved(false);
@@ -87,28 +44,33 @@ const JobDetailPage: React.FC = () => {
   }, [job, savedJobs]);
 
   const handleSaveToggle = async () => {
-    if (!job) return;
+    if (!job || !jobSeekerId) return;
+    const jobId = String(job.employerPostId);
 
-    if (isSaved) {
-      await unsaveJob(job.id);
-      setIsSaved(false);
-      // Cần dispatch action để cập nhật store nếu cần
-    } else {
-      await saveJob(job.id);
-      setIsSaved(true);
-      // Cần dispatch action để cập nhật store nếu cần
+    try {
+      if (isSaved) {
+        await dispatch(removeSavedJob({ jobSeekerId, jobId })).unwrap();
+        message.success('Đã hủy lưu công việc');
+        setIsSaved(false);
+      } else {
+        await dispatch(addSavedJob({ jobSeekerId, jobId })).unwrap();
+        message.success('Đã lưu công việc thành công');
+        setIsSaved(true);
+      }
+    } catch (err) {
+      message.error('Đã có lỗi xảy ra. Vui lòng thử lại.');
+      console.error('Failed to save/unsave the job: ', err);
     }
   };
 
   const handleSimilarJobSaveToggle = async (jobId: string) => {
-    const jobIsSaved = savedJobs.some(j => j.id === jobId);
+    if (!jobSeekerId) return;
+    const jobIsSaved = savedJobs.some((j) => j.id === jobId);
     if (jobIsSaved) {
-      await unsaveJob(jobId);
+      dispatch(removeSavedJob({ jobSeekerId, jobId }));
     } else {
-      await saveJob(jobId);
+      dispatch(addSavedJob({ jobSeekerId, jobId }));
     }
-    // Optionally, dispatch an action to refetch saved jobs to keep the UI consistent
-    // dispatch(fetchSavedJobs());
   };
 
   useEffect(() => {
@@ -123,23 +85,6 @@ const JobDetailPage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (!id) {
-      navigate('/not-found');
-      return;
-    }
-    setLoading(true);
-    // Simulating API call
-    setTimeout(() => {
-      if (id === mockJobDetail.id) {
-        setJob(mockJobDetail);
-      } else {
-        navigate('/not-found');
-      }
-      setLoading(false);
-    }, 500);
-  }, [id, navigate]);
-
   const scrollToSection = (sectionId: string) => {
     const section = document.getElementById(sectionId);
     if (section) {
@@ -147,15 +92,17 @@ const JobDetailPage: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return <div className="container mx-auto p-4 text-center">Loading...</div>;
+  if (status === 'loading') {
+    return <div className="container mx-auto p-4 text-center">Đang tải...</div>;
+  }
+
+  if (status === 'failed') {
+    return <div className="container mx-auto p-4 text-center">Lỗi: {error}</div>;
   }
 
   if (!job) {
-    return null; // Render nothing while navigating
+    return null;
   }
-
-  const remainingDays = Math.ceil((new Date(job.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 
   return (
     <div className="bg-gray-100">
@@ -167,17 +114,17 @@ const JobDetailPage: React.FC = () => {
             <img src="/src/assets/no-logo.png" alt="company logo" className="w-24 h-24 object-contain mr-6" />
             <div>
               <h1 className="text-2xl font-bold text-blue-800">{job.title}</h1>
-              <p className="text-lg text-gray-700 mt-1">{job.company}</p>
+              <p className="text-lg text-gray-700 mt-1">{job.employerName}</p>
               <div className="flex items-center text-gray-500 text-sm mt-2">
                 <i className="fas fa-map-marker-alt mr-2"></i>
                 <span>{job.location}</span>
               </div>
               <div className="flex items-center text-gray-500 text-sm mt-1">
                 <i className="fas fa-briefcase mr-2"></i>
-                <span>{job.experience}</span>
+                <span>{job.workHours}</span>
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                Hạn nộp hồ sơ: {job.deadline} <span className="text-red-500 ml-2">{remainingDays > 0 ? `(còn ${remainingDays} ngày)` : '(đã hết hạn)'}</span>
+                Ngày đăng: {new Date(job.createdAt).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -193,7 +140,7 @@ const JobDetailPage: React.FC = () => {
           <div ref={navRef} className={`bg-white border-b transition-all duration-300 ${isSticky ? 'fixed top-0 left-0 right-0 shadow-md z-10' : ''}`}>
             <div className="container mx-auto">
               <nav className="flex space-x-8 p-4">
-                {['Mô tả công việc', 'Quyền lợi', 'Kỹ năng yêu cầu', 'Chi tiết công việc', 'Liên hệ', 'Về công ty'].map(item => (
+                {['Mô tả công việc', 'Yêu cầu', 'Chi tiết công việc', 'Liên hệ'].map(item => (
                   <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} onClick={(e) => { e.preventDefault(); scrollToSection(item.toLowerCase().replace(/ /g, '-')); }} className="text-gray-600 hover:text-blue-600 font-semibold">
                     {item}
                   </a>
@@ -205,54 +152,35 @@ const JobDetailPage: React.FC = () => {
           {/* Sections */}
           <div id="mô-tả-công-việc" className="pt-8">
             <h2 className="text-xl font-bold mb-4">Mô tả công việc</h2>
-            <ul className="list-disc list-inside space-y-2">
-              {job.description.map((item: string, index: number) => <li key={index}>{item}</li>)}
-            </ul>
+            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(job.description || '') }}></div>
           </div>
 
-          <div id="quyền-lợi" className="pt-8">
-            <h2 className="text-xl font-bold mb-4">Quyền lợi</h2>
-            <ul className="list-disc list-inside space-y-2">
-              {job.benefits.map((item: string, index: number) => <li key={index}>{item}</li>)}
-            </ul>
-          </div>
-
-          <div id="kỹ-năng-yêu-cầu" className="pt-8">
-            <h2 className="text-xl font-bold mb-4">Kinh nghiệm / Kỹ năng chi tiết</h2>
-            <ul className="list-disc list-inside space-y-2">
-              {job.skills.map((item: string, index: number) => <li key={index}>{item}</li>)}
+          <div id="yêu-cầu" className="pt-8">
+            <h2 className="text-xl font-bold mb-4">Yêu cầu ứng viên</h2>
+            <ul className="list-disc pl-5 prose max-w-none">
+              {job.requirements && job.requirements.split('\n').map((line, index) => (
+                line.trim() && <li key={index}>{line.replace(/^- /, '')}</li>
+              ))}
             </ul>
           </div>
 
           <div id="chi-tiết-công-việc" className="pt-8">
-            <h2 className="text-xl font-bold mb-4">Mô tả</h2>
+            <h2 className="text-xl font-bold mb-4">Chi tiết công việc</h2>
             <Card>
               <div className="grid grid-cols-2 gap-4">
-                {Object.entries(job.jobDetails).map(([key, value]) => (
-                  <div key={key}>
-                    <p className="font-semibold">{key}</p>
-                    <p>{value as string}</p>
-                  </div>
-                ))}
+                <div><p className="font-semibold">Lương</p><p>{job.salary ? `${job.salary.toLocaleString()} VNĐ` : 'Thương lượng'}</p></div>
+                <div><p className="font-semibold">Giờ làm việc</p><p>{job.workHours}</p></div>
+                <div><p className="font-semibold">Ngành nghề</p><p>{job.categoryName}</p></div>
+                <div><p className="font-semibold">Trạng thái</p><p>{job.status}</p></div>
               </div>
             </Card>
           </div>
 
           <div id="liên-hệ" className="pt-8">
             <h2 className="text-xl font-bold mb-4">Thông tin liên hệ</h2>
-            <p><span className="font-semibold">Địa chỉ:</span> {job.contact.address}</p>
-            <p className="mt-2"><span className="font-semibold">Ghi chú:</span> {job.contact.note}</p>
-            <p className="mt-2"><span className="font-semibold">Ngôn ngữ hồ sơ:</span> {job.contact.language}</p>
+            <p><span className="font-semibold">Điện thoại:</span> {job.phoneContact}</p>
+            <p className="mt-2"><span className="font-semibold">Địa chỉ:</span> {job.location}</p>
           </div>
-
-          <div id="về-công-ty" className="pt-8">
-            <h2 className="text-xl font-bold mb-4">Về công ty</h2>
-            <p className="font-semibold">{job.aboutCompany.name}</p>
-            <p className="mt-2">{job.aboutCompany.description}</p>
-            <p className="mt-2"><span className="font-semibold">Quy mô:</span> {job.aboutCompany.size}</p>
-            <p className="mt-2"><span className="font-semibold">Website:</span> {job.aboutCompany.website}</p>
-          </div>
-
         </div>
 
         {/* Right Column */}
@@ -273,12 +201,12 @@ const JobDetailPage: React.FC = () => {
       </div>
 
       {/* Sticky Apply/Save Popup */}
-      {isSticky && (
+      {isSticky && job && (
         <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4 z-10 border-t">
           <div className="container mx-auto flex justify-between items-center">
             <div>
               <h3 className="font-bold text-lg">{job.title}</h3>
-              <p className="text-gray-600">{job.company}</p>
+              <p className="text-gray-600">{job.employerName}</p>
             </div>
             <div className="flex space-x-4">
               <Button size="large" onClick={handleSaveToggle} icon={isSaved ? <i className="fas fa-heart text-red-500"></i> : <i className="far fa-heart"></i>}>

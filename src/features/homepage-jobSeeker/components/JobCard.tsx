@@ -1,61 +1,88 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { message } from 'antd';
+import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+import { addSavedJob, removeSavedJob, fetchSavedJobs } from '../../savedJob-jobSeeker/slice';
 import { formatTimeAgo } from '../../../utils/date';
 import type { Job } from '../../../types';
-import { saveJob, unsaveJob } from '../../savedJob-jobSeeker/services';
 
 interface JobCardProps {
   job: Job;
-  isSaved?: boolean; // Tùy chọn: cho biết công việc đã được lưu hay chưa
-  onSaveToggle?: (jobId: string) => void; // Tùy chọn: hàm xử lý khi nhấn nút lưu
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job, isSaved, onSaveToggle }) => {
+const JobCard: React.FC<JobCardProps> = ({ job }) => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  const { user } = useAppSelector((state) => state.auth);
+  const { jobs: savedJobs } = useAppSelector((state) => state.savedJobs);
+
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const alreadySaved = savedJobs.some(savedJob => savedJob.id === job.id);
+      setIsSaved(alreadySaved);
+    } else {
+      setIsSaved(false);
+    }
+  }, [job.id, savedJobs, user]);
+
 
   const handleClick = () => {
     navigate(`/viec-lam/chi-tiet/${job.id}`);
   };
 
-  // Xử lý khi người dùng nhấn nút lưu/bỏ lưu
-  const handleSaveToggle = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Ngăn không cho sự kiện click lan ra thẻ div bên ngoài
-    try {
-      if (isSaved) {
-        await unsaveJob(job.id); // Nếu đã lưu, gọi hàm bỏ lưu
-      } else {
-        await saveJob(job.id); // Nếu chưa lưu, gọi hàm lưu
-      }
-      // Thông báo cho component cha rằng trạng thái đã thay đổi
-      if (onSaveToggle) {
-        onSaveToggle(job.id);
-      }
-    } catch (error) {
-      console.error('Lỗi khi lưu/bỏ lưu công việc:', error);
-      // Tùy chọn: Hiển thị thông báo lỗi cho người dùng
+  const handleSaveToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user?.id) {
+      message.error('Bạn cần đăng nhập để thực hiện chức năng này.');
+      navigate('/login');
+      return;
     }
+
+    const jobSeekerId = user.id;
+    const jobId = job.id;
+
+    const action = isSaved ? removeSavedJob({ jobSeekerId, jobId }) : addSavedJob({ jobSeekerId, jobId });
+
+    dispatch(action)
+      .unwrap()
+      .then(() => {
+        const successMessage = isSaved ? 'Đã bỏ lưu công việc.' : 'Đã lưu công việc thành công!';
+        message.success(successMessage);
+        setIsSaved(!isSaved); 
+
+        if (!isSaved) {
+          dispatch(fetchSavedJobs(jobSeekerId));
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to update saved job status:', error);
+        message.error('Đã có lỗi xảy ra. Vui lòng thử lại.');
+      });
   };
 
   return (
-    // Giữ nguyên các class h-40 để cố định chiều cao
     <div
       className="bg-white p-4 rounded-lg shadow-md flex items-start space-x-4 relative w-full border border-gray-200 h-40 cursor-pointer"
       onClick={handleClick}
     >
-      <img src={job.companyLogo || "/src/assets/no-logo.png"} alt="company logo" className="w-16 h-16 object-contain" /> {/* Sử dụng companyLogo */}
+      <img src={job.companyLogo || "/src/assets/no-logo.png"} alt="company logo" className="w-16 h-16 object-contain" />
       <div className="flex-1 overflow-hidden">
         <div className="flex items-start mb-1">
           <h3 className="text-base font-semibold text-gray-800 truncate pr-6">
-            {job.isHot && <span className="bg-orange-100 text-orange-500 text-xs font-semibold px-2.5 py-0.5 rounded mr-2">HOT</span>} {/* Hiển thị HOT nếu isHot là true */}
+            {job.isHot && <span className="bg-orange-100 text-orange-500 text-xs font-semibold px-2.5 py-0.5 rounded mr-2">HOT</span>}
             {job.title}
           </h3>
-          <button
-            className={`absolute top-4 right-4 text-gray-400 hover:text-red-500 ${isSaved ? 'text-red-500' : ''}`}
-            onClick={handleSaveToggle} // Sử dụng hàm xử lý mới
-          >
-            <i className={`${isSaved ? 'fas' : 'far'} fa-heart`}></i>
-          </button>
+          {user && (
+            <button
+              className={`absolute top-4 right-4 text-gray-400 hover:text-red-500 ${isSaved ? 'text-red-500' : ''}`}
+              onClick={handleSaveToggle}
+            >
+              <i className={`${isSaved ? 'fas' : 'far'} fa-heart`}></i>
+            </button>
+          )}
         </div>
         
         <p className="text-gray-600 text-sm truncate">{job.company}</p>
@@ -70,7 +97,6 @@ const JobCard: React.FC<JobCardProps> = ({ job, isSaved, onSaveToggle }) => {
           <span>{job.salary}</span>
         </div>
         
-        {/* 2. Sử dụng hàm formatTimeAgo với prop job.updatedAt */}
         <span className="text-gray-500 text-xs absolute bottom-4 right-4">
           {formatTimeAgo(job.updatedAt)}
         </span>

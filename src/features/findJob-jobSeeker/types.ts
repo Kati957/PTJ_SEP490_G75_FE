@@ -16,3 +16,23 @@ export interface JobLocation {
   count: number;
 }
 
+export interface EmployerPostDtoOutResponse {
+  success: boolean;
+  data: EmployerPostDtoOut;
+}
+
+export interface EmployerPostDtoOut {
+  employerPostId: number;
+  employerId: number;
+  title: string;
+  description?: string;
+  salary?: number;
+  requirements?: string;
+  workHours?: string;
+  location?: string;
+  phoneContact?: string;
+  categoryName?: string;
+  employerName?: string;
+  createdAt: string; 
+  status: string;
+}

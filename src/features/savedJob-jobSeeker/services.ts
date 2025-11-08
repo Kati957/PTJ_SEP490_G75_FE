@@ -1,16 +1,10 @@
 import type { SavedJob, GetSavedJobsResponse } from './types';
 import baseService from '../../services/baseService';
-import { store } from '../../app/store';
 
 // Lấy danh sách các công việc đã lưu từ backend
-export const getSavedJobs = async (): Promise<{ jobs: SavedJob[]; total: number }> => {
+export const getSavedJobs = async (jobSeekerId: string): Promise<{ jobs: SavedJob[]; total: number }> => {
   console.log('Fetching saved jobs...');
   try {
-    const jobSeekerId = store.getState().auth.user?.id;
-    if (!jobSeekerId) {
-      console.error('JobSeeker ID not found. Cannot fetch saved jobs.');
-      return { jobs: [], total: 0 };
-    }
     const response = await baseService.get<GetSavedJobsResponse>(`/JobSeekerPost/saved/${jobSeekerId}`);
     
     const savedJobs: SavedJob[] = response.data.map(backendJob => ({
@@ -33,9 +27,8 @@ export const getSavedJobs = async (): Promise<{ jobs: SavedJob[]; total: number 
 };
 
 
-export const saveJob = async (jobId: string): Promise<{ success: true }> => {
+export const saveJob = async (jobSeekerId: string, jobId: string): Promise<{ success: true }> => {
   try {
-    const jobSeekerId = store.getState().auth.user?.id || 0;
     const payload = {
       jobSeekerId: jobSeekerId,
       employerPostId: parseInt(jobId),
@@ -50,10 +43,9 @@ export const saveJob = async (jobId: string): Promise<{ success: true }> => {
   }
 };
 
-export const unsaveJob = async (jobId: string): Promise<{ success: true }> => {
+export const unsaveJob = async (jobSeekerId: string, jobId: string): Promise<{ success: true }> => {
   console.log(`Unsaving job with id: ${jobId}`);
   try {
-    const jobSeekerId = store.getState().auth.user?.id || 0;
     const payload = {
       jobSeekerId: jobSeekerId,
       employerPostId: parseInt(jobId),

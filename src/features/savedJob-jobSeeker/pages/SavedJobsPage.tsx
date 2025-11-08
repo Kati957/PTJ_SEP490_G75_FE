@@ -3,27 +3,51 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../../../app/store';
 import { fetchSavedJobs, removeSavedJob } from '../slice';
 import SavedJobCard from '../components/SavedJobCard';
-import { Pagination } from 'antd';
+import { Pagination, Modal, message } from 'antd';
 
 const SavedJobsPage: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { jobs, status, error, total } = useSelector((state: RootState) => state.savedJobs);
+  const jobSeekerId = useSelector((state: RootState) => state.auth.user?.id);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<string | null>(null);
   const pageSize = 5;
 
   const fetchJobs = useCallback(() => {
-    dispatch(fetchSavedJobs());
-  }, [dispatch]);
+    if (jobSeekerId) {
+      dispatch(fetchSavedJobs(jobSeekerId));
+    }
+  }, [dispatch, jobSeekerId]);
 
   useEffect(() => {
-    if (status === 'idle') {
-      fetchJobs();
-    }
-  }, [status, fetchJobs]);
+    fetchJobs();
+  }, [fetchJobs]);
 
-  const handleDelete = (jobId: string) => {
-    dispatch(removeSavedJob(jobId));
+  const showDeleteConfirm = (jobId: string) => {
+    setJobToDelete(jobId);
+    setIsModalVisible(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (jobToDelete && jobSeekerId) {
+      try {
+        await dispatch(removeSavedJob({ jobId: jobToDelete, jobSeekerId })).unwrap();
+        message.success('Xóa công việc đã lưu thành công!');
+        // Optionally, re-fetch the list if the slice doesn't handle removal automatically
+        // fetchJobs();
+      } catch (err) {
+        message.error('Xóa công việc thất bại. Vui lòng thử lại.');
+      }
+    }
+    setIsModalVisible(false);
+    setJobToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setIsModalVisible(false);
+    setJobToDelete(null);
   };
 
   const handlePageChange = (page: number) => {
@@ -46,7 +70,7 @@ const SavedJobsPage: React.FC = () => {
           {currentJobs.length > 0 ? (
             <div className="space-y-4">
               {currentJobs.map(job => (
-                <SavedJobCard key={job.id} job={job} onDelete={handleDelete} />
+                <SavedJobCard key={job.id} job={job} onDelete={showDeleteConfirm} />
               ))}
             </div>
           ) : (
@@ -65,6 +89,17 @@ const SavedJobsPage: React.FC = () => {
           )}
         </div>
       )}
+      <Modal
+        title="Xác nhận xóa"
+        open={isModalVisible}
+        onOk={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        okText="Xóa"
+        cancelText="Hủy"
+        okButtonProps={{ danger: true }}
+      >
+        <p>Bạn có chắc chắn muốn xóa công việc đã lưu này không?</p>
+      </Modal>
     </div>
   );
 };
