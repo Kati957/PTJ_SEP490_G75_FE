@@ -13,7 +13,7 @@ export const jobSeekerPostService = {
   },
   saveCandidate: async (dto: SaveCandidateDto) => {
     const res = await baseService.post<{ success: boolean; message: string }>(
-      "/JobSeekerPost/save-candidate",
+      "/EmployerPost/save-candidate",
       dto
     );
     return res;
@@ -21,7 +21,7 @@ export const jobSeekerPostService = {
 
   unsaveCandidate: async (dto: SaveCandidateDto) => {
     const res = await baseService.post<{ success: boolean; message: string }>(
-      "/JobSeekerPost/unsave-candidate",
+      "/EmployerPost/unsave-candidate",
       dto
     );
     return res;

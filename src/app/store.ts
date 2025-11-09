@@ -9,6 +9,7 @@ import jobSeekerPostingReducer from '../features/jobSeekerPosting/slice';
 import savedJobsReducer from '../features/savedJob-jobSeeker/slice';
 import employerJobPostingReducer from '../features/job/jobPostingSlice';
 import categoryReducer from '../features/category/slice';
+import adminJobsReducer from '../features/admin-js-post/slice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -16,8 +17,9 @@ const rootReducer = combineReducers({
   findJob: findJobReducer,
   jobSeekerPosting: jobSeekerPostingReducer,
   employerPosting: employerJobPostingReducer, 
-  category: categoryReducer,,
-  savedJobs: savedJobsReducer
+  category: categoryReducer,
+  savedJobs: savedJobsReducer,
+  adminJobs: adminJobsReducer,
 });
 
 export const store = configureStore({

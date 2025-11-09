@@ -51,7 +51,7 @@ const JobSeekerPostsPage: React.FC = () => {
         // Bỏ lưu
         await jobSeekerPostService.unsaveCandidate({
           employerId: user.id,
-          jobSeekerId: record.jobSeekerId,
+          jobSeekerId: record.userID,
           employerPostId: record.jobSeekerPostId,
         });
         setSavedJobs(savedJobs.filter((id) => id !== jobId));
@@ -60,7 +60,7 @@ const JobSeekerPostsPage: React.FC = () => {
         // Lưu
         await jobSeekerPostService.saveCandidate({
           employerId: user.id,
-          jobSeekerId: record.jobSeekerId,
+          jobSeekerId: record.userID,
           employerPostId: record.jobSeekerPostId,
         });
         setSavedJobs([...savedJobs, jobId]);

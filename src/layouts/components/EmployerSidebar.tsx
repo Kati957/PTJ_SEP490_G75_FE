@@ -36,7 +36,6 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const { user } = useAuth();
   const location = useLocation();
 
-
   // Mục menu chính
   const employerItems: MenuItem[] = [
     getItem(
@@ -74,14 +73,33 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     ]),
   ];
 
+  const adminItems: MenuItem[] = [
+    getItem("Quản lí bài viết", "sub-cong-viec", <FileTextOutlined />, [
+      getItem(
+        <NavLink to="/admin/jobseeker-post">
+          Bài đăng của ứng viên
+        </NavLink>,
+        "/admin/jobseeker-post"
+      ),
+      getItem(
+        <NavLink to="/admin/jobseeker-post">
+          Bài đăng của nhà tuyển dụng
+        </NavLink>,
+        "/admin/employer-post"
+      ),
+    ]),
+    // getItem(
+    //   <NavLink to="/admin/jobseeker-post">
+    //     Quản lí bài của nhà tuyển dụng
+    //   </NavLink>,
+    //   "/admin/jobseeker-post"
+    // ),
+  ];
+
   // Mục menu Hỗ trợ
   const supportItems: MenuItem[] = [
     menuDivider,
-    getItem(
-      <a href="#">Hỗ trợ</a>,
-      "support",
-      <QuestionCircleOutlined />
-    ),
+    getItem(<a href="#">Hỗ trợ</a>, "support", <QuestionCircleOutlined />),
     getItem(
       <NavLink to="/nha-tuyen-dung/cai-dat">Cài đặt</NavLink>,
       "/nha-tuyen-dung/cai-dat",
@@ -90,23 +108,25 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   ];
 
   const getMenuItems = (): MenuItem[] => {
-  if (!user) return [];
+    if (!user) return [];
 
-  if (user.roles.includes(ROLES.EMPLOYER)) {
-    return [...employerItems, ...supportItems];
-  }
+    if (user.roles.includes(ROLES.EMPLOYER)) {
+      return [...employerItems, ...supportItems];
+    }
 
-  if (user.roles.includes(ROLES.ADMIN)) {
+    if (user.roles.includes(ROLES.ADMIN)) {
+      return [...adminItems, ...supportItems];
+    }
+
     return [];
-  }
+  };
 
-  return [];
-};
-
-
-  const defaultOpenKey = employerItems.find((item) =>
-    item && 'children' in item && Array.isArray(item.children) &&
-    item.children.some((child) => child && child.key === location.pathname)
+  const defaultOpenKey = employerItems.find(
+    (item) =>
+      item &&
+      "children" in item &&
+      Array.isArray(item.children) &&
+      item.children.some((child) => child && child.key === location.pathname)
   )?.key as string;
 
   return (
@@ -130,7 +150,6 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       {/* 2. Phần User (cố định ở dưới, KHÔNG CÒN MENU) */}
       {user && (
         <div className="p-4 flex-shrink-0 border-t border-gray-200">
-        
           <div
             className={`flex items-center space-x-3 ${
               !isOpen ? "justify-center" : ""
