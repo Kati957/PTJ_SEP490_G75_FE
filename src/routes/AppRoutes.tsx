@@ -46,6 +46,8 @@ export const AppRoutes: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={[ROLES.JOB_SEEKER]} />}>
           <Route path="quan-ly-bai-dang" element={<ManagePostingsPage />} />
           <Route path="tao-bai-dang-tim-viec" element={<CreatePostingPage />} />
+          <Route path="xem-bai-dang-tim-viec/:id" element={<CreatePostingPage />} />
+          <Route path="sua-bai-dang-tim-viec/:id" element={<CreatePostingPage />} />
           <Route path="viec-lam-da-luu" element={<SavedJobsPage />} />
           <Route path="viec-da-ung-tuyen" element={<AppliedJobsPage />} />
         </Route>

@@ -47,13 +47,15 @@ const ManagePostingsPage: React.FC = () => {
               renderItem={(item, index) => (
                 <List.Item
                   actions={[
-                    <Button type="link">Sửa</Button>,
+                    <Link to={`/sua-bai-dang-tim-viec/${item.jobSeekerPostId}`}>
+                      <Button type="link">Sửa</Button>
+                    </Link>,
                     <Button type="link" danger>Xóa</Button>,
                   ]}
                 >
                   <div className="mr-4 text-gray-500 font-medium">{index + 1}.</div>
                   <List.Item.Meta
-                    title={<a href="#">{item.title}</a>}
+                    title={<Link to={`/xem-bai-dang-tim-viec/${item.jobSeekerPostId}`}>{item.title}</Link>}
                     description={`Ngày tạo: ${format(new Date(item.createdAt), 'dd/MM/yyyy HH:mm')}`}
                   />
                   <div>

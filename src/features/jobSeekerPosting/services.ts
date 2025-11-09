@@ -1,6 +1,6 @@
 import axios from 'axios';
 import baseService from '../../services/baseService';
-import type { CreateJobSeekerPostPayload, Province, JobSeekerPost, GetJobByIdResponse } from './types';
+import type { CreateJobSeekerPostPayload, Province, JobSeekerPost, GetJobByIdResponse, UpdateJobSeekerPostPayload } from './types';
 
 const PROVINCES_API_URL = 'https://provinces.open-api.vn/api/p/';
 
@@ -17,6 +17,14 @@ interface ApiResponse<T> {
  */
 export const createJobSeekerPost = (payload: CreateJobSeekerPostPayload) => {
   return baseService.post('/JobSeekerPost/create', payload);
+};
+
+/**
+ * Gửi yêu cầu cập nhật một bài đăng tìm việc.
+ * @param payload - Dữ liệu của bài đăng cần cập nhật.
+ */
+export const updateJobSeekerPost = (payload: UpdateJobSeekerPostPayload) => {
+  return baseService.put(`/JobSeekerPost/${payload.jobSeekerPostId}`, payload);
 };
 
 /**
@@ -47,5 +55,5 @@ export const getPostsByUserId = async (userId: number): Promise<JobSeekerPost[]>
 };
 
 export const getJobById = async (id: number): Promise<GetJobByIdResponse> => {
-  return await baseService.get<GetJobByIdResponse>(`/EmployerPost/${id}`);
+  return await baseService.get<GetJobByIdResponse>(`/JobSeekerPost/${id}`);
 };
