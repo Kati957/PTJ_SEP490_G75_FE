@@ -30,6 +30,11 @@ const LoginForm: React.FC = () => {
 
       // 2. Dispatch action để lưu thông tin user vào Redux
       dispatch(loginSuccess({ user, token: accessToken }));
+      
+      if(user.roles.includes(ROLES.ADMIN)){
+        navigate('/admin/jobseeker-post');
+        return;
+      }
 
       message.success('Đăng nhập thành công!');
 

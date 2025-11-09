@@ -19,12 +19,15 @@ export const EmployerLoginForm: React.FC = () => {
       const response = await loginJobSeeker(values);
       const { accessToken, user } = response;
 
-      //.roles = [ROLES.EMPLOYER];
-
       setAccessToken(accessToken);
       dispatch(loginSuccess({ user, token: accessToken }));
 
       message.success('Đăng nhập thành công!');
+
+      if(user.roles.includes(ROLES.ADMIN)){
+        navigate('/admin/jobseeker-post');
+        return;
+      }
       navigate('/nha-tuyen-dung/dashboard');
 
     } catch (error: any) {

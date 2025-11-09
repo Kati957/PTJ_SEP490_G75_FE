@@ -25,6 +25,7 @@ import EditJobPage from '../features/job/pages/EditJobPage';
 import JobSeekerPostPage from '../features/candidate/pages/JobSeekerPostPage';
 import SavedTalentPage from '../features/candidate/pages/SavedTalentPage';
 import SavedJobsPage from '../features/savedJob-jobSeeker/pages/SavedJobsPage';
+import AdminJSPostPage from '../features/admin-js-post/pages/AdminJSPostPage';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -76,7 +77,10 @@ export const AppRoutes: React.FC = () => {
 
         {/* Protected Routes for Admin */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
-          {/* <Route path="admin/dashboard" element={<AdminDashboard />} /> */}
+          <Route
+            path="admin/jobseeker-post"
+            element={<AdminJSPostPage />}
+          />
         </Route>
       </Route>
     </Routes>
