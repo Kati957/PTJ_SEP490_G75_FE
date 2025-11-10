@@ -25,7 +25,7 @@ export const EmployerLoginForm: React.FC = () => {
       message.success('Đăng nhập thành công!');
 
       if(user.roles.includes(ROLES.ADMIN)){
-        navigate('/admin/jobseeker-post');
+        navigate('/admin/dashboard');
         return;
       }
       navigate('/nha-tuyen-dung/dashboard');

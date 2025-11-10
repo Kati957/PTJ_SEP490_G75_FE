@@ -15,6 +15,7 @@ import NotFoundPage from '../pages/common/NotFoundPage';
 import { ROLES } from '../constants/roles';
 import EmployerDashboard from '../pages/employer/EmployerDashboard';
 import EmployerJobsPage from '../pages/employer/EmployerJobsPage';
+import EmployerProfilePage from '../pages/employer/EmployerProfilePage';
 import PostJobPage from '../features/job/pages/PostJobPage';
 import ProtectedRoute from './ProtectedRoute';
 import ManagePostingsPage from '../features/jobSeekerPosting/pages/ManagePostingsPage';
@@ -27,6 +28,12 @@ import SavedTalentPage from '../features/candidate/pages/SavedTalentPage';
 import SavedJobsPage from '../features/savedJob-jobSeeker/pages/SavedJobsPage';
 import AppliedJobsPage from '../features/applyJob-jobSeeker/pages/AppliedJobsPage';
 import AdminJSPostPage from '../features/admin-js-post/pages/AdminJSPostPage';
+import AdminDashboard from '../pages/admin/AdminDashboard';
+import AdminAccountManagementPage from '../pages/admin/AdminAccountManagementPage';
+import AdminNewsManagementPage from '../pages/admin/AdminNewsManagementPage';
+import AdminJobPostManagementPage from '../pages/admin/AdminJobPostManagementPage';
+import AdminCategoryManagementPage from '../pages/admin/AdminCategoryManagementPage';
+import AdminReportManagementPage from '../pages/admin/AdminReportManagementPage';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -74,6 +81,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="/nha-tuyen-dung/sua-tin/:id" element={<EditJobPage />} />
           <Route path="/nha-tuyen-dung/tim-kiem" element={<JobSeekerPostPage />} />
           <Route path='/nha-tuyen-dung/tai-nang-da-xem' element={<SavedTalentPage />} />
+          <Route path="nha-tuyen-dung/ho-so" element={<EmployerProfilePage />} />
         </Route>
         <Route
           element={<ProtectedRoute allowedRoles={[ROLES.JOB_SEEKER]} />}
@@ -81,10 +89,13 @@ export const AppRoutes: React.FC = () => {
 
         {/* Protected Routes for Admin */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
-          <Route
-            path="admin/jobseeker-post"
-            element={<AdminJSPostPage />}
-          />
+          <Route path="admin/dashboard" element={<AdminDashboard />} />
+          <Route path="admin/accounts" element={<AdminAccountManagementPage />} />
+          <Route path="admin/news" element={<AdminNewsManagementPage />} />
+          <Route path="admin/job-posts" element={<AdminJobPostManagementPage />} />
+          <Route path="admin/categories" element={<AdminCategoryManagementPage />} />
+          <Route path="admin/reports" element={<AdminReportManagementPage />} />
+          <Route path="admin/jobseeker-post" element={<AdminJSPostPage />} />
         </Route>
       </Route>
     </Routes>

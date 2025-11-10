@@ -32,7 +32,7 @@ const LoginForm: React.FC = () => {
       dispatch(loginSuccess({ user, token: accessToken }));
       
       if(user.roles.includes(ROLES.ADMIN)){
-        navigate('/admin/jobseeker-post');
+        navigate('/admin/dashboard');
         return;
       }
 
