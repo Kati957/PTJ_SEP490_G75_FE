@@ -62,8 +62,8 @@ const mainNavLinks = [
   },
   {
     icon: <BankOutlined />,
-    text: 'Công ty',
-    path: '/cong-ty'
+    text: 'Nhà tuyển dụng',
+    path: '/employer'
   },
   {
     icon: <BookOutlined />,

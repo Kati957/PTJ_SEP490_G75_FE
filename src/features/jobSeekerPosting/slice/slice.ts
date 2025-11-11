@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import { createJobSeekerPost, getJobById, updateJobSeekerPost } from '../services';
+import { createJobSeekerPost, getJobById, updateJobSeekerPost, deleteJobSeekerPost } from '../services';
 import type { CreateJobSeekerPostPayload, JobSeekerPost, UpdateJobSeekerPostPayload } from '../types';
 
 interface JobSeekerPostingState {
@@ -13,6 +13,11 @@ interface JobSeekerPostingState {
     loading: boolean;
     error: string | null;
   };
+  delete: {
+    loading: boolean;
+    error: string | null;
+    success: boolean;
+  };
 }
 
 const initialState: JobSeekerPostingState = {
@@ -25,6 +30,11 @@ const initialState: JobSeekerPostingState = {
     post: null,
     loading: false,
     error: null,
+  },
+  delete: {
+    loading: false,
+    error: null,
+    success: false,
   },
 };
 
@@ -64,6 +74,18 @@ export const fetchPostById = createAsyncThunk(
   }
 );
 
+export const deletePosting = createAsyncThunk(
+  'jobSeekerPosting/delete',
+  async (jobSeekerPostId: number, { rejectWithValue }) => {
+    try {
+      const response = await deleteJobSeekerPost(jobSeekerPostId);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Xóa bài đăng thất bại');
+    }
+  }
+);
+
 const jobSeekerPostingSlice = createSlice({
   name: 'jobSeekerPosting',
   initialState,
@@ -72,6 +94,10 @@ const jobSeekerPostingSlice = createSlice({
       state.create.loading = false;
       state.create.error = null;
       state.create.success = false;
+
+      state.delete.loading = false;
+      state.delete.error = null;
+      state.delete.success = false;
     },
   },
   extraReducers: (builder) => {
@@ -115,7 +141,21 @@ const jobSeekerPostingSlice = createSlice({
       .addCase(fetchPostById.rejected, (state, action: PayloadAction<any>) => {
         state.detail.loading = false;
         state.detail.error = action.payload;
-      });
+      })
+      // Reducers for deleting post
+      .addCase(deletePosting.pending, (state) => {
+        state.delete.loading = true;
+        state.delete.error = null;
+        state.delete.success = false;
+      })
+      .addCase(deletePosting.fulfilled, (state) => {
+        state.delete.loading = false;
+        state.delete.success = true;
+      })
+      .addCase(deletePosting.rejected, (state, action: PayloadAction<any>) => {
+        state.delete.loading = false;
+        state.delete.error = action.payload;
+      });;
   },
 });
 

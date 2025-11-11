@@ -94,17 +94,13 @@ const TopEmployersSlider: React.FC = () => {
           {topEmployers.map((employer: Employer) => (
             <div key={employer.id} className="p-2">
               <div className="bg-white rounded-lg shadow-md overflow-hidden relative h-[320px] pb-4 flex flex-col">
-                {/* Fixed height and flex column */}
-                {/* Orange corner tag */}
                 <div className="absolute top-0 left-0 w-0 h-0 border-t-[20px] border-r-[20px] border-t-orange-500 border-r-transparent z-10"></div>
-                {/* Background Image */}
                 <div
                   className="w-full h-24 bg-cover bg-center"
                   style={{
                     backgroundImage: `url(${employer.backgroundImage})`,
                   }}
                 ></div>
-                {/* Company Logo (Avatar) */}
                 <div className="absolute top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full bg-white shadow-md flex items-center justify-center p-1">
                   <img
                     src={employer.logo}
@@ -112,7 +108,6 @@ const TopEmployersSlider: React.FC = () => {
                     className="w-full h-full object-contain rounded-full"
                   />
                 </div>
-                {/* Content */}
                 <div className="pt-16 text-center px-4 flex-1 flex flex-col justify-between">
                   <h3 className="text-xl font-bold text-gray-800 mt-2 line-clamp-2 min-h-14">
                     {employer.name}
@@ -128,7 +123,6 @@ const TopEmployersSlider: React.FC = () => {
 
                   <div className="mt-auto">
                     {" "}
-                    {/* Push to bottom */}
                     <p className="text-gray-600 text-sm mt-2">
                       {employer.jobsCount} việc đang tuyển
                     </p>

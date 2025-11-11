@@ -28,6 +28,14 @@ export const updateJobSeekerPost = (payload: UpdateJobSeekerPostPayload) => {
 };
 
 /**
+ * Gửi yêu cầu xóa một bài đăng tìm việc.
+ * @param jobSeekerPostId - ID của bài đăng cần xóa.
+ */
+export const deleteJobSeekerPost = (jobSeekerPostId: number) => {
+  return baseService.del(`/JobSeekerPost/${jobSeekerPostId}`);
+};
+
+/**
  * Lấy danh sách các tỉnh/thành phố từ API công khai.
  * @returns - Promise chứa danh sách các tỉnh/thành phố.
  */

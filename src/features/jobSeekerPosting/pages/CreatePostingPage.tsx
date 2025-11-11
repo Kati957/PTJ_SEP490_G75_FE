@@ -17,9 +17,8 @@ const CreatePostingPage: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const location = useLocation();
-  const { id } = useParams<{ id: string }>(); // Lấy id từ URL
+  const { id } = useParams<{ id: string }>();
 
-  // Xác định chế độ (tạo mới, xem, sửa)
   const isCreateMode = location.pathname.includes('/tao-bai-dang-tim-viec');
   const isViewMode = location.pathname.includes('/xem-bai-dang-tim-viec');
   const isEditMode = location.pathname.includes('/sua-bai-dang-tim-viec');
@@ -39,7 +38,6 @@ const CreatePostingPage: React.FC = () => {
     setIsReadOnly(isViewMode);
   }, [isViewMode]);
 
-  // Lấy danh sách tỉnh/thành khi component được mount
   useEffect(() => {
     const getProvinces = async () => {
       try {
@@ -52,14 +50,12 @@ const CreatePostingPage: React.FC = () => {
     getProvinces();
   }, []);
 
-  // Lấy chi tiết bài đăng nếu ở chế độ xem/sửa
   useEffect(() => {
     if ((isViewMode || isEditMode) && id) {
       dispatch(fetchPostById(Number(id)));
     }
   }, [dispatch, id, isViewMode, isEditMode]);
 
-  // Điền dữ liệu vào form khi có chi tiết bài đăng
   useEffect(() => {
     if (postDetail && (isViewMode || isEditMode)) {
       form.setFieldsValue({
@@ -76,12 +72,11 @@ const CreatePostingPage: React.FC = () => {
     }
   }, [postDetail, categories, isViewMode, isEditMode, form]);
 
-  // Xử lý khi tạo bài đăng thành công hoặc thất bại
   useEffect(() => {
     if (success) {
       message.success(isCreateMode ? 'Tạo bài đăng thành công!' : 'Cập nhật thành công!');
       dispatch(resetPostStatus());
-      navigate('/quan-ly-bai-dang'); // Chuyển về trang quản lý
+      navigate('/quan-ly-bai-dang');
     }
     if (error) {
       message.error(`Thao tác thất bại: ${error}`);

@@ -34,6 +34,8 @@ import AdminNewsManagementPage from '../pages/admin/AdminNewsManagementPage';
 import AdminJobPostManagementPage from '../pages/admin/AdminJobPostManagementPage';
 import AdminCategoryManagementPage from '../pages/admin/AdminCategoryManagementPage';
 import AdminReportManagementPage from '../pages/admin/AdminReportManagementPage';
+import ListEmployerPage from '../features/listEmployer-jobSeeker/pages/ListEmployerPage';
+import JobSeekerProfilePage from '../features/profile-JobSeeker/pages/JobSeekerProfilePage';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -43,6 +45,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="viec-lam" element={<FindJobPage />} />
         <Route path="viec-lam/chi-tiet/:id" element={<JobDetailPage />} />
         <Route path="viec-lam/:slug" element={<JobListPage />} />
+        <Route path="employer" element={<ListEmployerPage />} />
         <Route path="login" element={<JobSeekerLoginPage />} />
         <Route path="register" element={<JobSeekerLoginPage />} />
         <Route path="unauthorized" element={<UnauthorizedPage />} />
@@ -57,6 +60,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="sua-bai-dang-tim-viec/:id" element={<CreatePostingPage />} />
           <Route path="viec-lam-da-luu" element={<SavedJobsPage />} />
           <Route path="viec-da-ung-tuyen" element={<AppliedJobsPage />} />
+          <Route path="tai-khoan" element={<JobSeekerProfilePage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
