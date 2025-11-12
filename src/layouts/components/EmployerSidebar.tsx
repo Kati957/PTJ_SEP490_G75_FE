@@ -82,10 +82,10 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         "/admin/jobseeker-post"
       ),
       getItem(
-        <NavLink to="/admin/jobseeker-post">
+        <NavLink to="/admin/employer-post">
           Bài đăng của nhà tuyển dụng
         </NavLink>,
-        "/admin/employer-post"
+        "admin/employer-post"
       ),
     ]),
     // getItem(
@@ -96,26 +96,16 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     // ),
   ];
 
-  // Mục menu Hỗ trợ
-  const supportItems: MenuItem[] = [
-    menuDivider,
-    getItem(<a href="#">Hỗ trợ</a>, "support", <QuestionCircleOutlined />),
-    getItem(
-      <NavLink to="/nha-tuyen-dung/cai-dat">Cài đặt</NavLink>,
-      "/nha-tuyen-dung/cai-dat",
-      <SettingOutlined />
-    ),
-  ];
 
   const getMenuItems = (): MenuItem[] => {
     if (!user) return [];
 
     if (user.roles.includes(ROLES.EMPLOYER)) {
-      return [...employerItems, ...supportItems];
+      return [...employerItems];
     }
 
     if (user.roles.includes(ROLES.ADMIN)) {
-      return [...adminItems, ...supportItems];
+      return [...adminItems];
     }
 
     return [];
@@ -147,7 +137,6 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         />
       </div>
 
-      {/* 2. Phần User (cố định ở dưới, KHÔNG CÒN MENU) */}
       {user && (
         <div className="p-4 flex-shrink-0 border-t border-gray-200">
           <div

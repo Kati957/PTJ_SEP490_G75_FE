@@ -1,8 +1,8 @@
 import React from "react";
 import { Tag } from "antd";
-import type { AdminJobPostView } from "../type";
+import type { AdminJobSeekerPostView } from "../type";
 
-const JobJSDetailView: React.FC<{ post: AdminJobPostView }> = ({ post }) => {
+const JobJSDetailView: React.FC<{ post: AdminJobSeekerPostView }> = ({ post }) => {
   const DetailField: React.FC<{ label: string; children: React.ReactNode }> = ({
     label,
     children,
@@ -17,11 +17,14 @@ const JobJSDetailView: React.FC<{ post: AdminJobPostView }> = ({ post }) => {
 
   return (
     <div className="p-2">
-      <DetailField label="ID Bài đăng">{post.id}</DetailField>
+      <DetailField label="ID Bài đăng">{post.jobSeekerPostId}</DetailField>
       <DetailField label="Tiêu đề">{post.title}</DetailField>
-      <DetailField label="Email NTD">{post.employerEmail}</DetailField>
-      <DetailField label="Tên NTD">{post.employerName}</DetailField>
+      <DetailField label="Email Người tìm việc">{post.jobSeekerEmail}</DetailField>
+      <DetailField label="Giới tính">{post.gender}</DetailField>
+      <DetailField label="Địa điểm mong muốn">{post.preferredLocation}</DetailField>
+      <DetailField label="Giờ làm mong muốn">{post.preferredWorkHours}</DetailField>
       <DetailField label="Ngành nghề">{post.categoryName}</DetailField>
+      <DetailField label="Mô tả">{post.description}</DetailField>
       <DetailField label="Trạng thái">
         <Tag color={post.status === "Active" ? "green" : "red"}>
           {post.status}

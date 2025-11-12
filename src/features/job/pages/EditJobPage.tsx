@@ -10,11 +10,6 @@ import type { JobPostData, JobPostView } from '../jobTypes';
 import { transformToEmployerPostDto } from './PostJobPage';
 
 const transformDtoToFormData = (dto: JobPostView): JobPostData => {
-  let salaryType: JobPostData['salaryType'] = 'negotiable';
-  if (dto.salary) {
-    salaryType = 'exact'; 
-  }
-  
   return {
     jobTitle: dto.title,
     jobDescription: dto.description || '',
@@ -24,14 +19,12 @@ const transformDtoToFormData = (dto: JobPostView): JobPostData => {
     location: dto.location || '',
     categoryID: dto.categoryName ? 1 : null,
     contactPhone: dto.phoneContact || '',
-    salaryType: salaryType,
   };
 };
 
 const emptyState: JobPostData = {
   jobTitle: '', jobDescription: '', salaryValue: null, requirements: '',
   workHours: '', location: '', categoryID: null, contactPhone: '',
-  salaryType: 'negotiable',
 };
 
 const EditJobPage: React.FC = () => {
