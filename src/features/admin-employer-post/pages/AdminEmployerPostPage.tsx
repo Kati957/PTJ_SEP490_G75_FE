@@ -10,33 +10,38 @@ import {
   message,
   Spin,
   Modal,
+  Pagination,
 } from "antd";
 import type { TableColumnsType } from "antd";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { useCategories } from "../../category/hook";
 import {
   fetchAdminEmployerPosts,
-  selectAdminJobPosts,
-  selectAdminJobStatus,
-  toggleEmployerPostBlock,
+  selectAdminEmployerPosts,
+  selectAdminEmployerStatus,
+  selectAdminEmployerSelectedPost,
+  toggleBlockAndRefresh,
+  fetchAdminEmployerPostDetail,
+  clearSelectedPost,
 } from "../slice";
-import type { AdminJobSeekerPostView } from "../type";
+
+import type { AdminEmployerPostView } from "../type";
 import { SearchOutlined } from "@ant-design/icons";
-import { adminService } from "../service";
-import JobJSDetailView from "../components/JobJSDetailView";
+import JobEmployerDetailView from "../components/JobEmployerDetailView";
 
 const { Option } = Select;
 
-const AdminJSPostPage: React.FC = () => {
+const AdminEmployerPostPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const posts = useAppSelector(selectAdminJobPosts);
-  const status = useAppSelector(selectAdminJobStatus);
+  const posts = useAppSelector(selectAdminEmployerPosts);
+  const status = useAppSelector(selectAdminEmployerStatus);
+  const selectedPost = useAppSelector(selectAdminEmployerSelectedPost);
+
+  const totalRecords = useAppSelector((state) => state.adminJobs.totalRecords);
+
   const { categories, isLoading: categoriesLoading } = useCategories();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPost, setSelectedPost] =
-    useState<AdminJobSeekerPostView | null>(null);
-  const [isModalLoading, setIsModalLoading] = useState(false);
 
   const [keyword, setKeyword] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
@@ -45,57 +50,63 @@ const AdminJSPostPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>(
     undefined
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
-    dispatch(fetchAdminEmployerPosts({}));
+    dispatch(fetchAdminEmployerPosts({ page: 1, pageSize: 10 }));
   }, [dispatch]);
 
-  const handleView = async (id: number) => {
-  setIsModalOpen(true);
-  setIsModalLoading(true);
-  try {
-    const postDetail = await adminService.getJobSeekerPostDetail(id);
-    setSelectedPost(postDetail);
-  } catch (err) {
-    message.error("Không thể tải chi tiết.");
-    setIsModalOpen(false);
-  } finally {
-    setIsModalLoading(false);
-  }
-};
+  useEffect(() => {
+    if (selectedPost) {
+      setIsModalOpen(true);
+    }
+  }, [selectedPost]);
 
-
-  const handleToggleBlock = (id: number) => {
-    dispatch(toggleEmployerPostBlock(id));
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedPost(null);
-  };
-
-  const handleFilter = () => {
+  const handleFetchData = (page: number, size: number) => {
     dispatch(
       fetchAdminEmployerPosts({
         status: selectedStatus,
         categoryId: selectedCategory,
         keyword: keyword || undefined,
+        page: page,
+        pageSize: size,
       })
     );
+    setCurrentPage(page);
+    setPageSize(size);
+  };
+
+  const handleFilter = () => {
+    handleFetchData(1, pageSize);
   };
 
   const resetFilter = () => {
     setKeyword("");
     setSelectedStatus(undefined);
     setSelectedCategory(undefined);
-    dispatch(fetchAdminEmployerPosts({}));
+    handleFetchData(1, 10);
   };
 
-  const columns: TableColumnsType<AdminJobSeekerPostView> = [
+  const handleView = (id: number) => {
+  dispatch(fetchAdminEmployerPostDetail(id));
+};
+
+
+  const handleToggleBlock = (id: number) => {
+    dispatch(toggleBlockAndRefresh(id));
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    dispatch(clearSelectedPost());
+  };
+
+  const columns: TableColumnsType<AdminEmployerPostView> = [
     {
       title: "ID",
-      dataIndex: "jobSeekerPostId",
-      key: "jobSeekerPostId",
+      dataIndex: "employerPostId",
+      key: "employerPostId",
     },
     {
       title: "Tiêu đề",
@@ -103,11 +114,12 @@ const AdminJSPostPage: React.FC = () => {
       key: "title",
     },
     {
-      title: "Người tìm việc",
-      dataIndex: "jobSeekerEmail",
-      key: "jobSeekerEmail",
-      render: (email) => (
+      title: "Nhà tuyển dụng",
+      dataIndex: "employerEmail",
+      key: "employerEmail",
+      render: (email, record) => (
         <div>
+          <div>{record.employerName ?? "(Chưa có tên)"}</div>
           <small>{email}</small>
         </div>
       ),
@@ -116,8 +128,9 @@ const AdminJSPostPage: React.FC = () => {
       title: "Ngành nghề",
       dataIndex: "categoryName",
       key: "categoryName",
-      render: (name) => name || "N/A",
+      render: (name) => name ?? "N/A",
     },
+
     {
       title: "Ngày tạo",
       dataIndex: "createdAt",
@@ -146,7 +159,7 @@ const AdminJSPostPage: React.FC = () => {
             <Button
               type="link"
               size="small"
-              onClick={() => handleView(record.jobSeekerPostId)}
+              onClick={() => handleView(record.employerPostId)}
             >
               Xem
             </Button>
@@ -155,10 +168,10 @@ const AdminJSPostPage: React.FC = () => {
               type="link"
               size="small"
               danger={!isBlocked}
-              onClick={() => handleToggleBlock(record.jobSeekerPostId)}
+              onClick={() => handleToggleBlock(record.employerPostId)}
               loading={status === "loading"}
             >
-              {isBlocked ? "Bỏ lưu trữ" : "Lưu trữ"}
+              {isBlocked ? "Bỏ chặn" : "Chặn"}
             </Button>
           </Space>
         );
@@ -171,7 +184,6 @@ const AdminJSPostPage: React.FC = () => {
       <h1 className="text-2xl font-bold">
         Quản lý bài đăng của Nhà tuyển dụng
       </h1>
-
       <Card>
         <Space wrap size="middle">
           <Input
@@ -218,18 +230,20 @@ const AdminJSPostPage: React.FC = () => {
       </Card>
 
       <Table
-        rowKey="jobSeekerPostId"
+        rowKey="id"
         columns={columns}
-        dataSource={Array.isArray(posts) ? posts : []}
+        dataSource={posts}
         loading={status === "loading"}
         pagination={{
-          total: posts?.length ?? 0,
-          pageSize: 10,
+          total: totalRecords,
+          current: currentPage,
+          pageSize: pageSize,
+          onChange: handleFetchData,
         }}
       />
 
       <Modal
-        title={null}
+        title="Chi tiết bài đăng"
         open={isModalOpen}
         onCancel={handleModalClose}
         footer={[
@@ -237,23 +251,14 @@ const AdminJSPostPage: React.FC = () => {
             Đóng
           </Button>,
         ]}
-        className="custom-modal"
+        width={800}
       >
-        {isModalLoading ? (
+        {status === "loading" && selectedPost === null ? (
           <div className="flex justify-center items-center h-48">
             <Spin />
           </div>
         ) : selectedPost ? (
-          <div>
-            <div className="bg-blue-900 text-white px-5 py-3 rounded-t-lg -m-6 mb-4">
-              <h2 className="text-lg font-semibold">Chi tiết bài đăng</h2>
-              <p className="text-blue-100 text-sm">
-                Mã: {selectedPost.jobSeekerPostId}
-              </p>
-            </div>
-
-            <JobJSDetailView post={selectedPost} />
-          </div>
+          <JobEmployerDetailView post={selectedPost} />
         ) : (
           <p>Không có dữ liệu.</p>
         )}
@@ -262,4 +267,4 @@ const AdminJSPostPage: React.FC = () => {
   );
 };
 
-export default AdminJSPostPage;
+export default AdminEmployerPostPage;

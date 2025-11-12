@@ -15,6 +15,7 @@ import appliedJobsReducer from '../features/applyJob-jobSeeker/slices/appliedJob
 import profileReducer from '../features/employer/slice/profileSlice';
 import employersReducer from '../features/listEmployer-jobSeeker/slice/employerSlice';
 import jobSeekerProfileReducer from '../features/profile-JobSeeker/slice/profileSlice';
+import adminEmployerReducer from '../features/admin-employer-post/slice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -30,6 +31,7 @@ const rootReducer = combineReducers({
   profile: profileReducer,
   employers: employersReducer,
   jobSeekerProfile: jobSeekerProfileReducer,
+  adminEmployer: adminEmployerReducer,
 });
 
 export const store = configureStore({

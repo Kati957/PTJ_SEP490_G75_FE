@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Card,
-  Typography,
   Space,
   Input,
   Select,
@@ -15,14 +14,7 @@ import {
   Drawer,
   Descriptions
 } from 'antd';
-import {
-  ReloadOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  PoweroffOutlined
-} from '@ant-design/icons';
+import { ReloadOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import adminCategoryService from '../../features/admin/services/adminCategory.service';
 import type {
@@ -31,8 +23,7 @@ import type {
   AdminCreateCategoryPayload,
   AdminUpdateCategoryPayload
 } from '../../features/admin/types/category';
-
-const { Title, Paragraph } = Typography;
+import AdminSectionHeader from './components/AdminSectionHeader';
 const { Option } = Select;
 
 interface CategoryFormValues {
@@ -108,28 +99,6 @@ const AdminCategoryManagementPage: React.FC = () => {
     setModalOpen(true);
   };
 
-  const openEditModal = async (categoryId: number) => {
-    setModalMode('edit');
-    setEditingId(categoryId);
-    setModalOpen(true);
-    setSubmitting(true);
-    try {
-      const detail = await adminCategoryService.getCategory(categoryId);
-      form.setFieldsValue({
-        name: detail.name,
-        description: detail.description ?? '',
-        type: detail.type ?? '',
-        isActive: detail.isActive
-      });
-    } catch (error) {
-      console.error('Failed to load category detail', error);
-      message.error('Khong the tai thong tin danh muc');
-      setModalOpen(false);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleSubmitCategory = async (values: CategoryFormValues) => {
     setSubmitting(true);
     try {
@@ -160,23 +129,6 @@ const AdminCategoryManagementPage: React.FC = () => {
       message.error('Khong the luu danh muc');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleToggleActive = async (category: AdminCategory) => {
-    try {
-      await adminCategoryService.toggleActive(category.categoryId);
-      message.success(
-        category.isActive ? 'Da vo hieu hoa danh muc' : 'Da kich hoat danh muc'
-      );
-      await fetchCategories();
-      if (selectedCategory?.categoryId === category.categoryId) {
-        const detail = await adminCategoryService.getCategory(category.categoryId);
-        setSelectedCategory(detail);
-      }
-    } catch (error) {
-      console.error('Failed to toggle category', error);
-      message.error('Khong the thay doi trang thai danh muc');
     }
   };
 
@@ -238,46 +190,16 @@ const AdminCategoryManagementPage: React.FC = () => {
               minute: '2-digit'
             })
           : '---'
-    },
-    {
-      title: 'Hanh dong',
-      key: 'actions',
-      fixed: 'right',
-      width: 240,
-      render: (_, record) => (
-        <Space>
-          <Button icon={<EyeOutlined />} size="small" onClick={() => openDetail(record.categoryId)}>
-            Xem
-          </Button>
-          <Button icon={<EditOutlined />} size="small" onClick={() => openEditModal(record.categoryId)}>
-            Sua
-          </Button>
-          <Button
-            icon={<PoweroffOutlined />}
-            size="small"
-            danger={record.isActive}
-            type={record.isActive ? 'default' : 'primary'}
-            onClick={() => handleToggleActive(record)}
-          >
-            {record.isActive ? 'Vo hieu hoa' : 'Kich hoat'}
-          </Button>
-        </Space>
-      )
     }
   ];
 
   return (
     <>
-      <Card bordered={false} className="shadow-sm mb-4">
-        <Space className="w-full flex justify-between" align="start">
-          <Space direction="vertical" size={4}>
-            <Title level={3} className="!mb-0">
-              Quan ly danh muc
-            </Title>
-            <Paragraph className="!mb-0 text-gray-500">
-              Cap nhat cac nhom nganh, linh vuc su dung trong tuyen dung va tim viec.
-            </Paragraph>
-          </Space>
+      <AdminSectionHeader
+        title="Quan ly danh muc"
+        description="Cap nhat cac nhom nganh, linh vuc su dung trong tuyen dung va tim viec."
+        gradient="from-emerald-500 via-teal-500 to-green-500"
+        extra={
           <Space>
             <Button icon={<ReloadOutlined />} onClick={() => fetchCategories()} loading={loading}>
               Tai lai
@@ -286,8 +208,8 @@ const AdminCategoryManagementPage: React.FC = () => {
               Tao danh muc
             </Button>
           </Space>
-        </Space>
-      </Card>
+        }
+      />
 
       <Card bordered={false} className="shadow-sm mb-4">
         <Space direction="vertical" size="middle" className="w-full">
@@ -330,6 +252,10 @@ const AdminCategoryManagementPage: React.FC = () => {
           dataSource={categories}
           pagination={{ pageSize: 20 }}
           scroll={{ x: 900 }}
+          onRow={(record) => ({
+            onClick: () => openDetail(record.categoryId),
+            style: { cursor: 'pointer' }
+          })}
         />
       </Card>
 

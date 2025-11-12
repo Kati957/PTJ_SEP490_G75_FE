@@ -27,10 +27,11 @@ import { useCategories } from '../../features/category/hook';
 
 const { Option } = Select;
 
-const formatCurrency = (value: number | null) => {
-  if (!value) return 'Thỏa thuận';
+const formatCurrency = (value: number | null | undefined) => {
+  if (value == null) return '';
   return `${value.toLocaleString('vi-VN')} triệu`;
 };
+
 
 const EmployerJobsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -134,7 +135,7 @@ const EmployerJobsPage: React.FC = () => {
       render: (text, record) => (
         <div>
           <a
-            onClick={() => handleViewDetails(record.employerPostId)} // Chỗ này vẫn giữ nguyên
+            onClick={() => handleViewDetails(record.employerPostId)}
             className="font-semibold text-blue-600 hover:underline cursor-pointer"
           >
             {text}

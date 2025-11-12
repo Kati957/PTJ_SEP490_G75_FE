@@ -10,7 +10,8 @@ import {
   Select,
   message,
   Drawer,
-  Descriptions
+  Avatar,
+  Divider
 } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import {
@@ -24,6 +25,30 @@ import type { AdminUser, AdminUserDetail } from '../../features/admin/types/user
 import AdminSectionHeader from './components/AdminSectionHeader';
 
 const { Option } = Select;
+
+type DetailFieldProps = {
+  label: string;
+  value?: React.ReactNode;
+  span?: 1 | 2;
+};
+
+const DetailFieldBox: React.FC<DetailFieldProps> = ({ label, value, span = 1 }) => (
+  <div className={`flex flex-col gap-1 ${span === 2 ? 'md:col-span-2' : ''}`}>
+    <span className="text-sm font-semibold text-gray-600">{label}</span>
+    <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 min-h-[42px] flex items-center">
+      {value ?? <span className="text-gray-400 italic">Chua cap nhat</span>}
+    </div>
+  </div>
+);
+
+const DetailSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <section className="space-y-3">
+    <Typography.Title level={5} className="!mb-1">
+      {title}
+    </Typography.Title>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">{children}</div>
+  </section>
+);
 
 type FilterState = {
   role: string;
@@ -259,6 +284,7 @@ const AdminAccountManagementPage: React.FC = () => {
       <AdminSectionHeader
         title="Quan ly tai khoan"
         description="Giam sat trang thai hoat dong, xac thuc va thong tin nguoi dung tren he thong."
+        gradient="from-sky-600 via-blue-500 to-indigo-500"
         extra={
           <Button icon={<ReloadOutlined />} onClick={() => fetchUsers()} loading={loading} ghost>
             Tai lai
@@ -328,7 +354,7 @@ const AdminAccountManagementPage: React.FC = () => {
       <Drawer
         title="Chi tiet tai khoan"
         placement="right"
-        width={420}
+        width={640}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         destroyOnClose
@@ -336,39 +362,71 @@ const AdminAccountManagementPage: React.FC = () => {
         {detailLoading ? (
           <p>Dang tai...</p>
         ) : selectedUser ? (
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Username">{selectedUser.username}</Descriptions.Item>
-            <Descriptions.Item label="Email">{selectedUser.email}</Descriptions.Item>
-            <Descriptions.Item label="Vai tro">{selectedUser.role}</Descriptions.Item>
-            <Descriptions.Item label="Trang thai">
-              {selectedUser.isActive ? 'Dang hoat dong' : 'Bi khoa'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Xac thuc">
-              {selectedUser.isVerified ? 'Da xac thuc' : 'Chua xac thuc'}
-            </Descriptions.Item>
-            {selectedUser.fullName && (
-              <Descriptions.Item label="Ho ten">{selectedUser.fullName}</Descriptions.Item>
-            )}
-            {selectedUser.phoneNumber && (
-              <Descriptions.Item label="Dien thoai">{selectedUser.phoneNumber}</Descriptions.Item>
-            )}
-            {selectedUser.address && (
-              <Descriptions.Item label="Dia chi">{selectedUser.address}</Descriptions.Item>
-            )}
-            {selectedUser.preferredLocation && (
-              <Descriptions.Item label="Noi mong muon">
-                {selectedUser.preferredLocation}
-              </Descriptions.Item>
-            )}
-            <Descriptions.Item label="Tao luc">
-              {new Date(selectedUser.createdAt).toLocaleString('vi-VN')}
-            </Descriptions.Item>
-            <Descriptions.Item label="Lan dang nhap cuoi">
-              {selectedUser.lastLogin
-                ? new Date(selectedUser.lastLogin).toLocaleString('vi-VN')
-                : 'Chua co'}
-            </Descriptions.Item>
-          </Descriptions>
+          <Space direction="vertical" size="large" className="w-full">
+            <div className="flex flex-col items-center text-center">
+              <Avatar
+                size={96}
+                src={selectedUser.avatarUrl ?? undefined}
+                alt={selectedUser.username}
+                style={{ marginBottom: 12 }}
+              >
+                {selectedUser.username?.charAt(0)?.toUpperCase()}
+              </Avatar>
+              <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                {selectedUser.username}
+              </Typography.Title>
+              <Typography.Text type="secondary">{selectedUser.email}</Typography.Text>
+              <Space style={{ marginTop: 8 }}>
+                <Tag color="purple">{selectedUser.role}</Tag>
+                <Tag color={selectedUser.isActive ? 'green' : 'red'}>
+                  {selectedUser.isActive ? 'Dang hoat dong' : 'Bi khoa'}
+                </Tag>
+                <Tag color={selectedUser.isVerified ? 'blue' : 'orange'}>
+                  {selectedUser.isVerified ? 'Da xac thuc' : 'Chua xac thuc'}
+                </Tag>
+              </Space>
+            </div>
+
+            <Divider plain>Thong tin chi tiet</Divider>
+
+            <DetailSection title="Thong tin lien he">
+              <DetailFieldBox label="Ho ten" value={selectedUser.fullName || undefined} />
+              <DetailFieldBox label="Email" value={selectedUser.email} />
+              <DetailFieldBox label="So dien thoai" value={selectedUser.phoneNumber || undefined} />
+              <DetailFieldBox label="Dia chi" value={selectedUser.address || undefined} span={2} />
+            </DetailSection>
+
+            <DetailSection title="Thong tin khac">
+              <DetailFieldBox label="Cong ty" value={selectedUser.companyName || undefined} />
+              <DetailFieldBox
+                label="Noi mong muon"
+                value={selectedUser.preferredLocation || undefined}
+              />
+            </DetailSection>
+
+            <DetailSection title="Hoat dong tai khoan">
+              <DetailFieldBox
+                label="Trang thai"
+                value={selectedUser.isActive ? 'Dang hoat dong' : 'Bi khoa'}
+              />
+              <DetailFieldBox
+                label="Xac thuc"
+                value={selectedUser.isVerified ? 'Da xac thuc' : 'Chua xac thuc'}
+              />
+              <DetailFieldBox
+                label="Tai khoan tao luc"
+                value={new Date(selectedUser.createdAt).toLocaleString('vi-VN')}
+              />
+              <DetailFieldBox
+                label="Lan dang nhap cuoi"
+                value={
+                  selectedUser.lastLogin
+                    ? new Date(selectedUser.lastLogin).toLocaleString('vi-VN')
+                    : undefined
+                }
+              />
+            </DetailSection>
+          </Space>
         ) : (
           <p>Khong co du lieu.</p>
         )}

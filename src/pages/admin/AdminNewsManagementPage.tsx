@@ -10,7 +10,6 @@ import {
   Select,
   message,
   Drawer,
-  Descriptions,
   Modal,
   Form
 } from 'antd';
@@ -31,8 +30,8 @@ import type {
   AdminUpdateNewsPayload,
   AdminNewsStatusFilter
 } from '../../features/admin/types/news';
+import AdminSectionHeader from './components/AdminSectionHeader';
 
-const { Title, Paragraph } = Typography;
 const { Option } = Select;
 
 type FilterState = {
@@ -53,6 +52,30 @@ const statusOptions: Array<{ label: string; value: AdminNewsStatusFilter }> = [
   { label: 'Dang hien thi', value: 'Active' },
   { label: 'Dang an', value: 'Hidden' }
 ];
+
+type DetailFieldProps = {
+  label: string;
+  value?: React.ReactNode;
+  span?: 1 | 2;
+};
+
+const DetailField: React.FC<DetailFieldProps> = ({ label, value, span = 1 }) => (
+  <div className={`flex flex-col gap-1 ${span === 2 ? 'md:col-span-2' : ''}`}>
+    <span className="text-sm font-semibold text-gray-600">{label}</span>
+    <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 min-h-[42px] flex items-center">
+      {value ?? <span className="text-gray-400 italic">Chua cap nhat</span>}
+    </div>
+  </div>
+);
+
+const DetailSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <section className="space-y-3">
+    <Typography.Title level={5} className="!mb-1">
+      {title}
+    </Typography.Title>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">{children}</div>
+  </section>
+);
 
 const AdminNewsManagementPage: React.FC = () => {
   const [news, setNews] = useState<AdminNews[]>([]);
@@ -279,16 +302,11 @@ const AdminNewsManagementPage: React.FC = () => {
 
   return (
     <>
-      <Card bordered={false} className="shadow-sm mb-4">
-        <Space className="w-full flex justify-between" align="start">
-          <Space direction="vertical" size={4}>
-            <Title level={3} className="!mb-0">
-              Quan ly tin tuc
-            </Title>
-            <Paragraph className="!mb-0 text-gray-500">
-              Tao moi, cap nhat va theo doi trang thai tin tuc he thong.
-            </Paragraph>
-          </Space>
+      <AdminSectionHeader
+        title="Quan ly tin tuc"
+        description="Tao moi, cap nhat va theo doi trang thai tin tuc he thong."
+        gradient="from-amber-500 via-orange-500 to-yellow-500"
+        extra={
           <Space>
             <Button icon={<ReloadOutlined />} onClick={() => fetchNews()} loading={loading}>
               Tai lai
@@ -297,8 +315,8 @@ const AdminNewsManagementPage: React.FC = () => {
               Tao tin tuc
             </Button>
           </Space>
-        </Space>
-      </Card>
+        }
+      />
 
       <Card bordered={false} className="shadow-sm mb-4">
         <Space direction="vertical" size="middle" className="w-full">
@@ -337,7 +355,7 @@ const AdminNewsManagementPage: React.FC = () => {
       <Drawer
         title="Chi tiet tin tuc"
         placement="right"
-        width={480}
+        width={640}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         destroyOnClose
@@ -345,34 +363,60 @@ const AdminNewsManagementPage: React.FC = () => {
         {detailLoading ? (
           <p>Dang tai...</p>
         ) : selectedNews ? (
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Tieu de">{selectedNews.title}</Descriptions.Item>
-            {selectedNews.category && (
-              <Descriptions.Item label="Chuyen muc">{selectedNews.category}</Descriptions.Item>
-            )}
-            <Descriptions.Item label="Trang thai">
-              {selectedNews.status === 'Hidden' ? 'Dang an' : 'Dang hien thi'}
-            </Descriptions.Item>
+          <div className="space-y-6">
+            <DetailSection title="Thong tin chung">
+              <DetailField label="Tieu de" value={selectedNews.title} span={2} />
+              <DetailField label="Chuyen muc" value={selectedNews.category || undefined} />
+              <DetailField
+                label="Trang thai"
+                value={selectedNews.status === 'Hidden' ? 'Dang an' : 'Dang hien thi'}
+              />
+              <DetailField
+                label="Tao luc"
+                value={new Date(selectedNews.createdAt).toLocaleString('vi-VN')}
+              />
+              <DetailField
+                label="Cap nhat"
+                value={
+                  selectedNews.updatedAt
+                    ? new Date(selectedNews.updatedAt).toLocaleString('vi-VN')
+                    : undefined
+                }
+              />
+              <DetailField
+                label="Quan tri vien"
+                value={selectedNews.adminEmail ?? selectedNews.adminId}
+              />
+            </DetailSection>
+
             {selectedNews.imageUrl && (
-              <Descriptions.Item label="Anh minh hoa">{selectedNews.imageUrl}</Descriptions.Item>
+              <section className="space-y-3">
+                <Typography.Title level={5} className="!mb-1">
+                  Anh minh hoa
+                </Typography.Title>
+                <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-3 text-center">
+                  <img
+                    src={selectedNews.imageUrl}
+                    alt={selectedNews.title}
+                    className="mx-auto max-h-64 rounded-xl object-contain"
+                  />
+                </div>
+              </section>
             )}
+
             {selectedNews.content && (
-              <Descriptions.Item label="Noi dung">
-                <div className="whitespace-pre-line">{selectedNews.content}</div>
-              </Descriptions.Item>
+              <section className="space-y-3">
+                <Typography.Title level={5} className="!mb-1">
+                  Noi dung
+                </Typography.Title>
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="whitespace-pre-line leading-relaxed text-gray-800">
+                    {selectedNews.content}
+                  </p>
+                </div>
+              </section>
             )}
-            <Descriptions.Item label="Tao luc">
-              {new Date(selectedNews.createdAt).toLocaleString('vi-VN')}
-            </Descriptions.Item>
-            <Descriptions.Item label="Cap nhat">
-              {selectedNews.updatedAt
-                ? new Date(selectedNews.updatedAt).toLocaleString('vi-VN')
-                : 'Chua cap nhat'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Quan tri vien">
-              {selectedNews.adminEmail ?? selectedNews.adminId}
-            </Descriptions.Item>
-          </Descriptions>
+          </div>
         ) : (
           <p>Khong co du lieu.</p>
         )}

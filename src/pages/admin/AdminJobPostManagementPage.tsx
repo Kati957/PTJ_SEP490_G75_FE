@@ -6,12 +6,10 @@ import {
   Space,
   Input,
   Select,
-  InputNumber,
   Button,
   Table,
   Tag,
   Drawer,
-  Descriptions,
   message
 } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
@@ -29,9 +27,35 @@ import type {
   AdminJobSeekerPost,
   AdminJobSeekerPostDetail
 } from '../../features/admin/types/jobPost';
+import type { Category } from '../../features/category/type';
+import { categoryService } from '../../features/category/service';
+import AdminSectionHeader from './components/AdminSectionHeader';
 
-const { Title, Paragraph } = Typography;
 const { Option } = Select;
+
+type DetailFieldProps = {
+  label: string;
+  value?: React.ReactNode;
+  span?: 1 | 2;
+};
+
+const DetailField: React.FC<DetailFieldProps> = ({ label, value, span = 1 }) => (
+  <div className={`flex flex-col gap-1 ${span === 2 ? 'md:col-span-2' : ''}`}>
+    <span className="text-sm font-semibold text-gray-600">{label}</span>
+    <div className="min-h-[42px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">
+      {value ?? <span className="text-gray-400 italic">Chua cap nhat</span>}
+    </div>
+  </div>
+);
+
+const DetailSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <section className="space-y-3">
+    <Typography.Title level={5} className="!mb-1">
+      {title}
+    </Typography.Title>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">{children}</div>
+  </section>
+);
 
 type EmployerStatusFilter = 'all' | 'Active' | 'Blocked' | 'Deleted';
 type JobSeekerStatusFilter = 'all' | 'Active' | 'Archived';
@@ -87,6 +111,14 @@ const AdminJobPostManagementPage: React.FC = () => {
 
   const [toggleLoadingId, setToggleLoadingId] = useState<number | null>(null);
   const [toggleType, setToggleType] = useState<'employer' | 'jobseeker' | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryLoading, setCategoryLoading] = useState(false);
+  const formatDateTime = (value?: string | null) =>
+    value ? new Date(value).toLocaleString('vi-VN') : undefined;
+  const formatCurrency = (value?: number | null) =>
+    value !== null && value !== undefined
+      ? `${value.toLocaleString('vi-VN')} VND`
+      : undefined;
 
   const employerFilterParams = useMemo(
     () => ({
@@ -168,6 +200,22 @@ const AdminJobPostManagementPage: React.FC = () => {
   useEffect(() => {
     void fetchJobSeekerPosts();
   }, [fetchJobSeekerPosts]);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      setCategoryLoading(true);
+      try {
+        const data = await categoryService.getAll();
+        setCategories(data);
+      } catch (error) {
+        console.error('Failed to load categories', error);
+        message.error('Khong the tai danh sach nganh nghe');
+      } finally {
+        setCategoryLoading(false);
+      }
+    };
+    void loadCategories();
+  }, []);
 
   const handleEmployerFilterChange = (key: keyof EmployerFilters, value: string | number | null) => {
     setEmployerFilters((prev) => ({
@@ -419,12 +467,22 @@ const AdminJobPostManagementPage: React.FC = () => {
               <Option value="Blocked">Da khoa</Option>
               <Option value="Deleted">Da xoa</Option>
             </Select>
-            <InputNumber
-              placeholder="Category ID"
-              style={{ width: 200 }}
+            <Select
+              allowClear
+              showSearch
+              placeholder="Chon nganh nghe"
               value={employerFilters.categoryId}
-              onChange={(value) => handleEmployerFilterChange('categoryId', value ?? undefined)}
-            />
+              loading={categoryLoading}
+              optionFilterProp="children"
+              style={{ minWidth: 220 }}
+              onChange={(value) => handleEmployerFilterChange('categoryId', value ?? null)}
+            >
+              {categories.map((category) => (
+                <Option key={category.categoryId} value={category.categoryId}>
+                  {category.name}
+                </Option>
+              ))}
+            </Select>
           </Space>
         </Space>
       </Card>
@@ -466,12 +524,22 @@ const AdminJobPostManagementPage: React.FC = () => {
               <Option value="Active">Dang hoat dong</Option>
               <Option value="Archived">Da luu tru</Option>
             </Select>
-            <InputNumber
-              placeholder="Category ID"
-              style={{ width: 200 }}
+            <Select
+              allowClear
+              showSearch
+              placeholder="Chon nganh nghe"
               value={jobSeekerFilters.categoryId}
-              onChange={(value) => handleJobSeekerFilterChange('categoryId', value ?? undefined)}
-            />
+              loading={categoryLoading}
+              optionFilterProp="children"
+              style={{ minWidth: 220 }}
+              onChange={(value) => handleJobSeekerFilterChange('categoryId', value ?? null)}
+            >
+              {categories.map((category) => (
+                <Option key={category.categoryId} value={category.categoryId}>
+                  {category.name}
+                </Option>
+              ))}
+            </Select>
           </Space>
         </Space>
       </Card>
@@ -492,21 +560,19 @@ const AdminJobPostManagementPage: React.FC = () => {
 
   return (
     <>
-      <Card bordered={false} className="shadow-sm mb-4">
-        <Space className="w-full flex justify-between" align="start">
-          <Space direction="vertical" size={4}>
-            <Title level={3} className="!mb-0">
-              Quan ly bai dang
-            </Title>
-            <Paragraph className="!mb-0 text-gray-500">
-              Theo doi bai dang cua nha tuyen dung va ung vien, xu ly vi pham nhanh chong.
-            </Paragraph>
-          </Space>
-          <Button icon={<ReloadOutlined />} onClick={() => (activeTab === 'employer' ? fetchEmployerPosts() : fetchJobSeekerPosts())}>
+      <AdminSectionHeader
+        title="Quan ly bai dang"
+        description="Theo doi bai dang cua nha tuyen dung va ung vien, xu ly vi pham nhanh chong."
+        gradient="from-violet-600 via-purple-500 to-pink-500"
+        extra={
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => (activeTab === 'employer' ? fetchEmployerPosts() : fetchJobSeekerPosts())}
+          >
             Tai lai
           </Button>
-        </Space>
-      </Card>
+        }
+      />
 
       <Tabs
         activeKey={activeTab}
@@ -528,7 +594,7 @@ const AdminJobPostManagementPage: React.FC = () => {
       <Drawer
         title="Chi tiet bai dang"
         placement="right"
-        width={520}
+        width={720}
         open={detailOpen}
         onClose={() => {
           setDetailOpen(false);
@@ -539,92 +605,112 @@ const AdminJobPostManagementPage: React.FC = () => {
         {detailLoading ? (
           <p>Dang tai...</p>
         ) : detailState ? (
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Loai bai dang">
-              {detailState.type === 'employer' ? 'Nha tuyen dung' : 'Ung vien'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Tieu de">{detailState.data.title}</Descriptions.Item>
+          <div className="space-y-6">
+            <DetailSection title="Thong tin chung">
+              <DetailField
+                label="Loai bai dang"
+                value={detailState.type === 'employer' ? 'Nha tuyen dung' : 'Ung vien'}
+              />
+              <DetailField label="Trang thai" value={detailState.data.status} />
+              <DetailField
+                label="Tao luc"
+                value={formatDateTime(detailState.data.createdAt)}
+              />
+              <DetailField label="Tieu de" value={detailState.data.title} span={2} />
+              <DetailField label="Chuyen muc" value={detailState.data.categoryName || undefined} />
+            </DetailSection>
+
             {detailState.type === 'employer' ? (
               <>
-                {detailState.data.employerEmail && (
-                  <Descriptions.Item label="Email">{detailState.data.employerEmail}</Descriptions.Item>
-                )}
-                {detailState.data.employerName && (
-                  <Descriptions.Item label="Nha tuyen dung">
-                    {detailState.data.employerName}
-                  </Descriptions.Item>
-                )}
-                {detailState.data.categoryName && (
-                  <Descriptions.Item label="Chuyen muc">
-                    {detailState.data.categoryName}
-                  </Descriptions.Item>
-                )}
-                {detailState.data.salary !== undefined && detailState.data.salary !== null && (
-                  <Descriptions.Item label="Luong">
-                    {detailState.data.salary.toLocaleString('vi-VN')} VND
-                  </Descriptions.Item>
-                )}
-                {detailState.data.location && (
-                  <Descriptions.Item label="Dia diem">{detailState.data.location}</Descriptions.Item>
-                )}
-                {detailState.data.requirements && (
-                  <Descriptions.Item label="Yeu cau">
-                    <div className="whitespace-pre-line">{detailState.data.requirements}</div>
-                  </Descriptions.Item>
-                )}
-                {detailState.data.description && (
-                  <Descriptions.Item label="Mo ta">
-                    <div className="whitespace-pre-line">{detailState.data.description}</div>
-                  </Descriptions.Item>
-                )}
-                {detailState.data.phoneContact && (
-                  <Descriptions.Item label="Lien he">
-                    {detailState.data.phoneContact}
-                  </Descriptions.Item>
-                )}
+                <DetailSection title="Thong tin cong viec">
+                  <DetailField
+                    label="Luong"
+                    value={formatCurrency(detailState.data.salary)}
+                  />
+                  <DetailField
+                    label="Dia diem"
+                    value={detailState.data.location || undefined}
+                  />
+                  <DetailField
+                    label="Mo ta cong viec"
+                    value={
+                      detailState.data.description ? (
+                        <div className="whitespace-pre-line leading-relaxed">
+                          {detailState.data.description}
+                        </div>
+                      ) : undefined
+                    }
+                    span={2}
+                  />
+                  <DetailField
+                    label="Yeu cau"
+                    value={
+                      detailState.data.requirements ? (
+                        <div className="whitespace-pre-line leading-relaxed">
+                          {detailState.data.requirements}
+                        </div>
+                      ) : undefined
+                    }
+                    span={2}
+                  />
+                </DetailSection>
+
+                <DetailSection title="Thong tin lien he">
+                  <DetailField
+                    label="Nha tuyen dung"
+                    value={detailState.data.employerName || undefined}
+                  />
+                  <DetailField
+                    label="Email lien he"
+                    value={detailState.data.employerEmail || undefined}
+                  />
+                  <DetailField
+                    label="So dien thoai"
+                    value={detailState.data.phoneContact || undefined}
+                  />
+                </DetailSection>
               </>
             ) : (
               <>
-                {detailState.data.jobSeekerEmail && (
-                  <Descriptions.Item label="Email">{detailState.data.jobSeekerEmail}</Descriptions.Item>
-                )}
-                {detailState.data.fullName && (
-                  <Descriptions.Item label="Ho ten">{detailState.data.fullName}</Descriptions.Item>
-                )}
-                {detailState.data.categoryName && (
-                  <Descriptions.Item label="Chuyen muc">
-                    {detailState.data.categoryName}
-                  </Descriptions.Item>
-                )}
-                {detailState.data.preferredLocation && (
-                  <Descriptions.Item label="Noi mong muon">
-                    {detailState.data.preferredLocation}
-                  </Descriptions.Item>
-                )}
-                {detailState.data.preferredWorkHours && (
-                  <Descriptions.Item label="Gio lam mong muon">
-                    {detailState.data.preferredWorkHours}
-                  </Descriptions.Item>
-                )}
-                {detailState.data.gender && (
-                  <Descriptions.Item label="Gioi tinh">
-                    {detailState.data.gender}
-                  </Descriptions.Item>
-                )}
-                {detailState.data.description && (
-                  <Descriptions.Item label="Mo ta">
-                    <div className="whitespace-pre-line">{detailState.data.description}</div>
-                  </Descriptions.Item>
-                )}
+                <DetailSection title="Ho so ung vien">
+                  <DetailField
+                    label="Ho ten"
+                    value={detailState.data.fullName || undefined}
+                  />
+                  <DetailField
+                    label="Email"
+                    value={detailState.data.jobSeekerEmail || undefined}
+                  />
+                  <DetailField
+                    label="Gioi tinh"
+                    value={detailState.data.gender || undefined}
+                  />
+                  <DetailField
+                    label="Noi mong muon"
+                    value={detailState.data.preferredLocation || undefined}
+                  />
+                  <DetailField
+                    label="Gio lam mong muon"
+                    value={detailState.data.preferredWorkHours || undefined}
+                  />
+                </DetailSection>
+
+                <DetailSection title="Mo ta">
+                  <DetailField
+                    label="Thong tin"
+                    value={
+                      detailState.data.description ? (
+                        <div className="whitespace-pre-line leading-relaxed">
+                          {detailState.data.description}
+                        </div>
+                      ) : undefined
+                    }
+                    span={2}
+                  />
+                </DetailSection>
               </>
             )}
-            <Descriptions.Item label="Trang thai">
-              {detailState.data.status}
-            </Descriptions.Item>
-            <Descriptions.Item label="Tao luc">
-              {new Date(detailState.data.createdAt).toLocaleString('vi-VN')}
-            </Descriptions.Item>
-          </Descriptions>
+          </div>
         ) : (
           <p>Khong co du lieu.</p>
         )}

@@ -16,6 +16,8 @@ export interface AdminUserDetail extends AdminUser {
   phoneNumber?: string | null;
   address?: string | null;
   preferredLocation?: string | null;
+  companyName?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface AdminUserFilters {

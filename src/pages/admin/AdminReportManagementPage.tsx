@@ -30,8 +30,9 @@ import type {
   AdminReportDetail,
   AdminSolvedReport
 } from '../../features/admin/types/report';
+import AdminSectionHeader from './components/AdminSectionHeader';
 
-const { Title, Paragraph, Text } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
 
 interface PendingFilters {
@@ -446,24 +447,19 @@ const AdminReportManagementPage: React.FC = () => {
 
   return (
     <>
-      <Card bordered={false} className="shadow-sm mb-4">
-        <Space className="w-full flex justify-between" align="start">
-          <Space direction="vertical" size={4}>
-            <Title level={3} className="!mb-0">
-              Quan ly bao cao
-            </Title>
-            <Paragraph className="!mb-0 text-gray-500">
-              Theo doi cac bao cao vi pham va xu ly nhanh chong cac truong hop nhay cam.
-            </Paragraph>
-          </Space>
+      <AdminSectionHeader
+        title="Quan ly bao cao"
+        description="Theo doi cac bao cao vi pham va xu ly nhanh chong cac truong hop nhay cam."
+        gradient="from-rose-600 via-red-500 to-orange-500"
+        extra={
           <Button
             icon={<ReloadOutlined />}
             onClick={() => (activeTab === 'pending' ? fetchPendingReports() : fetchSolvedReports())}
           >
             Tai lai
           </Button>
-        </Space>
-      </Card>
+        }
+      />
 
       <Tabs
         activeKey={activeTab}

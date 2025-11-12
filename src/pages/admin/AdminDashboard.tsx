@@ -236,7 +236,8 @@ const AdminDashboard: React.FC = () => {
                 className="transition-transform hover:-translate-y-1 hover:shadow-lg"
                 style={{
                   borderLeft: `4px solid ${item.color}`,
-                  background: item.background
+                  background: `linear-gradient(135deg, ${item.background} 0%, #ffffff 140%)`,
+                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.04)'
                 }}
               >
                 <Space align="start" size={16}>
@@ -245,7 +246,7 @@ const AdminDashboard: React.FC = () => {
                     size="large"
                     icon={item.icon}
                     style={{
-                      background: '#fff',
+                      background: `${item.color}1a`,
                       color: item.color,
                       border: 'none',
                       boxShadow: '0 6px 18px rgba(0, 0, 0, 0.08)'
