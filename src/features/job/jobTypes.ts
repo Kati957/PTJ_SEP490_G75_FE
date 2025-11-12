@@ -19,7 +19,6 @@ export interface JobPostData {
   location: string;
   categoryID: number | null;
   contactPhone: string;
-  salaryType: 'negotiable' | 'range' | 'exact' | 'competitive';
 }
 
 export interface JobPostView {

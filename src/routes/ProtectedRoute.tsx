@@ -11,7 +11,6 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   const { user, isAuthenticated, status } = useAuth();
 
-  // 🌀 Loading UI
   if (status === "idle" || status === "loading") {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -20,16 +19,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
     );
   }
 
-  // 🚪 Chưa đăng nhập
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // 🧠 Log để debug trước khi check roles
-  console.log("User roles:", user?.roles);
-  console.log("Allowed roles:", allowedRoles);
-
-  // ✅ Kiểm tra quyền hợp lệ (case-insensitive + type-safe)
   if (
     user &&
     Array.isArray(user.roles) &&
@@ -40,7 +33,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
     return <Outlet />;
   }
 
-  // 🚫 Không có quyền
   return <Navigate to="/unauthorized" replace />;
 };
 

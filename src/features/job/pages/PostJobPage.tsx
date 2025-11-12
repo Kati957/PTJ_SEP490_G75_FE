@@ -11,7 +11,7 @@ export const transformToEmployerPostDto = (data: JobPostData, userId: number) =>
   userID: userId,
   title: data.jobTitle,
   description: data.jobDescription,
-  salary: (data.salaryType === 'negotiable' || data.salaryType === 'competitive') ? null : data.salaryValue,
+  salary: data.salaryValue,
   requirements: data.requirements,
   workHours: data.workHours,
   location: data.location,

@@ -12,7 +12,6 @@ interface JobPostingPreviewProps {
     location: string;
     categoryID: number | null;
     contactPhone: string;
-    salaryType: string;
   };
 }
 const JobPostingPreview: React.FC<JobPostingPreviewProps> = ({ data }) => {
@@ -58,11 +57,7 @@ const JobPostingPreview: React.FC<JobPostingPreviewProps> = ({ data }) => {
             Mức lương
           </h3>
           <p className="text-gray-700">
-            {data.salaryType === "negotiable"
-              ? "Thỏa thuận"
-              : data.salaryValue
-              ? `${data.salaryValue.toLocaleString()} VND`
-              : "Chưa nhập"}
+              {data.salaryValue.toLocaleString() || "Chưa nhập"} VNĐ
           </p>
         </div>
 

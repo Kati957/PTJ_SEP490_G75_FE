@@ -114,8 +114,6 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
       </FormField>
 
       {/* --- Mức lương --- */}
-      {data.salaryType !== "negotiable" &&
-        data.salaryType !== "competitive" && (
           <FormField label="Mức lương (VNĐ)">
             <InputNumber
               size="large"
@@ -127,7 +125,6 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
               required
             />
           </FormField>
-        )}
 
       {/* --- Mô tả công việc --- */}
       <FormField label="Mô tả công việc" required>

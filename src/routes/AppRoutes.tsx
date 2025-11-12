@@ -34,6 +34,7 @@ import AdminNewsManagementPage from '../pages/admin/AdminNewsManagementPage';
 import AdminJobPostManagementPage from '../pages/admin/AdminJobPostManagementPage';
 import AdminCategoryManagementPage from '../pages/admin/AdminCategoryManagementPage';
 import AdminReportManagementPage from '../pages/admin/AdminReportManagementPage';
+import AdminEmployerPostPage from '../features/admin-employer-post/pages/AdminEmployerPostPage';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -96,6 +97,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="admin/categories" element={<AdminCategoryManagementPage />} />
           <Route path="admin/reports" element={<AdminReportManagementPage />} />
           <Route path="admin/jobseeker-post" element={<AdminJSPostPage />} />
+          <Route path="admin/employer-post" element={<AdminEmployerPostPage />} />
         </Route>
       </Route>
     </Routes>
