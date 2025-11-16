@@ -59,26 +59,22 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         "/nha-tuyen-dung/tim-kiem",
         <SearchOutlined />
       ),
-      getItem(
-        <NavLink to="/nha-tuyen-dung/tai-nang-da-xem">Tài năng đã xem</NavLink>,
-        "/nha-tuyen-dung/tai-nang-da-xem",
-        <UserSwitchOutlined />
-      ),
+      // getItem(
+      //   <NavLink to="/nha-tuyen-dung/tai-nang-da-xem">Tài năng đã xem</NavLink>,
+      //   "/nha-tuyen-dung/tai-nang-da-xem",
+      //   <UserSwitchOutlined />
+      // ),
     ]),
-    getItem("Blog", "sub-blog", <ReadOutlined />, [
-      getItem(
-        <NavLink to="/nha-tuyen-dung/cam-nang">Cẩm nang Tuyển dụng</NavLink>,
-        "/nha-tuyen-dung/cam-nang"
-      ),
-    ]),
+    getItem(
+      <NavLink to="/nha-tuyen-dung/cam-nang">Cẩm nang Tuyển dụng</NavLink>,
+      "/nha-tuyen-dung/cam-nang"
+    ),
   ];
 
   const adminItems: MenuItem[] = [
     getItem("Quản lí bài viết", "sub-cong-viec", <FileTextOutlined />, [
       getItem(
-        <NavLink to="/admin/jobseeker-post">
-          Bài đăng của ứng viên
-        </NavLink>,
+        <NavLink to="/admin/jobseeker-post">Bài đăng của ứng viên</NavLink>,
         "/admin/jobseeker-post"
       ),
       getItem(
@@ -95,7 +91,6 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     //   "/admin/jobseeker-post"
     // ),
   ];
-
 
   const getMenuItems = (): MenuItem[] => {
     if (!user) return [];

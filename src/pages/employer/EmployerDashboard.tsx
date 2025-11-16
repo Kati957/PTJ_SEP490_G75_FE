@@ -14,31 +14,12 @@ const EmployerDashboard: React.FC = () => {
     <div className="space-y-6">
       
       <h1 className="text-2xl font-bold text-gray-800">My CareerLink</h1>
-
-      <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg relative flex justify-between items-start" role="alert">
-        <div>
-          <strong className="font-bold mr-2"><InfoCircleOutlined /> Tính năng mới</strong>
-          <span className="block sm:inline">
-            Để dùng quản lý thành viên - vai trò, thêm hoặc điều chỉnh thông tin thành viên trong tài khoản tuyển dụng của bạn. Xem chi tiết <a href="#" className="font-bold underline hover:text-blue-700">tại đây</a>
-          </span>
-        </div>
-        <button className="text-blue-800 hover:text-blue-600">
-          <CloseOutlined />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard 
           title="Yêu cầu hủy cấp hồ sơ" 
           value={0} 
           icon={<BellOutlined />} 
           bgColor="bg-orange-50"
-        />
-        <StatCard 
-          title="Credis Left" 
-          value={0} 
-          icon={<CreditCardOutlined />} 
-          bgColor="bg-blue-50"
         />
         <StatCard 
           title="Việc đang kích hoạt" 

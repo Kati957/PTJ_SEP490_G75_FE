@@ -1,23 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Table, Space, message, Button } from "antd";
+import { Table, Space, message } from "antd";
 import type { TableColumnsType } from "antd";
 import {
   EnvironmentOutlined,
   ClockCircleOutlined,
   PhoneOutlined,
-  HeartFilled,
-  HeartOutlined,
+
 } from "@ant-design/icons";
 import { jobSeekerPostService } from "../services";
 import type { JobSeekerPostDtoOut } from "../type";
-import { useAuth } from "../../auth/hooks";
 
 const JobSeekerPostsPage: React.FC = () => {
   const [posts, setPosts] = useState<JobSeekerPostDtoOut[]>([]);
-  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [savedJobs, setSavedJobs] = useState<number[]>([]);
-  const { user } = useAuth();
 
   const fetchPosts = async () => {
     setIsLoading(true);
@@ -25,7 +20,6 @@ const JobSeekerPostsPage: React.FC = () => {
       const res = await jobSeekerPostService.getAllJobSeekerPosts();
       if (res.success) {
         setPosts(res.data);
-        setTotal(res.total);
       }
     } catch (err) {
       message.error("Không thể tải danh sách bài đăng tìm việc.");
@@ -37,40 +31,6 @@ const JobSeekerPostsPage: React.FC = () => {
     fetchPosts();
   }, []);
 
-  const handleToggleSave = async (record: JobSeekerPostDtoOut) => {
-    const jobId = record.jobSeekerPostId;
-    const isSaved = savedJobs.includes(jobId);
-
-    if (!user?.id) {
-      message.warning("Bạn cần đăng nhập để lưu ứng viên.");
-      return;
-    }
-
-    try {
-      if (isSaved) {
-        // Bỏ lưu
-        await jobSeekerPostService.unsaveCandidate({
-          employerId: user.id,
-          jobSeekerId: record.userID,
-          employerPostId: record.jobSeekerPostId,
-        });
-        setSavedJobs(savedJobs.filter((id) => id !== jobId));
-        message.success("Đã bỏ lưu ứng viên.");
-      } else {
-        // Lưu
-        await jobSeekerPostService.saveCandidate({
-          employerId: user.id,
-          jobSeekerId: record.userID,
-          employerPostId: record.jobSeekerPostId,
-        });
-        setSavedJobs([...savedJobs, jobId]);
-        message.success("Đã lưu ứng viên.");
-      }
-    } catch (err) {
-      console.error(err);
-      message.error("Không thể thực hiện thao tác. Vui lòng thử lại.");
-    }
-  };
 
   const columns: TableColumnsType<JobSeekerPostDtoOut> = [
     {
@@ -136,27 +96,6 @@ const JobSeekerPostsPage: React.FC = () => {
           {createdAt ? new Date(createdAt).toLocaleDateString("vi-VN") : "N/A"}
         </Space>
       ),
-    },
-    {
-      title: "Yêu thích",
-      key: "actions",
-      align: "center",
-      render: (_, record) => {
-        const isSaved = savedJobs.includes(record.jobSeekerPostId);
-        return (
-          <Button
-            type="text"
-            icon={
-              isSaved ? (
-                <HeartFilled style={{ color: "red", fontSize: 18 }} />
-              ) : (
-                <HeartOutlined style={{ color: "gray", fontSize: 18 }} />
-              )
-            }
-            onClick={() => handleToggleSave(record)}
-          />
-        );
-      },
     },
   ];
 
