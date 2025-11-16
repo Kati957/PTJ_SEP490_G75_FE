@@ -36,13 +36,9 @@ const mapBackendJobToFrontendJob = (backendJob: BackendJob): Job => {
     description: backendJob.description,
     company: backendJob.employerName,
     location: backendJob.location,
-    // Chuyển đổi salary từ number sang string theo format mong muốn
-    salary: `Trên ${backendJob.salary} triệu`, 
-    // Sử dụng createdAt cho updatedAt và sẽ được format bởi component
+    salary: backendJob.salary == 0 ? 'Thỏa thuận' : backendJob.salary.toString(), 
     updatedAt: backendJob.createdAt, 
-    // Backend chưa có logo, dùng ảnh mặc định
     companyLogo: '/src/assets/no-logo.png', 
-    // Backend chưa có isHot, tạm thời để true để demo
     isHot: true, 
   };
 };

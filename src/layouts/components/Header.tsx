@@ -75,11 +75,6 @@ const mainNavLinks = [
     icon: <BookOutlined />,
     text: 'Cẩm nang việc làm',
     path: '/cam-nang'
-  },
-  {
-    icon: <FileTextOutlined />,
-    text: 'Mẫu CV Xin Việc',
-    path: '/mau-cv'
   }
 ];
 
