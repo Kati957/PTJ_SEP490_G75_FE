@@ -21,3 +21,16 @@ export interface SaveCandidateDto {
   note?: string;
 }
 
+export interface ShortlistedCandidateDto {
+  jobSeekerId: number;
+  jobSeekerName: string;
+  note: string | null;
+  addedAt: string;
+}
+
+export interface ShortlistedResponse {
+  success: boolean;
+  total: number;
+  data: ShortlistedCandidateDto[];
+}
+

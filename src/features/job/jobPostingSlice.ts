@@ -19,7 +19,6 @@ const initialState: EmployerJobPostingState = {
     location: '',
     categoryID: null,
     contactPhone: '',
-    salaryType: 'negotiable',
   },
   status: 'idle',
 };

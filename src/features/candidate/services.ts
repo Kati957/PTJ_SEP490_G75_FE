@@ -1,5 +1,5 @@
 import baseService from "../../services/baseService";
-import type { JobSeekerPostDtoOut, SaveCandidateDto } from "./type";
+import type { JobSeekerPostDtoOut, SaveCandidateDto, ShortlistedResponse } from "./type";
 
 export interface PaginatedJobResponse {
   success: boolean;
@@ -25,5 +25,8 @@ export const jobSeekerPostService = {
       dto
     );
     return res;
+  },
+  getShortlistedCandidates: async (postId: number): Promise<ShortlistedResponse> => {
+    return await baseService.get<ShortlistedResponse>(`/EmployerPost/shortlist/${postId}`);
   },
 };
