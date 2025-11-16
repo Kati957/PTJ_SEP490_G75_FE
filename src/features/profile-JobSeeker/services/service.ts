@@ -19,15 +19,15 @@ export const updateJobSeekerProfile = async (profileData: JobSeekerProfileUpdate
   try {
     const formData = new FormData();
 
-    if (profileData.fullName !== undefined) formData.append('FullName', profileData.fullName || '');
-    if (profileData.gender !== undefined) formData.append('Gender', profileData.gender || '');
-    if (profileData.birthYear !== undefined) formData.append('BirthYear', profileData.birthYear.toString());
-    if (profileData.skills !== undefined) formData.append('Skills', profileData.skills || '');
-    if (profileData.experience !== undefined) formData.append('Experience', profileData.experience || '');
-    if (profileData.education !== undefined) formData.append('Education', profileData.education || '');
-    if (profileData.preferredJobType !== undefined) formData.append('PreferredJobType', profileData.preferredJobType || '');
-    if (profileData.preferredLocation !== undefined) formData.append('PreferredLocation', profileData.preferredLocation || '');
-    if (profileData.contactPhone !== undefined) formData.append('ContactPhone', profileData.contactPhone || '');
+    formData.append('FullName', profileData.fullName || '');
+    formData.append('Gender', profileData.gender || '');
+    formData.append('BirthYear', profileData.birthYear?.toString() || '');
+    formData.append('Skills', profileData.skills || '');
+    formData.append('Experience', profileData.experience || '');
+    formData.append('Education', profileData.education || '');
+    formData.append('PreferredJobType', profileData.preferredJobType || '');
+    formData.append('PreferredLocation', profileData.preferredLocation || '');
+    formData.append('ContactPhone', profileData.contactPhone || '');
     
     if (profileData.imageFile) {
       formData.append('ImageFile', profileData.imageFile);

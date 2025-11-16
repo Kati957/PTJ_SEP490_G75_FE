@@ -14,7 +14,8 @@ import {
   FileTextOutlined,
   HeartOutlined,
   SendOutlined,
-  FileDoneOutlined
+  FileDoneOutlined,
+  TeamOutlined
 } from '@ant-design/icons';
 import { FaBriefcase } from 'react-icons/fa';
 import { ROLES } from '../../constants/roles';
@@ -57,8 +58,13 @@ const jobSeekerNavLinks = [
 const mainNavLinks = [
   {
     icon: <SearchOutlined />,
-    text: 'Ngành nghề/Địa điểm',
+    text: 'Danh sách việc làm',
     path: '/viec-lam'
+  },
+  {
+    icon: <TeamOutlined />,
+    text: 'Bài đăng tìm việc',
+    path: '/danh-sach-bai-dang-tim-viec'
   },
   {
     icon: <BankOutlined />,

@@ -117,7 +117,21 @@ const CreatePostingPage: React.FC = () => {
         <Spin spinning={isSubmitting || isLoadingDetail}>
           <Card>
             <Form form={form} layout="vertical" name="create-posting-form" onFinish={onFinish}>
-              <Form.Item name="title" label="Tiêu đề bài đăng" rules={[{ required: true, message: 'Vui lòng nhập tiêu đề!' }]}>
+              <Form.Item
+                name="title"
+                label="Tiêu đề bài đăng"
+                rules={[
+                  { required: true, message: 'Vui lòng nhập tiêu đề!' },
+                  {
+                    validator: (_, value) => {
+                      if (!value || value.trim().split(/\s+/).length >= 5) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error('Tiêu đề phải có ít nhất 5 từ!'));
+                    },
+                  },
+                ]}
+              >
                 <Input placeholder="Ví dụ: Sinh viên năm 2 tìm việc làm phục vụ" readOnly={isReadOnly} />
               </Form.Item>
 
@@ -135,12 +149,31 @@ const CreatePostingPage: React.FC = () => {
                 <Select showSearch placeholder="Chọn khu vực" optionFilterProp="children" filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())} options={provinces.map(p => ({ value: p.name, label: p.name }))} disabled={isReadOnly} />
               </Form.Item>
 
-              <Form.Item name="preferredWorkHours" label="Thời gian làm việc mong muốn" rules={[{ required: true, message: 'Vui lòng nhập thời gian làm việc!' }]}>
+              <Form.Item
+                name="preferredWorkHours"
+                label="Thời gian làm việc mong muốn"
+                rules={[
+                  { required: true, message: 'Vui lòng nhập thời gian làm việc!' },
+                  {
+                    validator: (_, value) => {
+          
+                      const hourFormatRegex = /^\d{1,2}(h|:00)?\s*-\s*\d{1,2}(h|:00)?$/;
+                      if (!value || value.includes('-') || hourFormatRegex.test(value)) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error('Vui lòng nhập đúng định dạng "giờ - giờ" (ví dụ: 8:00- 17:00, 8-17, 8h-17h)'));
+                    },
+                  },
+                ]}
+              >
                 <Input placeholder="Ví dụ: Buổi tối các ngày trong tuần" readOnly={isReadOnly} />
               </Form.Item>
 
-              <Form.Item name="phoneContact" label="Số điện thoại liên hệ" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}>
-                <Input type="number" placeholder="Nhà tuyển dụng sẽ liên hệ qua số này" readOnly={isReadOnly} />
+              <Form.Item
+                name="phoneContact"
+                label="Số điện thoại liên hệ"
+                rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }, { pattern: /^\d{10}$/, message: 'Số điện thoại phải là 10 chữ số!' }]}>
+                <Input type="tel" placeholder="Nhà tuyển dụng sẽ liên hệ qua số này" readOnly={isReadOnly} />
               </Form.Item>
 
               <Form.Item name="age" label="Tuổi" rules={[{ required: true, message: 'Vui lòng nhập tuổi của bạn!' }]}>
@@ -160,10 +193,12 @@ const CreatePostingPage: React.FC = () => {
               </Form.Item>
 
               <Form.Item>
-                {isReadOnly ? (
-                  <Button type="primary" block onClick={() => navigate(`/sua-bai-dang-tim-viec/${id}`)}>
-                    Chỉnh sửa =={'>'} Sửa bài đăng
-                  </Button>
+                {isViewMode ? (
+                  user && postDetail && user.id === postDetail.userID && (
+                    <Button type="primary" block onClick={() => navigate(`/sua-bai-dang-tim-viec/${id}`)}>
+                      Chỉnh sửa bài đăng
+                    </Button>
+                  )
                 ) : (
                   <Button type="primary" htmlType="submit" block loading={isSubmitting}>
                     {buttonText}

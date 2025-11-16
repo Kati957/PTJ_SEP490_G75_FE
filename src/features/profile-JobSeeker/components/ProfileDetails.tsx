@@ -77,7 +77,7 @@ const ProfileDetails: React.FC = () => {
 
         {/* Các trường thông tin có thể chỉnh sửa */}
         <ProfileField label="Họ và tên" value={profile.fullName} onSave={(value) => handleSaveField('fullName', value)} />
-        <ProfileField label="Địa chỉ email" value={user?.email} />
+        <ProfileField label="Địa chỉ email" value={user?.username + "@gmail.com"} />
         <ProfileField label="Giới tính" value={profile.gender} onSave={(value) => handleSaveField('gender', value)} />
         <ProfileField label="Năm sinh" value={profile.birthYear} onSave={(value) => handleSaveField('birthYear', Number(value))} />
         <ProfileField label="Số điện thoại" value={profile.contactPhone} onSave={(value) => handleSaveField('contactPhone', value)} />

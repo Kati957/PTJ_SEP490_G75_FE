@@ -42,7 +42,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       state.token = null;
-      state.status = 'succeeded'; // Coi như logout là 1 trạng thái "khởi tạo xong"
+      state.status = 'succeeded';
       removeAccessToken();
     },
     initializationComplete(state) {
