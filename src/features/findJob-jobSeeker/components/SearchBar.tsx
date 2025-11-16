@@ -16,13 +16,13 @@ export const SearchBar = () => {
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
 
   // Salary filter states
-  // const [salaryRange, setSalaryRange] = useState<[number, number]>([0, MAX_SALARY]);
-  // const [appliedSalary, setAppliedSalary] = useState<[number, number] | null>(null);
+  const [salaryRange, setSalaryRange] = useState<[number, number]>([0, MAX_SALARY]);
+  const [appliedSalary, setAppliedSalary] = useState<[number, number] | null>(null);
 
   const [isCategoryDropdownVisible, setCategoryDropdownVisible] = useState(false);
   // const [isLevelDropdownVisible, setLevelDropdownVisible] = useState(false);
   // const [isExperienceDropdownVisible, setExperienceDropdownVisible] = useState(false);
-  // const [isSalaryDropdownVisible, setSalaryDropdownVisible] = useState(false);
+  const [isSalaryDropdownVisible, setSalaryDropdownVisible] = useState(false);
   // const [isEducationDropdownVisible, setEducationDropdownVisible] = useState(false);
 
   const allCategories = useMemo(() => majors.flatMap((major) => major.categories), [majors]);
@@ -39,24 +39,24 @@ export const SearchBar = () => {
 
   // const totalFilters = selectedCategories.length + selectedLevels.length + selectedExperiences.length + selectedEducations.length + (appliedSalary ? 1 : 0);
 
-  // const handleClearAllFilters = () => {
-  //   setSelectedCategories([]);
-  //   setSelectedLevels([]);
-  //   setSelectedExperiences([]);
-  //   setSelectedEducations([]);
-  //   setAppliedSalary(null);
-  //   setSalaryRange([0, MAX_SALARY]);
-  // };
+  const handleClearAllFilters = () => {
+    setSelectedCategories([]);
+    // setSelectedLevels([]);
+    // setSelectedExperiences([]);
+    // setSelectedEducations([]);
+    setAppliedSalary(null);
+    setSalaryRange([0, MAX_SALARY]);
+  };
 
-  // const handleApplySalary = () => {
-  //   setAppliedSalary(salaryRange);
-  //   setSalaryDropdownVisible(false);
-  // };
+  const handleApplySalary = () => {
+    setAppliedSalary(salaryRange);
+    setSalaryDropdownVisible(false);
+  };
 
-  // const handleClearSalary = () => {
-  //   setAppliedSalary(null);
-  //   setSalaryRange([0, MAX_SALARY]);
-  // };
+  const handleClearSalary = () => {
+    setAppliedSalary(null);
+    setSalaryRange([0, MAX_SALARY]);
+  };
 
   // const educationDropdownContent = (
   //   <div className="bg-white shadow-lg rounded-lg p-4" style={{ width: 250 }}>
@@ -152,47 +152,47 @@ export const SearchBar = () => {
   //   </div>
   // );
 
-  // const salaryDropdownContent = (
-  //   <div className="bg-white shadow-lg rounded-lg p-4" style={{ width: 300 }}>
-  //       <p className="font-semibold">Mức lương (tháng)</p>
-  //       <Slider
-  //           range
-  //           min={0}
-  //           max={MAX_SALARY}
-  //           value={salaryRange}
-  //           onChange={setSalaryRange}
-  //           className="my-4"
-  //           tipFormatter={(value) => `${value} triệu`}
-  //       />
-  //       <div className="flex justify-between items-center">
-  //           <InputNumber
-  //               min={0}
-  //               max={MAX_SALARY}
-  //               value={salaryRange[0]}
-  //               onChange={(val) => setSalaryRange([val ?? 0, salaryRange[1]])}
-  //               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-  //               addonAfter="triệu"
-  //           />
-  //           <span className="mx-2">-</span>
-  //           <InputNumber
-  //               min={0}
-  //               max={MAX_SALARY}
-  //               value={salaryRange[1]}
-  //               onChange={(val) => setSalaryRange([salaryRange[0], val ?? MAX_SALARY])}
-  //               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-  //               addonAfter="triệu"
-  //           />
-  //       </div>
-  //       <div className="flex justify-end items-center mt-6">
-  //           <Button type="link" danger onClick={handleClearSalary} icon={<DeleteOutlined />}>
-  //               Xóa lọc
-  //           </Button>
-  //           <Button type="primary" onClick={handleApplySalary}>
-  //               Áp dụng
-  //           </Button>
-  //       </div>
-  //   </div>
-  // );
+  const salaryDropdownContent = (
+    <div className="bg-white shadow-lg rounded-lg p-4" style={{ width: 300 }}>
+        <p className="font-semibold">Mức lương (tháng)</p>
+        <Slider
+            range
+            min={0}
+            max={MAX_SALARY}
+            value={salaryRange}
+            onChange={setSalaryRange}
+            className="my-4"
+            tipFormatter={(value) => `${value} triệu`}
+        />
+        <div className="flex justify-between items-center">
+            <InputNumber
+                min={0}
+                max={MAX_SALARY}
+                value={salaryRange[0]}
+                onChange={(val) => setSalaryRange([val ?? 0, salaryRange[1]])}
+                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                addonAfter="triệu"
+            />
+            <span className="mx-2">-</span>
+            <InputNumber
+                min={0}
+                max={MAX_SALARY}
+                value={salaryRange[1]}
+                onChange={(val) => setSalaryRange([salaryRange[0], val ?? MAX_SALARY])}
+                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                addonAfter="triệu"
+            />
+        </div>
+        <div className="flex justify-end items-center mt-6">
+            <Button type="link" danger onClick={handleClearSalary} icon={<DeleteOutlined />}>
+                Xóa lọc
+            </Button>
+            <Button type="primary" onClick={handleApplySalary}>
+                Áp dụng
+            </Button>
+        </div>
+    </div>
+  );
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
@@ -210,6 +210,12 @@ export const SearchBar = () => {
         <Dropdown overlay={categoryDropdownContent} trigger={['click']} visible={isCategoryDropdownVisible} onVisibleChange={setCategoryDropdownVisible}>
           <Button size="large" type={selectedCategories.length > 0 ? 'primary' : 'default'}>
             Ngành nghề {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+            <DownOutlined />
+          </Button>
+        </Dropdown>
+        <Dropdown overlay={salaryDropdownContent} trigger={['click']} visible={isSalaryDropdownVisible} onVisibleChange={setSalaryDropdownVisible}>
+          <Button size="large" type={appliedSalary ? 'primary' : 'default'}>
+            Mức lương
             <DownOutlined />
           </Button>
         </Dropdown>

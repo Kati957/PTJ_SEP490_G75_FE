@@ -67,7 +67,7 @@ const FeaturedJobs: React.FC = () => {
   return (
     <section className="py-12 px-6">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-800">Việc làm hấp dẫn</h2>
+        <h2 className="text-3xl font-bold text-gray-800">Việc làm gần đây</h2>
         <a href="#" className="text-blue-600 hover:underline">Xem tất cả &gt;</a>
       </div>
 
