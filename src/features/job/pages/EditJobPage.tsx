@@ -14,17 +14,37 @@ const transformDtoToFormData = (dto: JobPostView): JobPostData => {
     jobTitle: dto.title,
     jobDescription: dto.description || '',
     salaryValue: dto.salary || null,
+    salaryText: dto.salaryText || null,
     requirements: dto.requirements || '',
     workHours: dto.workHours || '',
+    workHourStart: dto.workHourStart || null,
+    workHourEnd: dto.workHourEnd || null,
+    detailAddress: dto.detailAddress || '',
+    provinceId: dto.provinceId ?? null,
+    districtId: dto.districtId ?? null,
+    wardId: dto.wardId ?? null,
     location: dto.location || '',
-    categoryID: dto.categoryName ? 1 : null,
+    categoryID: dto.categoryId ?? null,
     contactPhone: dto.phoneContact || '',
   };
 };
 
 const emptyState: JobPostData = {
-  jobTitle: '', jobDescription: '', salaryValue: null, requirements: '',
-  workHours: '', location: '', categoryID: null, contactPhone: '',
+  jobTitle: '',
+  jobDescription: '',
+  salaryValue: null,
+  salaryText: null,
+  requirements: '',
+  workHours: '',
+  workHourStart: null,
+  workHourEnd: null,
+  detailAddress: '',
+  provinceId: null,
+  districtId: null,
+  wardId: null,
+  location: '',
+  categoryID: null,
+  contactPhone: '',
 };
 
 const EditJobPage: React.FC = () => {

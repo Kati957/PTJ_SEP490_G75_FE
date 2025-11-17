@@ -34,8 +34,8 @@ const { Option } = Select;
 const { Search } = Input;
 
 const formatCurrency = (value: number | null | undefined) => {
-  if (value == null) return "";
-  return `${value.toLocaleString("vi-VN")} triệu`;
+  if (value == null || value <= 0) return "Thỏa thuận";
+  return `${value.toLocaleString("vi-VN")} vnđ`;
 };
 
 const EmployerJobsPage: React.FC = () => {

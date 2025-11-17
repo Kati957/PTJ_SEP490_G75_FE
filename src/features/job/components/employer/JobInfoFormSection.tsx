@@ -9,7 +9,6 @@ import {
   Input,
   InputNumber,
   Select,
-  Radio,
   Checkbox,
   TimePicker,
   Space,
@@ -22,13 +21,9 @@ import "jodit/es2021/jodit.min.css";
 import { useCategories } from "../../../category/hook";
 import dayjs from "dayjs";
 import type { Dayjs } from "dayjs";
-
-const { RangePicker } = TimePicker;
-
-interface Props {
-  data: JobPostData;
-  onDataChange: (field: keyof JobPostData, value: any) => void;
-}
+import locationService, {
+  type LocationOption,
+} from "../../../location/locationService";
 
 const FormField: React.FC<{
   label: string;
@@ -45,32 +40,203 @@ const FormField: React.FC<{
 
 const timeRangeRegex = /^(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/;
 
-export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
+export const JobInfoFormSection: React.FC<{
+  data: JobPostData;
+  onDataChange: (field: keyof JobPostData, value: any) => void;
+}> = ({ data, onDataChange }) => {
   const editor = useRef(null);
-  const [validation, setValidation] = useState<Record<string, boolean>>({});
   const { categories, isLoading } = useCategories();
 
-  type WorkHoursType = "range" | "text";
-  const [workHoursType, setWorkHoursType] = useState<WorkHoursType>("text");
+  const [validation, setValidation] = useState<Record<string, boolean>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
   const [timeRange, setTimeRange] = useState<[Dayjs | null, Dayjs | null]>([
     null,
     null,
   ]);
-  const [workHoursText, setWorkHoursText] = useState("");
-
   const [isNegotiable, setIsNegotiable] = useState(false);
-  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
+
+  const [provinceOptions, setProvinceOptions] = useState<LocationOption[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<LocationOption[]>([]);
+  const [wardOptions, setWardOptions] = useState<LocationOption[]>([]);
+
+  const [provinceName, setProvinceName] = useState("");
+  const [districtName, setDistrictName] = useState("");
+  const [wardName, setWardName] = useState("");
+
+  const [locationLoading, setLocationLoading] = useState({
+    provinces: false,
+    districts: false,
+    wards: false,
+  });
+
   useEffect(() => {
-    if (touched.workHours) {
-      if (workHoursType === "range") {
-        const isInvalid = !timeRange[0] || !timeRange[1];
-        setValidation((prev) => ({ ...prev, workHours: isInvalid }));
-      } else {
-        const isInvalid = !workHoursText || workHoursText.trim() === "";
-        setValidation((prev) => ({ ...prev, workHours: isInvalid }));
+    let mounted = true;
+    const fetchProvinces = async () => {
+      setLocationLoading((prev) => ({ ...prev, provinces: true }));
+      try {
+        const provinces = await locationService.getProvinces();
+        if (mounted) {
+          setProvinceOptions(provinces);
+        }
+      } catch (error) {
+        console.error("Failed to load provinces", error);
+      } finally {
+        if (mounted) {
+          setLocationLoading((prev) => ({ ...prev, provinces: false }));
+        }
       }
+    };
+    fetchProvinces();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!data.provinceId) {
+      setDistrictOptions([]);
+      setWardOptions([]);
+      setDistrictName("");
+      setWardName("");
+      return;
     }
-  }, [timeRange, workHoursText, workHoursType, touched.workHours]);
+
+    let mounted = true;
+    const fetchDistricts = async () => {
+      setLocationLoading((prev) => ({ ...prev, districts: true }));
+      try {
+        const districts = await locationService.getDistricts(
+          data.provinceId as number
+        );
+        if (mounted) {
+          setDistrictOptions(districts);
+        }
+      } catch (error) {
+        console.error("Failed to load districts", error);
+      } finally {
+        if (mounted) {
+          setLocationLoading((prev) => ({ ...prev, districts: false }));
+        }
+      }
+    };
+    fetchDistricts();
+    return () => {
+      mounted = false;
+    };
+  }, [data.provinceId]);
+
+  useEffect(() => {
+    if (!data.districtId) {
+      setWardOptions([]);
+      setWardName("");
+      return;
+    }
+
+    let mounted = true;
+    const fetchWards = async () => {
+      setLocationLoading((prev) => ({ ...prev, wards: true }));
+      try {
+        const wards = await locationService.getWards(
+          data.districtId as number
+        );
+        if (mounted) {
+          setWardOptions(wards);
+        }
+      } catch (error) {
+        console.error("Failed to load wards", error);
+      } finally {
+        if (mounted) {
+          setLocationLoading((prev) => ({ ...prev, wards: false }));
+        }
+      }
+    };
+    fetchWards();
+    return () => {
+      mounted = false;
+    };
+  }, [data.districtId]);
+
+  useEffect(() => {
+    if (!data.provinceId) {
+      setProvinceName("");
+      return;
+    }
+    const province = provinceOptions.find(
+      (item) => item.code === data.provinceId
+    );
+    if (province) {
+      setProvinceName(province.name);
+    }
+  }, [provinceOptions, data.provinceId]);
+
+  useEffect(() => {
+    if (!data.districtId) {
+      setDistrictName("");
+      return;
+    }
+    const district = districtOptions.find(
+      (item) => item.code === data.districtId
+    );
+    if (district) {
+      setDistrictName(district.name);
+    }
+  }, [districtOptions, data.districtId]);
+
+  useEffect(() => {
+    if (!data.wardId) {
+      setWardName("");
+      return;
+    }
+    const ward = wardOptions.find((item) => item.code === data.wardId);
+    if (ward) {
+      setWardName(ward.name);
+    }
+  }, [wardOptions, data.wardId]);
+
+  const locationDisplay = useMemo(() => {
+    const parts = [
+      data.detailAddress?.trim(),
+      wardName,
+      districtName,
+      provinceName,
+    ].filter((part) => part && part.length > 0);
+    return parts.join(", ");
+  }, [data.detailAddress, wardName, districtName, provinceName]);
+
+  useEffect(() => {
+    if (locationDisplay !== data.location) {
+      onDataChange("location", locationDisplay);
+    }
+  }, [locationDisplay, data.location, onDataChange]);
+
+  useEffect(() => {
+    setIsNegotiable(Boolean(data.salaryText));
+  }, [data.salaryText]);
+
+  useEffect(() => {
+    if (!touched.workHours) return;
+    const invalid =
+      !timeRange[0] || !timeRange[1] || !timeRange[1]?.isAfter(timeRange[0]!);
+    setValidation((prev) => ({ ...prev, workHours: invalid }));
+  }, [timeRange, touched.workHours]);
+
+  useEffect(() => {
+    const { workHourStart, workHourEnd, workHours } = data;
+    if (workHourStart && workHourEnd) {
+      setTimeRange([
+        dayjs(workHourStart, "HH:mm"),
+        dayjs(workHourEnd, "HH:mm"),
+      ]);
+      return;
+    }
+    const match = workHours ? workHours.match(timeRangeRegex) : null;
+    if (match) {
+      setTimeRange([dayjs(match[1], "HH:mm"), dayjs(match[2], "HH:mm")]);
+    } else {
+      setTimeRange([null, null]);
+    }
+  }, [data.workHourStart, data.workHourEnd, data.workHours]);
 
   const config = useMemo(
     () => ({
@@ -100,52 +266,45 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
     []
   );
 
-  useEffect(() => {
-    setIsNegotiable(data.salaryValue === 0);
-
-    const wh = data.workHours;
-    const match = wh ? wh.match(timeRangeRegex) : null;
-
-    if (match) {
-      setWorkHoursType("range");
-      setTimeRange([dayjs(match[1], "HH:mm"), dayjs(match[2], "HH:mm")]);
-      setWorkHoursText("");
-    } else {
-      setWorkHoursType("text");
-      setWorkHoursText(wh || "");
-      setTimeRange([null, null]);
-    }
-  }, [data.salaryValue, data.workHours]);
+  const normalizeEditorText = (value: string) =>
+    value
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
 
   const handleEditorChange = useCallback(
     debounce((content: string) => {
       onDataChange("jobDescription", content);
     }, 400),
-    []
+    [onDataChange]
   );
+
   const handleBlur = (field: keyof JobPostData, value: any) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
     let isInvalid = false;
 
-    const vnPhoneRegex =
+    const phoneRegex =
       /^(?:\+84|0)(?:3[2-9]|5[6|8|9]|7[0|6-9]|8[1-5]|9[0-9])[0-9]{7}$/;
 
     if (
-      ["jobTitle", "location", "requirements", "contactPhone"].includes(field)
+      ["jobTitle", "detailAddress", "requirements", "contactPhone"].includes(
+        field as string
+      )
     ) {
       isInvalid = !value || (value as string).trim() === "";
 
       if (field === "contactPhone" && !isInvalid) {
-        const phone = (value as string).trim();
-        if (!vnPhoneRegex.test(phone)) {
+        if (!phoneRegex.test((value as string).trim())) {
           isInvalid = true;
         }
       }
     }
 
     if (field === "jobDescription") {
-      isInvalid =
-        !value || (value as string).trim() === "" || value === "<p><br></p>";
+      const normalized =
+        typeof value === "string" ? normalizeEditorText(value) : "";
+      isInvalid = !normalized || normalized.length < 20;
     }
 
     if (field === "categoryID") {
@@ -153,16 +312,17 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
     }
 
     if (field === "salaryValue") {
-      isInvalid = !isNegotiable && (value === null || value <= 0);
+      isInvalid = !isNegotiable && (!value || value <= 0);
     }
 
-    // if (field === "workHours") {
-    //   if (workHoursType === "range") {
-    //     isInvalid = !timeRange[0] || !timeRange[1];
-    //   } else {
-    //     isInvalid = !value || (value as string).trim() === "";
-    //   }
-    // }
+    if (["provinceId", "districtId", "wardId"].includes(field as string)) {
+      isInvalid = !value;
+    }
+
+    if (field === "workHours") {
+      const [start, end] = timeRange;
+      isInvalid = !start || !end || !end.isAfter(start);
+    }
 
     setValidation((prev) => ({ ...prev, [field]: isInvalid }));
   };
@@ -175,52 +335,70 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
   };
 
   const handleSalaryNegotiableChange = (e: CheckboxChangeEvent) => {
-    const isChecked = e.target.checked;
-    setIsNegotiable(isChecked);
+    const checked = e.target.checked;
+    setIsNegotiable(checked);
 
-    if (isChecked) {
-      handleChange("salaryValue", 0);
+    if (checked) {
+      handleChange("salaryValue", null);
+      handleChange("salaryText", "Thỏa thuận");
       setValidation((prev) => ({ ...prev, salaryValue: false }));
     } else {
-      handleChange("salaryValue", null);
+      handleChange("salaryText", null);
     }
-  };
-
-  const handleWorkHoursTypeChange = (e: any) => {
-    const newType = e.target.value as WorkHoursType;
-    setWorkHoursType(newType);
-
-    if (newType === "range") {
-      setWorkHoursText("");
-      handleBlur("workHours", null);
-    } else {
-      setTimeRange([null, null]);
-      handleBlur("workHours", null);
-    }
-    onDataChange("workHours", "");
   };
 
   const handleTimeRangeChange = (values: [Dayjs | null, Dayjs | null]) => {
     setTimeRange(values);
     setTouched((prev) => ({ ...prev, workHours: true }));
 
-    if (values[0] && values[1]) {
-      const formattedString = `${values[0].format(
-        "HH:mm"
-      )} - ${values[1].format("HH:mm")}`;
-      handleChange("workHours", formattedString);
-    } else {
-      handleChange("workHours", "");
+    const [start, end] = values;
+    if (start && end) {
+      if (!end.isAfter(start)) {
+        setValidation((prev) => ({ ...prev, workHours: true }));
+        handleChange("workHourStart", null);
+        handleChange("workHourEnd", null);
+        handleChange("workHours", "");
+        return;
+      }
+      const formatted = `${start.format("HH:mm")} - ${end.format("HH:mm")}`;
+      handleChange("workHourStart", start.format("HH:mm"));
+      handleChange("workHourEnd", end.format("HH:mm"));
+      handleChange("workHours", formatted);
+      setValidation((prev) => ({ ...prev, workHours: false }));
+      return;
     }
+
+    handleChange("workHourStart", null);
+    handleChange("workHourEnd", null);
+    handleChange("workHours", "");
+    setValidation((prev) => ({ ...prev, workHours: true }));
   };
 
-  const handleWorkHoursTextChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const newText = e.target.value;
-    setWorkHoursText(newText);
-    setTouched((prev) => ({ ...prev, workHours: true }));
-    handleChange("workHours", newText);
+  const updateLocationValidation = (field: keyof JobPostData, value: any) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    setValidation((prev) => ({ ...prev, [field]: !value }));
+  };
+
+  const handleProvinceChange = (value: number | null) => {
+    handleChange("provinceId", value ?? null);
+    handleChange("districtId", null);
+    handleChange("wardId", null);
+    updateLocationValidation("provinceId", value);
+    setTouched((prev) => ({ ...prev, districtId: false, wardId: false }));
+    setValidation((prev) => ({ ...prev, districtId: false, wardId: false }));
+  };
+
+  const handleDistrictChange = (value: number | null) => {
+    handleChange("districtId", value ?? null);
+    handleChange("wardId", null);
+    updateLocationValidation("districtId", value);
+    setTouched((prev) => ({ ...prev, wardId: false }));
+    setValidation((prev) => ({ ...prev, wardId: false }));
+  };
+
+  const handleWardChange = (value: number | null) => {
+    handleChange("wardId", value ?? null);
+    updateLocationValidation("wardId", value);
   };
 
   return (
@@ -246,28 +424,91 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
       </FormField>
 
       <FormField label="Địa điểm" required>
-        <Input
-          size="large"
-          placeholder="Ví dụ: Hồ Chí Minh, Hà Nội..."
-          value={data.location}
-          onChange={(e) => handleChange("location", e.target.value)}
-          onBlur={() => handleBlur("location", data.location)}
-          className={validation.location ? "border-red-500" : ""}
-        />
-        {validation.location && (
-          <p className="text-red-500 text-sm mt-1">Vui lòng nhập địa điểm</p>
-        )}
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <Select
+                size="large"
+                placeholder="Chọn tỉnh/thành"
+                loading={locationLoading.provinces}
+                value={data.provinceId ?? undefined}
+                options={provinceOptions.map((option) => ({
+                  value: option.code,
+                  label: option.name,
+                }))}
+                onChange={(value) => handleProvinceChange(value as number)}
+                allowClear
+              />
+              {validation.provinceId && touched.provinceId && (
+                <p className="text-red-500 text-sm mt-1">
+                  Vui lòng chọn tỉnh/thành
+                </p>
+              )}
+            </div>
+            <div>
+              <Select
+                size="large"
+                placeholder="Chọn quận/huyện"
+                loading={locationLoading.districts}
+                value={data.districtId ?? undefined}
+                disabled={!data.provinceId}
+                options={districtOptions.map((option) => ({
+                  value: option.code,
+                  label: option.name,
+                }))}
+                onChange={(value) => handleDistrictChange(value as number)}
+                allowClear
+              />
+              {validation.districtId && touched.districtId && (
+                <p className="text-red-500 text-sm mt-1">
+                  Vui lòng chọn quận/huyện
+                </p>
+              )}
+            </div>
+            <div>
+              <Select
+                size="large"
+                placeholder="Chọn phường/xã"
+                loading={locationLoading.wards}
+                value={data.wardId ?? undefined}
+                disabled={!data.districtId}
+                options={wardOptions.map((option) => ({
+                  value: option.code,
+                  label: option.name,
+                }))}
+                onChange={(value) => handleWardChange(value as number)}
+                allowClear
+              />
+              {validation.wardId && touched.wardId && (
+                <p className="text-red-500 text-sm mt-1">
+                  Vui lòng chọn phường/xã
+                </p>
+              )}
+            </div>
+          </div>
+          <Input
+            size="large"
+            placeholder="Số nhà, tên đường..."
+            value={data.detailAddress}
+            onChange={(e) => handleChange("detailAddress", e.target.value)}
+            onBlur={() => handleBlur("detailAddress", data.detailAddress)}
+            className={validation.detailAddress ? "border-red-500" : ""}
+          />
+          {validation.detailAddress && (
+            <p className="text-red-500 text-sm mt-1">
+              Vui lòng nhập địa chỉ chi tiết
+            </p>
+          )}
+        </div>
       </FormField>
 
-      <FormField label="Mức lương (VNĐ)">
+      <FormField label="Mức lương (VND)">
         <InputNumber
           size="large"
           min={0}
           className={`w-full ${validation.salaryValue ? "border-red-500" : ""}`}
           placeholder="Nhập mức lương (ví dụ: 15000000)"
-          value={
-            data.salaryValue === 0 ? undefined : data.salaryValue ?? undefined
-          }
+          value={data.salaryValue ?? undefined}
           onChange={(value) => handleChange("salaryValue", value ?? null)}
           onBlur={() => handleBlur("salaryValue", data.salaryValue)}
           disabled={isNegotiable}
@@ -281,7 +522,7 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
           onChange={handleSalaryNegotiableChange}
           className="mt-2"
         >
-          Thoả thuận (Không hiển thị lương)
+          Thỏa thuận (Không hiển thị lương)
         </Checkbox>
         {validation.salaryValue && (
           <p className="text-red-500 text-sm mt-1">
@@ -300,7 +541,7 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
               handleEditorChange(newContent);
               handleBlur("jobDescription", newContent);
             }}
-            onChange={(newContent) => {
+            onChange={() => {
               if (validation.jobDescription) {
                 setValidation((prev) => ({ ...prev, jobDescription: false }));
               }
@@ -309,7 +550,7 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
         </div>
         {validation.jobDescription && (
           <p className="text-red-500 text-sm mt-1">
-            Vui lòng nhập mô tả công việc
+            Vui lòng nhập mô tả công việc (ít nhất 20 ký tự)
           </p>
         )}
         <style>{`.jodit-invalid .jodit-container { border: 1px solid #ef4444; }`}</style>
@@ -326,53 +567,35 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
         />
         {validation.requirements && (
           <p className="text-red-500 text-sm mt-1">
-            VSui lòng nhập yêu cầu công việc
+            Vui lòng nhập yêu cầu công việc
           </p>
         )}
       </FormField>
 
       <FormField label="Giờ làm việc" required>
-        <Radio.Group
-          value={workHoursType}
-          onChange={handleWorkHoursTypeChange}
-          className="mb-2"
-        >
-          <Radio value="range">Theo khoảng giờ</Radio>
-          <Radio value="text">Mô tả tự do</Radio>
-        </Radio.Group>
-
-        {workHoursType === "range" && (
-          <Space.Compact className="w-full">
-            <TimePicker
-              value={timeRange[0]}
-              onChange={(time) => handleTimeRangeChange([time, timeRange[1]])}
-              format="HH:mm"
-              placeholder="Từ"
-              className={validation.workHours ? "border-red-500" : ""}
-              style={{ width: "50%" }}
-            />
-            <TimePicker
-              value={timeRange[1]}
-              onChange={(time) => handleTimeRangeChange([timeRange[0], time])}
-              format="HH:mm"
-              placeholder="Đến"
-              className={validation.workHours ? "border-red-500" : ""}
-              style={{ width: "50%" }}
-            />
-          </Space.Compact>
-        )}
-
-        {workHoursType === "text" && (
-          <Input
-            size="large"
-            placeholder="Ví dụ: Toàn thời gian, 8h-17h, Sau 18h..."
-            value={workHoursText}
-            onChange={handleWorkHoursTextChange}
-            onBlur={() => handleBlur("workHours", workHoursText)}
+        <Space.Compact className="w-full">
+          <TimePicker
+            value={timeRange[0]}
+            onChange={(time) => handleTimeRangeChange([time, timeRange[1]])}
+            format="HH:mm"
+            placeholder="Từ"
             className={validation.workHours ? "border-red-500" : ""}
+            style={{ width: "50%" }}
           />
+          <TimePicker
+            value={timeRange[1]}
+            onChange={(time) => handleTimeRangeChange([timeRange[0], time])}
+            format="HH:mm"
+            placeholder="Đến"
+            className={validation.workHours ? "border-red-500" : ""}
+            style={{ width: "50%" }}
+          />
+        </Space.Compact>
+        {validation.workHours && (
+          <p className="text-red-500 text-sm mt-1">
+            Vui lòng nhập giờ làm hợp lệ (giờ kết thúc phải sau giờ bắt đầu)
+          </p>
         )}
-        
       </FormField>
 
       <FormField label="Ngành nghề" required>
@@ -395,7 +618,6 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
         <style>{`.select-invalid .ant-select-selector { border-color: #ef4444 !important; }`}</style>
       </FormField>
 
-      {/* --- Số điện thoại liên hệ (giữ nguyên) --- */}
       <FormField label="Số điện thoại liên hệ" required>
         <Input
           size="large"
@@ -409,7 +631,7 @@ export const JobInfoFormSection: React.FC<Props> = ({ data, onDataChange }) => {
           <p className="text-red-500 text-sm mt-1">
             {!data.contactPhone
               ? "Vui lòng nhập số điện thoại"
-              : "Số điện thoại không hợp lệ (phải là số Việt Nam)"}
+              : "Số điện thoại không đúng định dạng Việt Nam"}
           </p>
         )}
       </FormField>

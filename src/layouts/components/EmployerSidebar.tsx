@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../features/auth/hooks";
 import { ROLES } from "../../constants/roles";
@@ -6,9 +6,7 @@ import { Avatar, Menu, type MenuProps } from "antd";
 import {
   HomeOutlined,
   FileTextOutlined,
-  TeamOutlined,
   SearchOutlined,
-  UserSwitchOutlined,
   ReadOutlined,
   SettingOutlined,
   QuestionCircleOutlined,
@@ -36,34 +34,22 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Mục menu chính
+  // Má»¥c menu chÃ­nh
   const employerItems: MenuItem[] = [
     getItem(
-      <NavLink to="/nha-tuyen-dung/dashboard">My PTJob</NavLink>,
+     <NavLink to="/nha-tuyen-dung/dashboard">Thông tin</NavLink>,
       "/nha-tuyen-dung/dashboard",
       <HomeOutlined />
     ),
     getItem("Công Việc", "sub-cong-viec", <FileTextOutlined />, [
       getItem(
-        <NavLink to="/nha-tuyen-dung/cong-viec">Công Việc của tôi</NavLink>,
+        <NavLink to="/nha-tuyen-dung/cong-viec">Bài đăng của tôi</NavLink>,
         "/nha-tuyen-dung/cong-viec"
       ),
       getItem(
-        <NavLink to="/nha-tuyen-dung/dang-tin">Đăng Tuyển dụng</NavLink>,
+        <NavLink to="/nha-tuyen-dung/dang-tin">Đăng bài</NavLink>,
         "/nha-tuyen-dung/dang-tin"
       ),
-    ]),
-    getItem("Ứng viên của tôi", "sub-ung-vien", <TeamOutlined />, [
-      getItem(
-        <NavLink to="/nha-tuyen-dung/tim-kiem">Tìm kiếm tài năng</NavLink>,
-        "/nha-tuyen-dung/tim-kiem",
-        <SearchOutlined />
-      ),
-      // getItem(
-      //   <NavLink to="/nha-tuyen-dung/tai-nang-da-xem">Tài năng đã xem</NavLink>,
-      //   "/nha-tuyen-dung/tai-nang-da-xem",
-      //   <UserSwitchOutlined />
-      // ),
     ]),
     getItem(
       <NavLink to="/nha-tuyen-dung/cam-nang">Cẩm nang Tuyển dụng</NavLink>,
