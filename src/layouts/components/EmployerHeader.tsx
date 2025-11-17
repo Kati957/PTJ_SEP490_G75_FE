@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../features/auth/hooks";
 import { Button, Dropdown, Avatar, message } from "antd";
 import {
@@ -25,6 +25,7 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
   const { user } = useAuth();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     dispatch(logout());
@@ -63,7 +64,7 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
 
         <img src={LogoWhite} alt="Logo" className="h-8 mr-2" />
         <NavLink
-          to="/"
+          to="/nha-tuyen-dung/dashboard"
           className="text-white hover:text-gray-200 text-sm font-medium"
         >
           Trang chủ
@@ -71,6 +72,8 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-5">
+
+        {/* USER DROPDOWN */}
         {user &&
         (user.roles.includes(ROLES.EMPLOYER) ||
           user.roles.includes(ROLES.ADMIN)) ? (
@@ -90,6 +93,24 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
             className="text-white hover:text-gray-200 text-sm font-medium"
           >
             Đăng ký
+          </NavLink>
+        )}
+
+        <div className="border-l border-blue-700 h-6"></div>
+
+        {location.pathname.startsWith("/nha-tuyen-dung") ? (
+          <NavLink
+            to="/login"
+            className="text-gray-200 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+          >
+            Cho người tìm việc
+          </NavLink>
+        ) : (
+          <NavLink
+            to="/nha-tuyen-dung"
+            className="text-gray-200 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+          >
+            Nhà tuyển dụng
           </NavLink>
         )}
       </div>

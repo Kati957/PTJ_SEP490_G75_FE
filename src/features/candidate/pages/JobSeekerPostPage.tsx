@@ -72,7 +72,7 @@ const JobSeekerPostsPage: React.FC = () => {
       key: "preferredWorkHours",
       render: (hours) => (
         <Space>
-          <ClockCircleOutlined /> {hours || "Không rõ"}
+          <ClockCircleOutlined /> {hours || "Không rõ"}h
         </Space>
       ),
     },

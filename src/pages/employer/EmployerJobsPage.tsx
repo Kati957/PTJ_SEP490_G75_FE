@@ -29,6 +29,7 @@ import { useCategories } from "../../features/category/hook";
 
 import { useSelector } from "react-redux";
 import type { RootState } from "../../app/store";
+import { JobPostDetailModal } from "../../features/job/components/employer/JobPostDetailModal";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -263,7 +264,8 @@ const EmployerJobsPage: React.FC = () => {
       sorter: true,
       render: (salary) => (
         <Space>
-          <MoneyCollectOutlined /> {formatCurrency(salary)}
+          <MoneyCollectOutlined />
+          {salary === 0 ? "Thoả thuận" : formatCurrency(salary)}
         </Space>
       ),
     },
@@ -381,7 +383,7 @@ const EmployerJobsPage: React.FC = () => {
           }}
         />
 
-        <Modal
+        {/* <Modal
           title="Chi tiết công việc"
           open={isModalVisible}
           onCancel={handleCloseModal}
@@ -393,7 +395,12 @@ const EmployerJobsPage: React.FC = () => {
           width={800}
         >
           {selectedJob && <JobDetailView job={selectedJob} />}
-        </Modal>
+        </Modal> */}
+        <JobPostDetailModal
+          jobPost={selectedJob}
+          visible={isModalVisible}
+          onClose={handleCloseModal}
+        />
       </div>
     </div>
   );

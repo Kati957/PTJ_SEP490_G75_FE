@@ -153,7 +153,7 @@ const AdminEmployerPostPage: React.FC = () => {
       title: "Hành động",
       key: "action",
       render: (_, record) => {
-        const isBlocked = record.status.toLowerCase() === "archived";
+        const isBlocked = record.status.toLowerCase() === "blocked";
         return (
           <Space size="middle">
             <Button

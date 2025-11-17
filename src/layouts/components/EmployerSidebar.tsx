@@ -13,6 +13,9 @@ import {
   SettingOutlined,
   QuestionCircleOutlined,
   UserOutlined,
+  WarningOutlined,
+  AppstoreOutlined,
+  PieChartOutlined,
 } from "@ant-design/icons";
 
 type MenuItem = Required<MenuProps>["items"][number];
@@ -71,26 +74,59 @@ export const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     ),
   ];
 
-  const adminItems: MenuItem[] = [
-    getItem("Quản lí bài viết", "sub-cong-viec", <FileTextOutlined />, [
-      getItem(
-        <NavLink to="/admin/jobseeker-post">Bài đăng của ứng viên</NavLink>,
-        "/admin/jobseeker-post"
-      ),
-      getItem(
-        <NavLink to="/admin/employer-post">
-          Bài đăng của nhà tuyển dụng
-        </NavLink>,
-        "admin/employer-post"
-      ),
-    ]),
-    // getItem(
-    //   <NavLink to="/admin/jobseeker-post">
-    //     Quản lí bài của nhà tuyển dụng
-    //   </NavLink>,
-    //   "/admin/jobseeker-post"
-    // ),
-  ];
+const adminItems: MenuItem[] = [
+  // Dashboard
+  getItem(
+    <NavLink to="/admin/dashboard">Dashboard</NavLink>,
+    "/admin/dashboard",
+    <PieChartOutlined />
+  ),
+
+  // Quản lý tài khoản
+  getItem(
+    <NavLink to="/admin/accounts">Quản lý tài khoản</NavLink>,
+    "/admin/accounts",
+    <UserOutlined />
+  ),
+
+  // Quản lý bài viết (có submenu)
+  getItem("Quản lí bài viết", "sub-cong-viec", <FileTextOutlined />, [
+    getItem(
+      <NavLink to="/admin/job-posts">Bài đăng tuyển dụng</NavLink>,
+      "/admin/job-posts"
+    ),
+    getItem(
+      <NavLink to="/admin/jobseeker-post">Bài đăng của ứng viên</NavLink>,
+      "/admin/jobseeker-post"
+    ),
+    getItem(
+      <NavLink to="/admin/employer-post">Bài đăng của nhà tuyển dụng</NavLink>,
+      "/admin/employer-post"
+    ),
+  ]),
+
+  // Quản lý danh mục
+  getItem(
+    <NavLink to="/admin/categories">Quản lý danh mục</NavLink>,
+    "/admin/categories",
+    <AppstoreOutlined />
+  ),
+
+  // Tin tức
+  getItem(
+    <NavLink to="/admin/news">Quản lý tin tức</NavLink>,
+    "/admin/news",
+    <ReadOutlined />
+  ),
+
+  // Báo cáo
+  getItem(
+    <NavLink to="/admin/reports">Báo cáo & Khiếu nại</NavLink>,
+    "/admin/reports",
+    <WarningOutlined />
+  ),
+];
+
 
   const getMenuItems = (): MenuItem[] => {
     if (!user) return [];
