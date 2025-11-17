@@ -1,65 +1,60 @@
-import baseService from '../../services/baseService';
-import type { Job } from '../../types/index';
+import baseService from "../../services/baseService";
+import type { Job } from "../../types/index";
 
-// Định nghĩa kiểu dữ liệu cho một công việc từ API backend
 interface BackendJob {
   employerPostId: number;
   employerId: number;
   title: string;
-  description: string;
-  salary: number;
-  workHours: string;
-  location: string;
-  phoneContact: string;
-  categoryName: string;
-  employerName: string;
-  createdAt: string; // Giữ nguyên kiểu string để xử lý sau
+  description: string | null;
+  salary: number | null;
+  workHours: string | null;
+  location: string | null;
+  phoneContact: string | null;
+  categoryName: string | null;
+  employerName: string | null;
+  createdAt: string;
   status: string;
 }
 
-// Định nghĩa kiểu dữ liệu cho response từ API
 interface ApiResponse {
   success: boolean;
   total: number;
   data: BackendJob[];
 }
 
-/**
- * Ánh xạ dữ liệu công việc từ backend sang định dạng Job của frontend.
- * @param backendJob - Đối tượng công việc từ backend.
- * @returns - Đối tượng công việc đã được ánh xạ.
- */
 const mapBackendJobToFrontendJob = (backendJob: BackendJob): Job => {
+  const salaryValue = backendJob.salary ?? null;
+  const salaryText =
+    salaryValue === null || salaryValue <= 0
+      ? "Thoa thuan"
+      : `${salaryValue.toLocaleString("vi-VN")} VND`;
+
   return {
-    id: backendJob.employerPostId.toString(),
-    title: backendJob.title,
-    description: backendJob.description,
-    company: backendJob.employerName,
-    location: backendJob.location,
-    salary: backendJob.salary == 0 ? 'Thỏa thuận' : backendJob.salary.toString(), 
-    updatedAt: backendJob.createdAt, 
-    companyLogo: '/src/assets/no-logo.png', 
-    isHot: true, 
+    id:
+      backendJob.employerPostId?.toString() ??
+      `temp-${Math.random().toString(36).slice(2)}`,
+    title: backendJob.title ?? "Chua co tieu de",
+    description: backendJob.description ?? "Chua co mo ta",
+    company: backendJob.employerName ?? null,
+    location: backendJob.location ?? null,
+    salary: salaryText,
+    updatedAt: backendJob.createdAt,
+    companyLogo: "/src/assets/no-logo.png",
+    isHot: true,
   };
 };
 
-
-/**
- * Lấy danh sách các công việc nổi bật từ API.
- * @returns - Promise chứa danh sách các công việc đã được ánh xạ.
- */
 export const getFeaturedJobs = async (): Promise<Job[]> => {
   try {
-    const response = await baseService.get<ApiResponse>('/EmployerPost/all');
+    const response = await baseService.get<ApiResponse>("/EmployerPost/all");
 
     if (response && response.success && Array.isArray(response.data)) {
-      const featuredJobs = response.data.map(mapBackendJobToFrontendJob);
-      return featuredJobs;
+      return response.data.map(mapBackendJobToFrontendJob);
     }
 
     return [];
   } catch (error) {
-    console.error('Lỗi khi lấy dữ liệu featured jobs:', error);
+    console.error("Failed to load featured jobs:", error);
     throw error;
   }
 };

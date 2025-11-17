@@ -7,15 +7,19 @@ interface JobPostingPreviewProps {
     jobTitle: string;
     jobDescription: string;
     salaryValue: number | null;
+    salaryText: string | null;
     requirements: string;
     workHours: string;
+    detailAddress: string;
     location: string;
     categoryID: number | null;
     contactPhone: string;
   };
 }
+
 const JobPostingPreview: React.FC<JobPostingPreviewProps> = ({ data }) => {
   const { categories, isLoading: isCategoriesLoading } = useCategories();
+
   const categoryName = useMemo(() => {
     if (isCategoriesLoading || !data.categoryID) {
       return null;
@@ -57,7 +61,11 @@ const JobPostingPreview: React.FC<JobPostingPreviewProps> = ({ data }) => {
             Mức lương
           </h3>
           <p className="text-gray-700">
-              {data.salaryValue || "Chưa nhập"} VNĐ
+            {data.salaryText
+              ? data.salaryText
+              : data.salaryValue
+              ? `${data.salaryValue.toLocaleString()} VND`
+              : "Chưa nhập"}
           </p>
         </div>
 
@@ -72,7 +80,9 @@ const JobPostingPreview: React.FC<JobPostingPreviewProps> = ({ data }) => {
           <h3 className="text-sm font-semibold text-gray-500 uppercase">
             Địa điểm
           </h3>
-          <p className="text-gray-700">{data.location || "Chưa nhập"}</p>
+          <p className="text-gray-700">
+            {data.location || data.detailAddress || "Chưa nhập"}
+          </p>
         </div>
 
         <div>
