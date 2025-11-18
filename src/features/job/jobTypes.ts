@@ -78,3 +78,49 @@ export interface DeleteJobResponse {
   success: boolean;
   message: string;
 }
+
+export interface JobApplicationResultDto {
+  id: number;
+  jobSeekerId: number;
+  username: string;
+  email: string;
+  phone: string;
+  cvUrl: string | null;
+  coverLetter: string | null;
+  status: string;
+  applicationDate: string;
+  note?: string;
+}
+
+export interface JobApplicationUpdateDto {
+  status: 'Accepted' | 'Rejected';
+  note?: string;
+}
+
+export interface ApplicationListResponse {
+  success: boolean;
+  data: JobApplicationResultDto[];
+}
+
+export interface ApplicationActionResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface EmployerApplicationDto {
+  submissionId: number;
+  jobSeekerId: number;
+  username: string;
+  email: string;
+  phone: string;
+  cvUrl: string | null;
+  coverLetter: string | null;
+  status: string;
+  applicationDate: string;
+  note?: string;
+}
+
+export interface EmployerApplicationListResponse {
+  success: boolean;
+  data: EmployerApplicationDto[];
+}
