@@ -6,7 +6,7 @@ import { HeartFilled, HeartOutlined, DeleteOutlined, UserOutlined } from '@ant-d
 
 import { JobDetailView } from './JobDetailView';
 import { useAuth } from '../../../auth/hooks';
-import { jobSeekerPostService } from '../../../candidate/services'; //
+import { jobSeekerPostService } from '../../../candidate/services';
 import { jobApplicationService } from '../../../applyJob-employer/jobApplicationService';
 
 import type { JobPostView } from '../../jobTypes';

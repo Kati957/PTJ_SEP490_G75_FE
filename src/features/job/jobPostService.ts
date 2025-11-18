@@ -1,5 +1,5 @@
 import baseService from '../../services/baseService';
-import type { DeleteJobResponse, EmployerPostDto, JobPostResponse, PaginatedJobResponse, UpdateJobResponse } from './jobTypes';
+import type { ApplicationActionResponse, DeleteJobResponse, EmployerPostDto, JobApplicationUpdateDto, JobPostResponse, PaginatedJobResponse, UpdateJobResponse } from './jobTypes';
 
 
 export const createJobPost = async (data: EmployerPostDto): Promise<JobPostResponse> => {
@@ -25,6 +25,11 @@ export const deleteJobPost = async (id: number): Promise<DeleteJobResponse> => {
 
 export const getAllJobs = async (): Promise<PaginatedJobResponse> => {
   return await baseService.get<PaginatedJobResponse>('/EmployerPost/all');
+};
+
+export const updateStatus = async (id: number, status: 'Accepted' | 'Rejected', note: string = ""): Promise<ApplicationActionResponse> => {
+  const payload: JobApplicationUpdateDto = { status, note };
+  return await baseService.put<ApplicationActionResponse>(`/JobApplication/${id}/status`, payload);
 };
 
 
