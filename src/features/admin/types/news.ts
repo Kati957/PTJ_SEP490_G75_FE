@@ -2,9 +2,11 @@ export interface AdminNews {
   newsId: number;
   title: string;
   category?: string | null;
-  status?: string | null;
+  isPublished: boolean;
   createdAt: string;
   updatedAt?: string | null;
+  isFeatured?: boolean;
+  priority?: number;
 }
 
 export interface AdminNewsDetail extends AdminNews {
@@ -12,17 +14,22 @@ export interface AdminNewsDetail extends AdminNews {
   imageUrl?: string | null;
   adminId: number;
   adminEmail?: string | null;
+  isFeatured: boolean;
+  priority: number;
 }
 
 export interface AdminCreateNewsPayload {
   title: string;
-  content?: string;
-  imageUrl?: string;
+  content: string;
   category?: string;
+  isFeatured: boolean;
+  priority: number;
+  isPublished: boolean;
+  coverImage?: File | null;
 }
 
-export interface AdminUpdateNewsPayload extends AdminCreateNewsPayload {
-  status?: string;
+export interface AdminUpdateNewsPayload extends Omit<AdminCreateNewsPayload, 'isPublished'> {
+  isPublished?: boolean;
 }
 
-export type AdminNewsStatusFilter = 'all' | 'Active' | 'Hidden';
+export type AdminNewsStatusFilter = 'all' | 'published' | 'unpublished';

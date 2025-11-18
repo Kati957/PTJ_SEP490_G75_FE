@@ -1,5 +1,11 @@
 import baseService from '../../services/baseService';
-import type { LoginResponse, User, MeApiResponse } from './types';
+import type {
+  LoginResponse,
+  User,
+  MeApiResponse,
+  GooglePrepareResponse,
+  GoogleCompletePayload,
+} from './types';
 
 /**
  * Gọi API đăng nhập cho người tìm việc.
@@ -28,4 +34,12 @@ export const me = async (): Promise<User> => {
   };
 
   return user;
+};
+
+export const googlePrepare = (idToken: string): Promise<GooglePrepareResponse> => {
+  return baseService.post('/Auth/google/prepare', { idToken });
+};
+
+export const googleComplete = (payload: GoogleCompletePayload): Promise<LoginResponse> => {
+  return baseService.post('/Auth/google/complete', payload);
 };

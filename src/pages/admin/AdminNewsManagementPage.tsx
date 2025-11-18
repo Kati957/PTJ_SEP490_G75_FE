@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Card,
   Typography,
@@ -11,16 +11,11 @@ import {
   message,
   Drawer,
   Modal,
-  Form
+  Form,
+  InputNumber,
+  Switch
 } from 'antd';
-import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  BulbOutlined
-} from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, SearchOutlined, EyeOutlined, EditOutlined, BulbOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import adminNewsService from '../../features/admin/services/adminNews.service';
 import type {
@@ -41,16 +36,17 @@ type FilterState = {
 
 interface NewsFormValues {
   title: string;
-  content?: string;
-  imageUrl?: string;
+  content: string;
   category?: string;
-  status?: string;
+  isFeatured: boolean;
+  priority: number;
+  isPublished: boolean;
 }
 
 const statusOptions: Array<{ label: string; value: AdminNewsStatusFilter }> = [
-  { label: 'Tat ca trang thai', value: 'all' },
-  { label: 'Dang hien thi', value: 'Active' },
-  { label: 'Dang an', value: 'Hidden' }
+  { label: 'Tất cả trạng thái', value: 'all' },
+  { label: 'Đã đăng', value: 'published' },
+  { label: 'Bản nháp', value: 'unpublished' }
 ];
 
 type DetailFieldProps = {
@@ -63,7 +59,7 @@ const DetailField: React.FC<DetailFieldProps> = ({ label, value, span = 1 }) => 
   <div className={`flex flex-col gap-1 ${span === 2 ? 'md:col-span-2' : ''}`}>
     <span className="text-sm font-semibold text-gray-600">{label}</span>
     <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 min-h-[42px] flex items-center">
-      {value ?? <span className="text-gray-400 italic">Chua cap nhat</span>}
+      {value ?? <span className="text-gray-400 italic">Chưa cập nhật</span>}
     </div>
   </div>
 );
@@ -93,14 +89,22 @@ const AdminNewsManagementPage: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form] = Form.useForm<NewsFormValues>();
   const [toggleLoadingId, setToggleLoadingId] = useState<number | null>(null);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const normalizedFilters = useMemo(
-    () => ({
-      status: filters.status !== 'all' ? filters.status : undefined,
-      keyword: filters.keyword.trim() || undefined
-    }),
-    [filters]
-  );
+  const normalizedFilters = useMemo(() => {
+    const normalized: { isPublished?: boolean; keyword?: string } = {};
+    if (filters.status === 'published') {
+      normalized.isPublished = true;
+    }
+    if (filters.status === 'unpublished') {
+      normalized.isPublished = false;
+    }
+    if (filters.keyword.trim()) {
+      normalized.keyword = filters.keyword.trim();
+    }
+    return normalized;
+  }, [filters]);
 
   const fetchNews = useCallback(async () => {
     setLoading(true);
@@ -109,7 +113,7 @@ const AdminNewsManagementPage: React.FC = () => {
       setNews(data);
     } catch (error) {
       console.error('Failed to fetch news', error);
-      message.error('Khong the tai danh sach tin tuc');
+      message.error('Không thể tải danh sách tin tức');
     } finally {
       setLoading(false);
     }
@@ -123,6 +127,18 @@ const AdminNewsManagementPage: React.FC = () => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleCoverImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setCoverImageFile(file);
+  };
+
+  const resetCoverImage = () => {
+    setCoverImageFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const openDetail = async (newsId: number) => {
     setDetailOpen(true);
     setDetailLoading(true);
@@ -131,7 +147,7 @@ const AdminNewsManagementPage: React.FC = () => {
       setSelectedNews(detail);
     } catch (error) {
       console.error('Failed to load news detail', error);
-      message.error('Khong the tai chi tiet tin tuc');
+      message.error('Không thể tải chi tiết tin tức');
       setDetailOpen(false);
     } finally {
       setDetailLoading(false);
@@ -142,6 +158,12 @@ const AdminNewsManagementPage: React.FC = () => {
     setModalMode('create');
     setEditingId(null);
     form.resetFields();
+    form.setFieldsValue({
+      isFeatured: false,
+      priority: 0,
+      isPublished: false
+    });
+    resetCoverImage();
     setModalOpen(true);
   };
 
@@ -150,18 +172,20 @@ const AdminNewsManagementPage: React.FC = () => {
     setEditingId(newsId);
     setModalOpen(true);
     setSubmitting(true);
+    resetCoverImage();
     try {
       const detail = await adminNewsService.getNewsDetail(newsId);
       form.setFieldsValue({
         title: detail.title,
         content: detail.content ?? '',
-        imageUrl: detail.imageUrl ?? '',
         category: detail.category ?? '',
-        status: detail.status ?? 'Active'
+        isFeatured: detail.isFeatured ?? false,
+        priority: detail.priority ?? 0,
+        isPublished: detail.isPublished
       });
     } catch (error) {
       console.error('Failed to load news detail for editing', error);
-      message.error('Khong the tai thong tin tin tuc');
+      message.error('Không thể tải thông tin tin tức');
       setModalOpen(false);
     } finally {
       setSubmitting(false);
@@ -170,43 +194,55 @@ const AdminNewsManagementPage: React.FC = () => {
 
   const handleSubmitNews = async (values: NewsFormValues) => {
     setSubmitting(true);
+    const priorityValue = typeof values.priority === 'number' ? values.priority : 0;
+    const categoryValue = values.category?.trim() || undefined;
     try {
       if (modalMode === 'create') {
         const payload: AdminCreateNewsPayload = {
-          title: values.title,
+          title: values.title.trim(),
           content: values.content,
-          imageUrl: values.imageUrl,
-          category: values.category
+          category: categoryValue,
+          isFeatured: values.isFeatured,
+          priority: priorityValue,
+          isPublished: values.isPublished,
+          coverImage: coverImageFile ?? undefined
         };
         await adminNewsService.createNews(payload);
-        message.success('Da tao tin tuc moi');
+        message.success('Đã tạo tin tức mới');
       } else if (editingId !== null) {
         const payload: AdminUpdateNewsPayload = {
-          title: values.title,
+          title: values.title.trim(),
           content: values.content,
-          imageUrl: values.imageUrl,
-          category: values.category,
-          status: values.status
+          category: categoryValue,
+          isFeatured: values.isFeatured,
+          priority: priorityValue,
+          isPublished: values.isPublished,
+          coverImage: coverImageFile ?? undefined
         };
         await adminNewsService.updateNews(editingId, payload);
-        message.success('Da cap nhat tin tuc');
+        message.success('Đã cập nhật tin tức');
+        if (selectedNews?.newsId === editingId) {
+          const detail = await adminNewsService.getNewsDetail(editingId);
+          setSelectedNews(detail);
+        }
       }
       setModalOpen(false);
       form.resetFields();
+      resetCoverImage();
       await fetchNews();
     } catch (error) {
       console.error('Failed to submit news form', error);
-      message.error('Khong the luu tin tuc');
+      message.error('Không thể lưu tin tức');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleToggleActive = async (newsItem: AdminNews) => {
+  const handleTogglePublish = async (newsItem: AdminNews) => {
     setToggleLoadingId(newsItem.newsId);
     try {
-      await adminNewsService.toggleActive(newsItem.newsId);
-      message.success('Da thay doi trang thai tin tuc');
+      await adminNewsService.togglePublish(newsItem.newsId);
+      message.success('Đã thay đổi trạng thái xuất bản');
       await fetchNews();
       if (selectedNews?.newsId === newsItem.newsId) {
         const detail = await adminNewsService.getNewsDetail(newsItem.newsId);
@@ -214,7 +250,7 @@ const AdminNewsManagementPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to toggle news status', error);
-      message.error('Khong the thay doi trang thai');
+      message.error('Không thể thay đổi trạng thái xuất bản');
     } finally {
       setToggleLoadingId(null);
     }
@@ -222,7 +258,7 @@ const AdminNewsManagementPage: React.FC = () => {
 
   const columns: ColumnsType<AdminNews> = [
     {
-      title: 'Tieu de',
+      title: 'Tiêu đề',
       dataIndex: 'title',
       key: 'title',
       render: (text: string, record) => (
@@ -233,17 +269,16 @@ const AdminNewsManagementPage: React.FC = () => {
       )
     },
     {
-      title: 'Trang thai',
-      dataIndex: 'status',
-      key: 'status',
+      title: 'Trạng thái',
+      dataIndex: 'isPublished',
+      key: 'isPublished',
       width: 140,
-      render: (value?: string | null) => {
-        const isActive = value !== 'Hidden';
-        return <Tag color={isActive ? 'green' : 'orange'}>{isActive ? 'Dang hien thi' : 'Dang an'}</Tag>;
-      }
+      render: (value: boolean) => (
+        <Tag color={value ? 'green' : 'orange'}>{value ? 'Đã đăng' : 'Bản nháp'}</Tag>
+      )
     },
     {
-      title: 'Tao luc',
+      title: 'Tạo lúc',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 200,
@@ -257,7 +292,7 @@ const AdminNewsManagementPage: React.FC = () => {
         })
     },
     {
-      title: 'Cap nhat',
+      title: 'Cập nhật',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
       width: 200,
@@ -270,10 +305,10 @@ const AdminNewsManagementPage: React.FC = () => {
               hour: '2-digit',
               minute: '2-digit'
             })
-          : 'Chua cap nhat'
+          : 'Chưa cập nhật'
     },
     {
-      title: 'Hanh dong',
+      title: 'Hành động',
       key: 'actions',
       fixed: 'right',
       width: 240,
@@ -288,12 +323,12 @@ const AdminNewsManagementPage: React.FC = () => {
           <Button
             icon={<BulbOutlined />}
             size="small"
-            type={record.status === 'Hidden' ? 'primary' : 'default'}
-            danger={record.status !== 'Hidden'}
+            type={record.isPublished ? 'default' : 'primary'}
+            danger={record.isPublished}
             loading={toggleLoadingId === record.newsId}
-            onClick={() => handleToggleActive(record)}
+            onClick={() => handleTogglePublish(record)}
           >
-            {record.status === 'Hidden' ? 'Hien thi' : 'An tin'}
+            {record.isPublished ? 'Bỏ đăng' : 'Đăng tin'}
           </Button>
         </Space>
       )
@@ -303,16 +338,16 @@ const AdminNewsManagementPage: React.FC = () => {
   return (
     <>
       <AdminSectionHeader
-        title="Quan ly tin tuc"
-        description="Tao moi, cap nhat va theo doi trang thai tin tuc he thong."
+        title="Quản lý tin tức"
+        description="Tạo mới, cập nhật và theo dõi trạng thái tin tức hệ thống."
         gradient="from-amber-500 via-orange-500 to-yellow-500"
         extra={
           <Space>
             <Button icon={<ReloadOutlined />} onClick={() => fetchNews()} loading={loading}>
-              Tai lai
+              Tải lại
             </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
-              Tao tin tuc
+              Tạo tin tức
             </Button>
           </Space>
         }
@@ -322,7 +357,7 @@ const AdminNewsManagementPage: React.FC = () => {
         <Space direction="vertical" size="middle" className="w-full">
           <Input
             prefix={<SearchOutlined />}
-            placeholder="Tim theo tieu de hoac noi dung..."
+            placeholder="Tìm theo tiêu đề hoặc nội dung..."
             allowClear
             value={filters.keyword}
             onChange={(event) => handleFilterChange('keyword', event.target.value)}
@@ -365,18 +400,20 @@ const AdminNewsManagementPage: React.FC = () => {
         ) : selectedNews ? (
           <div className="space-y-6">
             <DetailSection title="Thong tin chung">
-              <DetailField label="Tieu de" value={selectedNews.title} span={2} />
-              <DetailField label="Chuyen muc" value={selectedNews.category || undefined} />
+              <DetailField label="Tiêu đề" value={selectedNews.title} span={2} />
+              <DetailField label="Chuyên mục" value={selectedNews.category || undefined} />
               <DetailField
-                label="Trang thai"
-                value={selectedNews.status === 'Hidden' ? 'Dang an' : 'Dang hien thi'}
+                label="Trạng thái"
+                value={selectedNews.isPublished ? 'Đã đăng' : 'Bản nháp'}
               />
+              <DetailField label="Nổi bật" value={selectedNews.isFeatured ? 'Có' : 'Không'} />
+              <DetailField label="Độ ưu tiên" value={selectedNews.priority} />
               <DetailField
-                label="Tao luc"
+                label="Tạo lúc"
                 value={new Date(selectedNews.createdAt).toLocaleString('vi-VN')}
               />
               <DetailField
-                label="Cap nhat"
+                label="Cập nhật"
                 value={
                   selectedNews.updatedAt
                     ? new Date(selectedNews.updatedAt).toLocaleString('vi-VN')
@@ -384,7 +421,7 @@ const AdminNewsManagementPage: React.FC = () => {
                 }
               />
               <DetailField
-                label="Quan tri vien"
+                label="Quản trị viên"
                 value={selectedNews.adminEmail ?? selectedNews.adminId}
               />
             </DetailSection>
@@ -392,7 +429,7 @@ const AdminNewsManagementPage: React.FC = () => {
             {selectedNews.imageUrl && (
               <section className="space-y-3">
                 <Typography.Title level={5} className="!mb-1">
-                  Anh minh hoa
+                  Ảnh minh họa
                 </Typography.Title>
                 <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-3 text-center">
                   <img
@@ -407,7 +444,7 @@ const AdminNewsManagementPage: React.FC = () => {
             {selectedNews.content && (
               <section className="space-y-3">
                 <Typography.Title level={5} className="!mb-1">
-                  Noi dung
+                  Nội dung
                 </Typography.Title>
                 <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                   <p className="whitespace-pre-line leading-relaxed text-gray-800">
@@ -418,49 +455,78 @@ const AdminNewsManagementPage: React.FC = () => {
             )}
           </div>
         ) : (
-          <p>Khong co du lieu.</p>
+          <p>Không có dữ liệu.</p>
         )}
       </Drawer>
 
       <Modal
-        title={modalMode === 'create' ? 'Tao tin tuc' : 'Cap nhat tin tuc'}
+        title={modalMode === 'create' ? 'Tạo tin tức' : 'Cập nhật tin tức'}
         open={modalOpen}
-        onCancel={() => setModalOpen(false)}
+        onCancel={() => {
+          setModalOpen(false);
+          form.resetFields();
+          resetCoverImage();
+        }}
         onOk={() => form.submit()}
         confirmLoading={submitting}
         destroyOnClose
-        okText={modalMode === 'create' ? 'Tao moi' : 'Luu thay doi'}
-        cancelText="Huy"
+        okText={modalMode === 'create' ? 'Tạo mới' : 'Lưu thay đổi'}
+        cancelText="Hủy"
       >
-        <Form form={form} layout="vertical" onFinish={handleSubmitNews}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmitNews}
+          initialValues={{ isFeatured: false, isPublished: false, priority: 0 }}
+        >
           <Form.Item
             name="title"
-            label="Tieu de"
-            rules={[{ required: true, message: 'Vui long nhap tieu de' }]}
+            label="Tiêu đề"
+            rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
           >
-            <Input placeholder="Nhap tieu de tin tuc" />
+            <Input placeholder="Nhập tiêu đề tin tức" />
           </Form.Item>
 
-          <Form.Item name="category" label="Chuyen muc">
-            <Input placeholder="Vi du: Thong bao, Su kien..." />
+          <Form.Item name="category" label="Chuyên mục">
+            <Input placeholder="Ví dụ: Thông báo, Sự kiện..." />
           </Form.Item>
 
-          <Form.Item name="imageUrl" label="Anh minh hoa">
-            <Input placeholder="Lien ket anh" />
+          <Form.Item label="Ảnh bìa (tải lên)">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleCoverImageChange}
+              className="block w-full text-sm text-gray-600"
+            />
+            <Typography.Text type="secondary">
+              Bỏ qua nếu muốn giữ nguyên hình hiện tại.
+            </Typography.Text>
           </Form.Item>
 
-          <Form.Item name="content" label="Noi dung">
-            <Input.TextArea rows={4} placeholder="Noi dung chi tiet" />
+          <Form.Item
+            name="content"
+            label="Nội dung"
+            rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
+          >
+            <Input.TextArea rows={4} placeholder="Nội dung chi tiết" />
           </Form.Item>
 
-          {modalMode === 'edit' && (
-            <Form.Item name="status" label="Trang thai">
-              <Select>
-                <Option value="Active">Dang hien thi</Option>
-                <Option value="Hidden">Dang an</Option>
-              </Select>
-            </Form.Item>
-          )}
+          <Form.Item
+            name="priority"
+            label="Độ ưu tiên"
+            rules={[{ required: true, message: 'Vui lòng nhập độ ưu tiên' }]}
+          >
+            <InputNumber className="w-full" min={0} />
+          </Form.Item>
+
+          <Form.Item name="isFeatured" label="Đánh dấu nổi bật" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+
+          <Form.Item name="isPublished" label="Trạng thái xuất bản" valuePropName="checked">
+            <Switch checkedChildren="Đã đăng" unCheckedChildren="Bản nháp" />
+          </Form.Item>
         </Form>
       </Modal>
     </>

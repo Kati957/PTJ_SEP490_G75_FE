@@ -4,12 +4,16 @@ export interface User {
   email: string;
   roles: string[];
   verified: boolean;
+  avatar?: string | null;
 }
 
 export interface LoginResponse {
   accessToken: string;
   expiresIn: number;
+  refreshToken?: string;
   user: User;
+  role?: string | null;
+  warning?: string | null;
 }
 
 export interface RegisterJobSeekerPayload {
@@ -27,3 +31,18 @@ export interface MeApiResponse {
   verified: string;
   roles: string[];
 }
+
+export interface GooglePrepareNeedRoleResponse {
+  needRoleSelection: true;
+  email: string;
+  name?: string;
+  picture?: string;
+  availableRoles: string[];
+}
+
+export interface GoogleCompletePayload {
+  idToken: string;
+  role: string;
+}
+
+export type GooglePrepareResponse = LoginResponse | GooglePrepareNeedRoleResponse;

@@ -36,7 +36,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   if (!profile) {
     return (
       <Card className="mb-4">
-        <Empty description="No profile information available" />
+        <Empty description="Không có thông tin hồ sơ" />
       </Card>
     );
   }
@@ -53,7 +53,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     {
       key: 'contactName',
       icon: <UserOutlined className="text-indigo-500" />,
-      label: 'Lien he',
+      label: 'Liên hệ',
       value: profile.contactName
     },
     {
@@ -65,13 +65,13 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     {
       key: 'phone',
       icon: <PhoneOutlined className="text-indigo-500" />,
-      label: 'Dien thoai',
+      label: 'Điện thoại',
       value: profile.contactPhone ?? profile.phoneNumber
     },
     {
       key: 'address',
       icon: <EnvironmentOutlined className="text-indigo-500" />,
-      label: 'Dia chi',
+      label: 'Địa chỉ',
       value: profile.address ?? profile.location
     },
     {
@@ -100,24 +100,24 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               {initial}
             </Avatar>
             <Title level={3} className="mt-3 mb-0">
-              {profile.displayName || 'Nha tuyen dung'}
+              {profile.displayName || 'Nhà tuyển dụng'}
             </Title>
-            <Text type="secondary">{profile.location || 'Chua co dia diem'}</Text>
+            <Text type="secondary">{profile.location || profile.address || 'Chưa có địa điểm'}</Text>
             <Text className={`text-sm ${isVerified ? 'text-green-600' : 'text-red-500'}`}>
-              {isVerified ? 'Tai khoan da xac thuc' : 'Tai khoan chua xac thuc'}
+              {isVerified ? 'Tài khoản đã xác thực' : 'Tài khoản chưa xác thực'}
             </Text>
             {averageRating !== undefined && (
               <div className="mt-3 flex flex-col items-center">
                 <Rate allowHalf disabled value={Math.round(averageRating * 2) / 2} />
                 <Text type="secondary" className="mt-1">
-                  {averageRating.toFixed(1)} / 5.0 ({ratingCount} danh gia)
+                  {averageRating.toFixed(1)} / 5.0 ({ratingCount} đánh giá)
                 </Text>
               </div>
             )}
           </div>
           <Divider />
           <Paragraph className="text-gray-600 text-center">
-            {profile.description || 'Chua co mo ta nha tuyen dung'}
+            {profile.description || 'Chưa có mô tả nhà tuyển dụng'}
           </Paragraph>
           <Divider />
           <Space direction="vertical" size="small" className="w-full">

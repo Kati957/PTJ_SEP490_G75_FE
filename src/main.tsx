@@ -6,14 +6,23 @@ import './index.css';
 import '@ant-design/v5-patch-for-react-19';
 import { Provider } from 'react-redux';
 import { store } from './app/store';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+
+if (!googleClientId) {
+  console.warn('Missing VITE_GOOGLE_CLIENT_ID env. Google login will be disabled.');
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      {/*Render App trong BrowserRouter */}
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <GoogleOAuthProvider clientId={googleClientId || 'missing-google-client-id'}>
+        {/*Render App trong BrowserRouter */}
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </GoogleOAuthProvider>
     </Provider>
   </StrictMode>,
 )

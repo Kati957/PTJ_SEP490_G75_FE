@@ -60,3 +60,30 @@ export interface AdminSolvedReportFilters {
 }
 
 export type AdminReportPagedResult<T> = PagedResult<T>;
+
+export interface AdminSystemReport {
+  reportId: number;
+  userId: number;
+  userEmail: string;
+  title: string;
+  description?: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt?: string | null;
+}
+
+export interface AdminSystemReportDetail extends AdminSystemReport {
+  fullName?: string | null;
+}
+
+export interface AdminSystemReportFilters {
+  status?: string;
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AdminResolveSystemReportPayload {
+  action: 'MarkSolved' | 'Ignore';
+  note?: string;
+}

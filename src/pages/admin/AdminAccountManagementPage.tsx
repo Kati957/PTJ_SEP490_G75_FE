@@ -36,7 +36,7 @@ const DetailFieldBox: React.FC<DetailFieldProps> = ({ label, value, span = 1 }) 
   <div className={`flex flex-col gap-1 ${span === 2 ? 'md:col-span-2' : ''}`}>
     <span className="text-sm font-semibold text-gray-600">{label}</span>
     <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 min-h-[42px] flex items-center">
-      {value ?? <span className="text-gray-400 italic">Chua cap nhat</span>}
+      {value ?? <span className="text-gray-400 italic">Chưa cập nhật</span>}
     </div>
   </div>
 );
@@ -58,7 +58,7 @@ type FilterState = {
 };
 
 const roleOptions = [
-  { label: 'Tat ca vai tro', value: 'all' },
+  { label: 'Tất cả vai trò', value: 'all' },
   { label: 'Admin', value: 'Admin' },
   { label: 'Employer', value: 'Employer' },
   { label: 'JobSeeker', value: 'JobSeeker' }
@@ -124,7 +124,7 @@ const AdminAccountManagementPage: React.FC = () => {
         }));
       } catch (error) {
         console.error('Failed to load admin users', error);
-        message.error('Khong the tai danh sach tai khoan');
+        message.error('Không thể tải danh sách tài khoản');
       } finally {
         setLoading(false);
       }
@@ -157,7 +157,7 @@ const AdminAccountManagementPage: React.FC = () => {
       setSelectedUser(detail);
     } catch (error) {
       console.error('Failed to fetch user detail', error);
-      message.error('Khong the tai chi tiet tai khoan');
+      message.error('Không thể tải chi tiết tài khoản');
       setDetailOpen(false);
     } finally {
       setDetailLoading(false);
@@ -169,7 +169,7 @@ const AdminAccountManagementPage: React.FC = () => {
     try {
       await adminUserService.toggleActive(user.userId);
       message.success(
-        `Da ${user.isActive ? 'vo hieu hoa' : 'kich hoat'} tai khoan ${user.username}`
+        `Đã ${user.isActive ? 'vô hiệu hóa' : 'kích hoạt'} tài khoản ${user.username}`
       );
       await fetchUsers();
       if (selectedUser?.userId === user.userId) {
@@ -178,7 +178,7 @@ const AdminAccountManagementPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to toggle user active', error);
-      message.error('Khong the thay doi trang thai tai khoan');
+      message.error('Không thể thay đổi trạng thái tài khoản');
     } finally {
       setToggleLoadingId(null);
     }
@@ -186,7 +186,7 @@ const AdminAccountManagementPage: React.FC = () => {
 
   const columns: ColumnsType<AdminUser> = [
     {
-      title: 'Nguoi dung',
+      title: 'Người dùng',
       dataIndex: 'username',
       key: 'username',
       render: (text, record) => (
@@ -197,32 +197,32 @@ const AdminAccountManagementPage: React.FC = () => {
       )
     },
     {
-      title: 'Vai tro',
+      title: 'Vai trò',
       dataIndex: 'role',
       key: 'role',
       render: (value: string) => <Tag color="blue">{value}</Tag>,
       width: 120
     },
     {
-      title: 'Xac thuc',
+      title: 'Xác thực',
       dataIndex: 'isVerified',
       key: 'isVerified',
       render: (value: boolean) => (
-        <Tag color={value ? 'green' : 'red'}>{value ? 'Da xac thuc' : 'Chua xac thuc'}</Tag>
+        <Tag color={value ? 'green' : 'red'}>{value ? 'Đã xác thực' : 'Chưa xác thực'}</Tag>
       ),
       width: 150
     },
     {
-      title: 'Trang thai',
+      title: 'Trạng thái',
       dataIndex: 'isActive',
       key: 'isActive',
       render: (value: boolean) => (
-        <Tag color={value ? 'green' : 'orange'}>{value ? 'Dang hoat dong' : 'Bi khoa'}</Tag>
+        <Tag color={value ? 'green' : 'orange'}>{value ? 'Đang hoạt động' : 'Bị khóa'}</Tag>
       ),
       width: 140
     },
     {
-      title: 'Tao luc',
+      title: 'Tạo lúc',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (value: string) =>
@@ -236,7 +236,7 @@ const AdminAccountManagementPage: React.FC = () => {
       width: 200
     },
     {
-      title: 'Lan dang nhap cuoi',
+      title: 'Lần đăng nhập cuối',
       dataIndex: 'lastLogin',
       key: 'lastLogin',
       render: (value: string | null | undefined) =>
@@ -248,11 +248,11 @@ const AdminAccountManagementPage: React.FC = () => {
               hour: '2-digit',
               minute: '2-digit'
             })
-          : 'Chua co',
+          : 'Chưa có',
       width: 200
     },
     {
-      title: 'Hanh dong',
+      title: 'Hành động',
       key: 'actions',
       fixed: 'right',
       width: 180,
@@ -282,12 +282,12 @@ const AdminAccountManagementPage: React.FC = () => {
   return (
     <>
       <AdminSectionHeader
-        title="Quan ly tai khoan"
-        description="Giam sat trang thai hoat dong, xac thuc va thong tin nguoi dung tren he thong."
+        title="Quản lý tài khoản"
+        description="Giám sát trạng thái hoạt động, xác thực và thông tin người dùng trên hệ thống."
         gradient="from-sky-600 via-blue-500 to-indigo-500"
         extra={
           <Button icon={<ReloadOutlined />} onClick={() => fetchUsers()} loading={loading} ghost>
-            Tai lai
+            Tải lại
           </Button>
         }
       />
@@ -300,7 +300,7 @@ const AdminAccountManagementPage: React.FC = () => {
         <Space direction="vertical" size="middle" className="w-full">
           <Input
             prefix={<SearchOutlined />}
-            placeholder="Tim theo email, username, dia chi..."
+            placeholder="Tìm theo email, username, địa chỉ..."
             allowClear
             value={filters.keyword}
             onChange={(event) => handleFilterChange('keyword', event.target.value)}
@@ -322,18 +322,18 @@ const AdminAccountManagementPage: React.FC = () => {
               onChange={(value) => handleFilterChange('status', value)}
               style={{ minWidth: 180 }}
             >
-              <Option value="all">Tat ca trang thai</Option>
-              <Option value="active">Dang hoat dong</Option>
-              <Option value="inactive">Bi khoa</Option>
+              <Option value="all">Tất cả trạng thái</Option>
+              <Option value="active">Đang hoạt động</Option>
+              <Option value="inactive">Bị khóa</Option>
             </Select>
             <Select
               value={filters.verified}
               onChange={(value) => handleFilterChange('verified', value)}
               style={{ minWidth: 200 }}
             >
-              <Option value="all">Tat ca xac thuc</Option>
-              <Option value="verified">Da xac thuc</Option>
-              <Option value="unverified">Chua xac thuc</Option>
+              <Option value="all">Tất cả xác thực</Option>
+              <Option value="verified">Đã xác thực</Option>
+              <Option value="unverified">Chưa xác thực</Option>
             </Select>
           </Space>
         </Space>
@@ -352,7 +352,7 @@ const AdminAccountManagementPage: React.FC = () => {
       </Card>
 
       <Drawer
-        title="Chi tiet tai khoan"
+        title="Chi tiết tài khoản"
         placement="right"
         width={640}
         open={detailOpen}
@@ -360,7 +360,7 @@ const AdminAccountManagementPage: React.FC = () => {
         destroyOnClose
       >
         {detailLoading ? (
-          <p>Dang tai...</p>
+          <p>Đang tải...</p>
         ) : selectedUser ? (
           <Space direction="vertical" size="large" className="w-full">
             <div className="flex flex-col items-center text-center">
@@ -379,46 +379,46 @@ const AdminAccountManagementPage: React.FC = () => {
               <Space style={{ marginTop: 8 }}>
                 <Tag color="purple">{selectedUser.role}</Tag>
                 <Tag color={selectedUser.isActive ? 'green' : 'red'}>
-                  {selectedUser.isActive ? 'Dang hoat dong' : 'Bi khoa'}
+                  {selectedUser.isActive ? 'Đang hoạt động' : 'Bị khóa'}
                 </Tag>
                 <Tag color={selectedUser.isVerified ? 'blue' : 'orange'}>
-                  {selectedUser.isVerified ? 'Da xac thuc' : 'Chua xac thuc'}
+                  {selectedUser.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
                 </Tag>
               </Space>
             </div>
 
-            <Divider plain>Thong tin chi tiet</Divider>
+            <Divider plain>Thông tin chi tiết</Divider>
 
-            <DetailSection title="Thong tin lien he">
-              <DetailFieldBox label="Ho ten" value={selectedUser.fullName || undefined} />
+            <DetailSection title="Thông tin liên hệ">
+              <DetailFieldBox label="Họ tên" value={selectedUser.fullName || undefined} />
               <DetailFieldBox label="Email" value={selectedUser.email} />
-              <DetailFieldBox label="So dien thoai" value={selectedUser.phoneNumber || undefined} />
-              <DetailFieldBox label="Dia chi" value={selectedUser.address || undefined} span={2} />
+              <DetailFieldBox label="Số điện thoại" value={selectedUser.phoneNumber || undefined} />
+              <DetailFieldBox label="Địa chỉ" value={selectedUser.address || undefined} span={2} />
             </DetailSection>
 
-            <DetailSection title="Thong tin khac">
-              <DetailFieldBox label="Cong ty" value={selectedUser.companyName || undefined} />
+            <DetailSection title="Thông tin khác">
+              <DetailFieldBox label="Công ty" value={selectedUser.companyName || undefined} />
               <DetailFieldBox
-                label="Noi mong muon"
+                label="Nơi mong muốn"
                 value={selectedUser.preferredLocation || undefined}
               />
             </DetailSection>
 
-            <DetailSection title="Hoat dong tai khoan">
+            <DetailSection title="Hoạt động tài khoản">
               <DetailFieldBox
-                label="Trang thai"
-                value={selectedUser.isActive ? 'Dang hoat dong' : 'Bi khoa'}
+                label="Trạng thái"
+                value={selectedUser.isActive ? 'Đang hoạt động' : 'Bị khóa'}
               />
               <DetailFieldBox
-                label="Xac thuc"
-                value={selectedUser.isVerified ? 'Da xac thuc' : 'Chua xac thuc'}
+                label="Xác thực"
+                value={selectedUser.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
               />
               <DetailFieldBox
-                label="Tai khoan tao luc"
+                label="Tài khoản tạo lúc"
                 value={new Date(selectedUser.createdAt).toLocaleString('vi-VN')}
               />
               <DetailFieldBox
-                label="Lan dang nhap cuoi"
+                label="Lần đăng nhập cuối"
                 value={
                   selectedUser.lastLogin
                     ? new Date(selectedUser.lastLogin).toLocaleString('vi-VN')
@@ -428,7 +428,7 @@ const AdminAccountManagementPage: React.FC = () => {
             </DetailSection>
           </Space>
         ) : (
-          <p>Khong co du lieu.</p>
+          <p>Không có dữ liệu.</p>
         )}
       </Drawer>
     </>

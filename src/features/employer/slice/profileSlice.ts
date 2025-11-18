@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { Profile, ProfileUpdateRequest } from '../../../types/profile';
 import profileService from '../services/profile.service';
+import ratingService from '../../../services/ratingService';
 
 interface ProfileState {
   profile: Profile | null;
@@ -14,19 +15,50 @@ const initialState: ProfileState = {
   error: null
 };
 
+const enrichProfileWithRatings = async (profile: Profile): Promise<Profile> => {
+  if (!profile?.userId) {
+    return profile;
+  }
+
+  try {
+    const [ratings, averageRating] = await Promise.all([
+      ratingService.getRatingsForUser(profile.userId),
+      ratingService.getAverageRatingForUser(profile.userId)
+    ]);
+
+    return {
+      ...profile,
+      ratings,
+      averageRating
+    };
+  } catch (error) {
+    console.error('Failed to load rating information', error);
+    return profile;
+  }
+};
+
 export const fetchEmployerProfile = createAsyncThunk<Profile>(
   'profile/fetchEmployerProfile',
-  async () => await profileService.getEmployerProfile()
+  async () => {
+    const profile = await profileService.getEmployerProfile();
+    return await enrichProfileWithRatings(profile);
+  }
 );
 
 export const updateEmployerProfile = createAsyncThunk<Profile, ProfileUpdateRequest>(
   'profile/updateEmployerProfile',
-  async (data) => await profileService.updateEmployerProfile(data)
+  async (data) => {
+    const updatedProfile = await profileService.updateEmployerProfile(data);
+    return await enrichProfileWithRatings(updatedProfile);
+  }
 );
 
 export const deleteEmployerAvatar = createAsyncThunk<Profile>(
   'profile/deleteEmployerAvatar',
-  async () => await profileService.deleteEmployerAvatar()
+  async () => {
+    const profile = await profileService.deleteEmployerAvatar();
+    return await enrichProfileWithRatings(profile);
+  }
 );
 
 const profileSlice = createSlice({

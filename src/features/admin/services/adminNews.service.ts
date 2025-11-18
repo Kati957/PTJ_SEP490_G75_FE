@@ -6,19 +6,38 @@ import type {
   AdminUpdateNewsPayload
 } from '../types/news';
 
+const buildNewsFormData = (payload: AdminCreateNewsPayload | AdminUpdateNewsPayload) => {
+  const formData = new FormData();
+  formData.append('Title', payload.title);
+  formData.append('Content', payload.content);
+  if (payload.category !== undefined) {
+    formData.append('Category', payload.category ?? '');
+  }
+  formData.append('IsFeatured', String(payload.isFeatured));
+  formData.append('Priority', payload.priority.toString());
+
+  if ('isPublished' in payload && payload.isPublished !== undefined) {
+    formData.append('IsPublished', String(payload.isPublished));
+  }
+
+  if (payload.coverImage) {
+    formData.append('CoverImage', payload.coverImage);
+  }
+
+  return formData;
+};
+
 const adminNewsService = {
-  async getNews(params?: { status?: string; keyword?: string }): Promise<AdminNews[]> {
+  async getNews(params?: { isPublished?: boolean; keyword?: string }): Promise<AdminNews[]> {
     const searchParams = new URLSearchParams();
-    if (params?.status && params.status !== 'all') {
-      searchParams.append('status', params.status);
+    if (params?.isPublished !== undefined) {
+      searchParams.append('isPublished', String(params.isPublished));
     }
     if (params?.keyword) {
       searchParams.append('keyword', params.keyword.trim());
     }
     const query = searchParams.toString();
-    return await baseService.get<AdminNews[]>(
-      `/admin/news${query ? `?${query}` : ''}`
-    );
+    return await baseService.get<AdminNews[]>(`/admin/news${query ? `?${query}` : ''}`);
   },
 
   async getNewsDetail(id: number): Promise<AdminNewsDetail> {
@@ -26,16 +45,22 @@ const adminNewsService = {
   },
 
   async createNews(payload: AdminCreateNewsPayload): Promise<number> {
-    const response = await baseService.post<{ id: number }>(`/admin/news`, payload);
+    const formData = buildNewsFormData(payload);
+    const response = await baseService.post<{ id: number }>(`/admin/news`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.id;
   },
 
   async updateNews(id: number, payload: AdminUpdateNewsPayload): Promise<void> {
-    await baseService.put(`/admin/news/${id}`, payload);
+    const formData = buildNewsFormData(payload);
+    await baseService.put(`/admin/news/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
   },
 
-  async toggleActive(id: number): Promise<void> {
-    await baseService.post(`/admin/news/${id}/toggle-active`);
+  async togglePublish(id: number): Promise<void> {
+    await baseService.post(`/admin/news/${id}/toggle-publish`);
   }
 };
 

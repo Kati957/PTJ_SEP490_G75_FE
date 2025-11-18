@@ -66,18 +66,18 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       await onDeleteAvatar();
       setAvatarFile(null);
       setPreviewUrl(undefined);
-      message.success('Da xoa anh dai dien');
+      message.success('Đã xóa ảnh đại diện');
     } catch (error) {
-      message.error('Khong the xoa anh');
+      message.error('Không thể xóa ảnh');
     }
   };
 
   const handleFinish = async (values: ProfileUpdateRequest) => {
     try {
       await onSubmit({ ...values, imageFile: avatarFile });
-      message.success('Cap nhat ho so thanh cong');
+      message.success('Cập nhật hồ sơ thành công');
     } catch (error) {
-      message.error('Cap nhat ho so that bai');
+      message.error('Cập nhật hồ sơ thất bại');
     }
   };
 
@@ -89,7 +89,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       onFinish={handleFinish}
       className="space-y-4"
     >
-      <Card title="Thong tin nha tuyen dung" bordered={false} className="shadow-sm">
+      <Card title="Thông tin nhà tuyển dụng" bordered={false} className="shadow-sm">
         <div className="flex flex-col md:flex-row gap-6 items-start">
           <div className="flex flex-col items-center md:items-start gap-2">
             <Upload
@@ -108,7 +108,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition text-white text-xs rounded-full">
                   <Space direction="vertical" size={0} className="items-center">
                     <CameraOutlined />
-                    <span>Chon anh</span>
+                    <span>Chọn ảnh</span>
                   </Space>
                 </div>
               </div>
@@ -121,7 +121,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
                 onClick={handleRemoveAvatar}
                 disabled={loading}
               >
-                Xoa anh
+                Xóa ảnh
               </Button>
             )}
           </div>
@@ -131,21 +131,21 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
               <Col xs={24}>
                 <Form.Item
                   name="displayName"
-                  label="Ten nha tuyen dung"
-                  rules={[{ required: true, message: 'Vui long nhap ten nha tuyen dung!' }]}
+                  label="Tên nhà tuyển dụng"
+                  rules={[{ required: true, message: 'Vui lòng nhập tên nhà tuyển dụng!' }]}
                 >
-                  <Input placeholder="VD: Nha tuyen dung ABC" />
+                  <Input placeholder="VD: Nhà tuyển dụng ABC" />
                 </Form.Item>
               </Col>
               <Col xs={24}>
                 <Form.Item
                   name="description"
-                  label="Mo ta nha tuyen dung"
-                  rules={[{ required: true, message: 'Vui long nhap mo ta nha tuyen dung!' }]}
+                  label="Mô tả nhà tuyển dụng"
+                  rules={[{ required: true, message: 'Vui lòng nhập mô tả nhà tuyển dụng!' }]}
                 >
                   <Input.TextArea
                     rows={4}
-                    placeholder="Gioi thieu ngan gon ve nha tuyen dung cua ban"
+                    placeholder="Giới thiệu ngắn gọn về nhà tuyển dụng của bạn"
                   />
                 </Form.Item>
               </Col>
@@ -153,7 +153,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
                 <Form.Item
                   name="website"
                   label="Website"
-                  rules={[{ type: 'url', message: 'Duong dan website khong hop le!' }]}
+                  rules={[{ type: 'url', message: 'Đường dẫn website không hợp lệ!' }]}
                 >
                   <Input placeholder="https://nha-tuyen-dung.com" />
                 </Form.Item>
@@ -161,10 +161,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
               <Col xs={24} md={12}>
                 <Form.Item
                   name="location"
-                  label="Dia diem chinh"
-                  rules={[{ required: true, message: 'Vui long nhap dia diem!' }]}
+                  label="Địa điểm chính"
+                  rules={[{ required: true, message: 'Vui lòng nhập địa điểm!' }]}
                 >
-                  <Input placeholder="Thanh pho, quoc gia" />
+                  <Input placeholder="VD: Hà Nội, Việt Nam" />
                 </Form.Item>
               </Col>
             </Row>
@@ -172,24 +172,24 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         </div>
       </Card>
 
-      <Card title="Thong tin lien he" bordered={false} className="shadow-sm">
+      <Card title="Thông tin liên hệ" bordered={false} className="shadow-sm">
         <Row gutter={[16, 0]}>
           <Col xs={24} md={12}>
             <Form.Item
               name="contactName"
-              label="Nguoi lien he"
-              rules={[{ required: true, message: 'Vui long nhap nguoi lien he!' }]}
+              label="Người liên hệ"
+              rules={[{ required: true, message: 'Vui lòng nhập người liên hệ!' }]}
             >
-              <Input placeholder="Ho va ten" />
+              <Input placeholder="Họ và tên" />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
             <Form.Item
               name="contactEmail"
-              label="Email lien he"
+              label="Email liên hệ"
               rules={[
-                { required: true, message: 'Vui long nhap email lien he!' },
-                { type: 'email', message: 'Email khong hop le!' }
+                { required: true, message: 'Vui lòng nhập email liên hệ!' },
+                { type: 'email', message: 'Email không hợp lệ!' }
               ]}
             >
               <Input placeholder="contact@company.com" />
@@ -198,8 +198,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           <Col xs={24} md={12}>
             <Form.Item
               name="contactPhone"
-              label="So dien thoai lien he"
-              rules={[{ required: true, message: 'Vui long nhap so dien thoai!' }]}
+              label="Số điện thoại liên hệ"
+              rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
             >
               <Input placeholder="+84 912 345 678" />
             </Form.Item>
@@ -209,7 +209,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
       <div className="flex justify-end">
         <Button type="primary" htmlType="submit" loading={loading}>
-          Luu thay doi
+          Lưu thay đổi
         </Button>
       </div>
     </Form>

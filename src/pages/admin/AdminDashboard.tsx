@@ -37,65 +37,65 @@ interface ManagementItem {
 const managementItems: ManagementItem[] = [
   {
     key: 'accounts',
-    title: 'Quan ly tai khoan',
-    description: 'Giam sat quyen han, trang thai va hoat dong dang nhap cua nguoi dung.',
+    title: 'Quản lý tài khoản',
+    description: 'Giám sát quyền hạn, trạng thái và hoạt động đăng nhập của người dùng.',
     icon: <UserSwitchOutlined />,
     color: '#1677ff',
     background: '#f5f9ff',
     route: '/admin/accounts',
     summaryEndpoint: '/AdminUsers/summary',
-    totalLabel: 'Tong tai khoan',
+    totalLabel: 'Tổng tài khoản',
     summaryFields: [
-      { field: 'active', label: 'Dang hoat dong' },
-      { field: 'inactive', label: 'Dang khoa' }
+      { field: 'active', label: 'Đang hoạt động' },
+      { field: 'inactive', label: 'Đang khóa' }
     ]
   },
   {
     key: 'posts',
-    title: 'Quan ly bai viet',
-    description: 'Duyet, chinh sua va giai quyet cac bai tuyen dung dang cho phe duyet.',
+    title: 'Quản lý bài viết',
+    description: 'Duyệt, chỉnh sửa và giải quyết các bài tuyển dụng đang chờ phê duyệt.',
     icon: <FileTextOutlined />,
     color: '#722ed1',
     background: '#f5f1ff',
     route: '/admin/job-posts',
     summaryEndpoint: '/AdminPosts/summary',
-    totalLabel: 'Tong bai viet',
-    summaryFields: [{ field: 'pending', label: 'Cho duyet' }]
+    totalLabel: 'Tổng bài viết',
+    summaryFields: [{ field: 'pending', label: 'Chờ duyệt' }]
   },
   {
     key: 'categories',
-    title: 'Quan ly danh muc',
-    description: 'Cap nhat cau truc danh muc viec lam va ky nang tren he thong.',
+    title: 'Quản lý danh mục',
+    description: 'Cập nhật cấu trúc danh mục việc làm và kỹ năng trên hệ thống.',
     icon: <TagsOutlined />,
     color: '#08979c',
     background: '#f0fffc',
     route: '/admin/categories',
     summaryEndpoint: '/AdminCategories/summary',
-    totalLabel: 'Tong danh muc'
+    totalLabel: 'Tổng danh mục'
   },
   {
     key: 'reports',
-    title: 'Quan ly bao cao',
-    description: 'Theo doi bao cao vi pham, xu ly khieu nai va phan hoi nguoi dung.',
+    title: 'Quản lý báo cáo',
+    description: 'Theo dõi báo cáo vi phạm, xử lý khiếu nại và phản hồi người dùng.',
     icon: <FlagOutlined />,
     color: '#f5222d',
     background: '#fff5f3',
     route: '/admin/reports',
     summaryEndpoint: '/AdminReports/summary',
-    totalLabel: 'Tong bao cao',
-    summaryFields: [{ field: 'pending', label: 'Chua xu ly' }]
+    totalLabel: 'Tổng báo cáo',
+    summaryFields: [{ field: 'pending', label: 'Chưa xử lý' }]
   },
   {
     key: 'news',
-    title: 'Quan ly tin tuc',
-    description: 'Dang tai thong bao, cap nhat tin tuc va noi dung marketing.',
+    title: 'Quản lý tin tức',
+    description: 'Đăng tải thông báo, cập nhật tin tức và nội dung marketing.',
     icon: <NotificationOutlined />,
     color: '#fa8c16',
     background: '#fff7e6',
     route: '/admin/news',
     summaryEndpoint: '/AdminNews/summary',
-    totalLabel: 'Tong tin tuc',
-    summaryFields: [{ field: 'pending', label: 'Ban nhap' }]
+    totalLabel: 'Tổng tin tức',
+    summaryFields: [{ field: 'pending', label: 'Bản nháp' }]
   }
 ];
 
@@ -135,7 +135,7 @@ const AdminDashboard: React.FC = () => {
         } catch (overviewError) {
           console.error('Failed to fetch admin overview', overviewError);
           if (mountedRef.current) {
-            message.warning('Khong the tai thong ke tong quan. Dang hien thi gia tri mac dinh.');
+            message.warning('Không thể tải thống kê tổng quan. Đang hiển thị giá trị mặc định.');
           }
         }
 
@@ -166,7 +166,7 @@ const AdminDashboard: React.FC = () => {
       } catch (error) {
         console.error('Failed to load admin dashboard data', error);
         if (mountedRef.current) {
-          message.error('Khong the tai du lieu dashboard. Vui long thu lai.');
+          message.error('Không thể tải dữ liệu dashboard. Vui lòng thử lại.');
         }
       } finally {
         if (mountedRef.current) {
@@ -182,21 +182,21 @@ const AdminDashboard: React.FC = () => {
     () => [
       {
         key: 'totalAccounts',
-        label: 'Tong tai khoan',
+        label: 'Tổng tài khoản',
         value: overview.totalAccounts,
         icon: <UserSwitchOutlined />,
         color: '#1677ff'
       },
       {
         key: 'totalPosts',
-        label: 'Tong bai viet',
+        label: 'Tổng bài viết',
         value: overview.totalPosts,
         icon: <FileTextOutlined />,
         color: '#722ed1'
       },
       {
         key: 'pendingReports',
-        label: 'Bao cao chua xu ly',
+        label: 'Báo cáo chưa xử lý',
         value: overview.pendingReports,
         icon: <FlagOutlined />,
         color: '#f5222d'
@@ -213,16 +213,6 @@ const AdminDashboard: React.FC = () => {
         collapsedWidth={0}
         className="!bg-white !shadow-md !p-5 flex flex-col gap-5 overflow-y-auto"
       >
-        <Space direction="vertical" size={12}>
-          <Space size={8}>
-            <MenuUnfoldOutlined style={{ fontSize: 20, color: '#1677ff' }} />
-            <Title level={4} className="!mb-0">
-              Trung tam quan tri
-            </Title>
-          </Space>
-          <Text type="secondary">Chon phan he de truy cap cac cong cu quan ly chi tiet.</Text>
-        </Space>
-
         <Space direction="vertical" size={12} className="w-full">
           {managementItems.map((item) => {
             const summary = summaries[item.key];
@@ -282,11 +272,11 @@ const AdminDashboard: React.FC = () => {
                           navigate(item.route!);
                         }}
                       >
-                        Truy cap {item.title.toLowerCase()}
+                        Truy cập {item.title.toLowerCase()}
                       </Button>
                     ) : (
                       <Text type="secondary" className="pt-2">
-                        Trang chi tiet dang duoc phat trien
+                        Trang chi tiết đang được phát triển
                       </Text>
                     )}
                   </Space>
@@ -309,16 +299,16 @@ const AdminDashboard: React.FC = () => {
                 Admin Control Center
               </span>
               <Title level={3} className="!text-white !mb-0">
-                Chao mung tro lai, quan tri vien
+                Chào mừng trở lại, quản trị viên
               </Title>
               <Text className="!text-white/80">
-                Theo doi hoat dong he thong, xu ly bao cao va quan ly noi dung chi voi vai thao tac.
+                Theo dõi hoạt động hệ thống, xử lý báo cáo và quản lý nội dung chỉ với vài thao tác.
               </Text>
               <Space className="flex flex-wrap gap-4 pt-2">
                 <Button type="primary" ghost icon={<BarChartOutlined />}>
-                  Xem bao cao tong quan
+                  Xem báo cáo tổng quan
                 </Button>
-                <Button ghost>Thiet lap nhanh</Button>
+                <Button ghost>Thiết lập nhanh</Button>
               </Space>
             </Space>
           </Card>
@@ -353,13 +343,13 @@ const AdminDashboard: React.FC = () => {
           <Card bordered={false} className="shadow-sm">
             <div className="h-64 rounded-lg bg-gradient-to-br from-blue-50 via-white to-indigo-50 border border-dashed border-indigo-200 flex flex-col items-center justify-center text-center px-4">
               <Title level={4} className="!mb-2">
-                Bieu do thong ke se hien thi tai day
+                Biểu đồ thống kê sẽ hiển thị tại đây
               </Title>
               <Text type="secondary">
-                Ket noi nguon du lieu that de xem nhanh cac chi so qua bieu do duong, cot hoac spline.
+                Kết nối nguồn dữ liệu thật dễ để xem nhanh các chỉ số qua biểu đồ đường, cột hoặc spline.
               </Text>
               <Button type="primary" className="mt-4">
-                Ket noi nguon du lieu
+                Kết nối nguồn dữ liệu
               </Button>
             </div>
           </Card>

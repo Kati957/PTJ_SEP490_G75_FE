@@ -39,6 +39,9 @@ interface FilterState {
   status: 'all' | 'active' | 'inactive';
 }
 
+const normalizeVietnamese = (text?: string | null) =>
+  text ? text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : '';
+
 const AdminCategoryManagementPage: React.FC = () => {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,9 +59,13 @@ const AdminCategoryManagementPage: React.FC = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<AdminCategoryDetail | null>(null);
 
-  const normalizedFilters = useMemo<AdminCategoryFilters>(
-    () => ({
-      keyword: filters.keyword.trim() || undefined,
+  const normalizedFilters = useMemo<AdminCategoryFilters>(() => {
+    const trimmedKeyword = filters.keyword.trim();
+    const normalized = normalizeVietnamese(trimmedKeyword);
+    const hasDiacritics = trimmedKeyword !== '' && normalized !== trimmedKeyword.toLowerCase();
+
+    return {
+      keyword: hasDiacritics ? trimmedKeyword : undefined,
       type: filters.type !== 'all' ? filters.type : undefined,
       isActive:
         filters.status === 'all'
@@ -66,9 +73,8 @@ const AdminCategoryManagementPage: React.FC = () => {
           : filters.status === 'active'
             ? true
             : false
-    }),
-    [filters]
-  );
+    };
+  }, [filters.keyword, filters.status, filters.type]);
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
@@ -77,7 +83,7 @@ const AdminCategoryManagementPage: React.FC = () => {
       setCategories(data);
     } catch (error) {
       console.error('Failed to fetch categories', error);
-      message.error('Khong the tai danh muc');
+      message.error('Không thể tải danh mục');
     } finally {
       setLoading(false);
     }
@@ -86,6 +92,30 @@ const AdminCategoryManagementPage: React.FC = () => {
   useEffect(() => {
     void fetchCategories();
   }, [fetchCategories]);
+
+  const categoryTypes = useMemo(() => {
+    const typeSet = new Set(
+      categories
+        .map((category) => category.type?.trim())
+        .filter((type): type is string => Boolean(type))
+    );
+    return Array.from(typeSet).sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
+  }, [categories]);
+
+  const displayedCategories = useMemo(() => {
+    const keyword = filters.keyword.trim();
+    if (!keyword) {
+      return categories;
+    }
+    const normalizedKeyword = normalizeVietnamese(keyword);
+    return categories.filter((category) => {
+      const normalizedName = normalizeVietnamese(category.name);
+      const normalizedDescription = normalizeVietnamese(category.description);
+      return (
+        normalizedName.includes(normalizedKeyword) || normalizedDescription.includes(normalizedKeyword)
+      );
+    });
+  }, [categories, filters.keyword]);
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -110,7 +140,7 @@ const AdminCategoryManagementPage: React.FC = () => {
           isActive: values.isActive ?? true
         };
         await adminCategoryService.createCategory(payload);
-        message.success('Da tao danh muc');
+        message.success('Đã tạo danh mục');
       } else if (editingId !== null) {
         const payload: AdminUpdateCategoryPayload = {
           name: values.name,
@@ -119,14 +149,14 @@ const AdminCategoryManagementPage: React.FC = () => {
           isActive: values.isActive ?? true
         };
         await adminCategoryService.updateCategory(editingId, payload);
-        message.success('Da cap nhat danh muc');
+        message.success('Đã cập nhật danh mục');
       }
       setModalOpen(false);
       form.resetFields();
       await fetchCategories();
     } catch (error) {
       console.error('Failed to submit category form', error);
-      message.error('Khong the luu danh muc');
+      message.error('Không thể lưu danh mục');
     } finally {
       setSubmitting(false);
     }
@@ -140,7 +170,7 @@ const AdminCategoryManagementPage: React.FC = () => {
       setSelectedCategory(detail);
     } catch (error) {
       console.error('Failed to fetch category detail', error);
-      message.error('Khong the tai chi tiet danh muc');
+      message.error('Không thể tải chi tiết danh mục');
       setDetailOpen(false);
     } finally {
       setDetailLoading(false);
@@ -149,7 +179,7 @@ const AdminCategoryManagementPage: React.FC = () => {
 
   const columns: ColumnsType<AdminCategory> = [
     {
-      title: 'Ten danh muc',
+      title: 'Tên danh mục',
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record) => (
@@ -160,44 +190,28 @@ const AdminCategoryManagementPage: React.FC = () => {
       )
     },
     {
-      title: 'Loai',
+      title: 'Loại',
       dataIndex: 'type',
       key: 'type',
       width: 180,
-      render: (value?: string | null) => value ?? 'Chua xac dinh'
+      render: (value?: string | null) => value ?? 'Chưa xác định'
     },
     {
-      title: 'Trang thai',
+      title: 'Trạng thái',
       dataIndex: 'isActive',
       key: 'isActive',
       width: 140,
       render: (value: boolean) => (
-        <Tag color={value ? 'green' : 'red'}>{value ? 'Dang ap dung' : 'Dang tat'}</Tag>
+        <Tag color={value ? 'green' : 'red'}>{value ? 'Đang áp dụng' : 'Đang tắt'}</Tag>
       )
     },
-    {
-      title: 'Tao luc',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 200,
-      render: (value?: string | null) =>
-        value
-          ? new Date(value).toLocaleString('vi-VN', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })
-          : '---'
-    }
   ];
 
   return (
     <>
       <AdminSectionHeader
-        title="Quan ly danh muc"
-        description="Cap nhat cac nhom nganh, linh vuc su dung trong tuyen dung va tim viec."
+        title="Quản lý danh mục"
+        description="Cập nhật các nhóm ngành, lĩnh vực sử dụng trong tuyển dụng và tìm việc."
         gradient="from-emerald-500 via-teal-500 to-green-500"
         extra={
           <Space>
@@ -205,7 +219,7 @@ const AdminCategoryManagementPage: React.FC = () => {
               Tai lai
             </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
-              Tao danh muc
+              Tạo danh mục
             </Button>
           </Space>
         }
@@ -215,7 +229,7 @@ const AdminCategoryManagementPage: React.FC = () => {
         <Space direction="vertical" size="middle" className="w-full">
           <Input
             prefix={<SearchOutlined />}
-            placeholder="Tim theo ten hoac mo ta..."
+            placeholder="Tìm theo tên hoặc mô tả..."
             allowClear
             value={filters.keyword}
             onChange={(event) => handleFilterChange('keyword', event.target.value)}
@@ -225,20 +239,24 @@ const AdminCategoryManagementPage: React.FC = () => {
               value={filters.type}
               onChange={(value) => handleFilterChange('type', value)}
               style={{ width: 220 }}
+              showSearch
+              optionFilterProp="children"
             >
-              <Option value="all">Tat ca loai</Option>
-              <Option value="Employer">Nha tuyen dung</Option>
-              <Option value="JobSeeker">Ung vien</Option>
-              <Option value="Skill">Ky nang</Option>
+              <Option value="all">Tất cả loại</Option>
+              {categoryTypes.map((type) => (
+                <Option key={type} value={type}>
+                  {type}
+                </Option>
+              ))}
             </Select>
             <Select
               value={filters.status}
               onChange={(value) => handleFilterChange('status', value)}
               style={{ width: 220 }}
             >
-              <Option value="all">Tat ca trang thai</Option>
-              <Option value="active">Dang ap dung</Option>
-              <Option value="inactive">Dang tat</Option>
+              <Option value="all">Tất cả trạng thái</Option>
+              <Option value="active">Đang áp dụng</Option>
+              <Option value="inactive">Đang tắt</Option>
             </Select>
           </Space>
         </Space>
@@ -249,7 +267,7 @@ const AdminCategoryManagementPage: React.FC = () => {
           rowKey="categoryId"
           loading={loading}
           columns={columns}
-          dataSource={categories}
+          dataSource={displayedCategories}
           pagination={{ pageSize: 20 }}
           scroll={{ x: 900 }}
           onRow={(record) => ({
@@ -260,7 +278,7 @@ const AdminCategoryManagementPage: React.FC = () => {
       </Card>
 
       <Drawer
-        title="Chi tiet danh muc"
+        title="Chi tiết danh mục"
         placement="right"
         width={420}
         open={detailOpen}
@@ -268,68 +286,71 @@ const AdminCategoryManagementPage: React.FC = () => {
         destroyOnClose
       >
         {detailLoading ? (
-          <p>Dang tai...</p>
+          <p>Đang tải...</p>
         ) : selectedCategory ? (
           <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Ten">{selectedCategory.name}</Descriptions.Item>
+            <Descriptions.Item label="Tên">{selectedCategory.name}</Descriptions.Item>
             {selectedCategory.description && (
-              <Descriptions.Item label="Mo ta">{selectedCategory.description}</Descriptions.Item>
+              <Descriptions.Item label="Mô tả">{selectedCategory.description}</Descriptions.Item>
             )}
-            <Descriptions.Item label="Loai">
-              {selectedCategory.type ?? 'Chua xac dinh'}
+            <Descriptions.Item label="Loại">
+              {selectedCategory.type ?? 'Chưa xác định'}
             </Descriptions.Item>
-            <Descriptions.Item label="Trang thai">
-              {selectedCategory.isActive ? 'Dang ap dung' : 'Dang tat'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Tao luc">
-              {selectedCategory.createdAt
-                ? new Date(selectedCategory.createdAt).toLocaleString('vi-VN')
-                : '---'}
+            <Descriptions.Item label="Trạng thái">
+              {selectedCategory.isActive ? 'Đang áp dụng' : 'Đang tắt'}
             </Descriptions.Item>
           </Descriptions>
         ) : (
-          <p>Khong co du lieu.</p>
+          <p>Không có dữ liệu.</p>
         )}
       </Drawer>
 
       <Modal
-        title={modalMode === 'create' ? 'Tao danh muc' : 'Cap nhat danh muc'}
+        title={modalMode === 'create' ? 'Tạo danh mục' : 'Cập nhật danh mục'}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={() => form.submit()}
         confirmLoading={submitting}
         destroyOnClose
-        okText={modalMode === 'create' ? 'Tao moi' : 'Luu thay doi'}
-        cancelText="Huy"
+        okText={modalMode === 'create' ? 'Tạo mới' : 'Lưu thay đổi'}
+        cancelText="Hủy"
       >
         <Form form={form} layout="vertical" onFinish={handleSubmitCategory}>
           <Form.Item
             name="name"
-            label="Ten danh muc"
-            rules={[{ required: true, message: 'Vui long nhap ten danh muc' }]}
+            label="Tên danh mục"
+            rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}
           >
-            <Input placeholder="Nhap ten danh muc" />
+            <Input placeholder="Nhập tên danh mục" />
           </Form.Item>
 
-          <Form.Item name="type" label="Loai">
-            <Select allowClear placeholder="Chon loai">
-              <Option value="Employer">Nha tuyen dung</Option>
-              <Option value="JobSeeker">Ung vien</Option>
-              <Option value="Skill">Ky nang</Option>
+          <Form.Item name="type" label="Loại">
+            <Select
+              allowClear
+              placeholder="Chọn loại"
+              showSearch
+              optionFilterProp="children"
+              notFoundContent="Chưa có loại nào"
+            >
+              {categoryTypes.map((type) => (
+                <Option key={type} value={type}>
+                  {type}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
 
-          <Form.Item name="description" label="Mo ta">
-            <Input.TextArea rows={3} placeholder="Mo ta ngan gon" />
+          <Form.Item name="description" label="Mô tả">
+            <Input.TextArea rows={3} placeholder="Mô tả ngắn gọn" />
           </Form.Item>
 
           <Form.Item
             name="isActive"
-            label="Trang thai"
+            label="Trạng thái"
             valuePropName="checked"
             initialValue={true}
           >
-            <Switch checkedChildren="Dang ap dung" unCheckedChildren="Dang tat" />
+            <Switch checkedChildren="Đang áp dụng" unCheckedChildren="Đang tắt" />
           </Form.Item>
         </Form>
       </Modal>

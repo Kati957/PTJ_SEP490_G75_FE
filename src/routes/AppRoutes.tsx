@@ -11,6 +11,7 @@ import FindJobPage from "../features/findJob-jobSeeker/pages/FindJobPage";
 import UnauthorizedPage from "../pages/common/UnauthorizedPage";
 import VerifySuccessPage from "../features/auth/pages/VerifySuccessPage";
 import VerifyFailedPage from "../features/auth/pages/VerifyFailedPage";
+import GoogleRoleSelectionPage from "../features/auth/pages/GoogleRoleSelectionPage";
 import NotFoundPage from "../pages/common/NotFoundPage";
 import { ROLES } from "../constants/roles";
 import EmployerDashboard from "../pages/employer/EmployerDashboard";
@@ -53,6 +54,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="employer" element={<ListEmployerPage />} />
         <Route path="login" element={<JobSeekerLoginPage />} />
         <Route path="register" element={<JobSeekerLoginPage />} />
+        <Route path="google/select-role" element={<GoogleRoleSelectionPage />} />
         <Route path="unauthorized" element={<UnauthorizedPage />} />
         <Route path="verify-success" element={<VerifySuccessPage />} />
         <Route path="verify-failed" element={<VerifyFailedPage />} />

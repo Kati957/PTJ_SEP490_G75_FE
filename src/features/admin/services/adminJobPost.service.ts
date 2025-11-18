@@ -37,8 +37,10 @@ const adminJobPostService = {
     return await baseService.get<AdminEmployerPostDetail>(`/admin/jobposts/employer/${id}`);
   },
 
-  async toggleEmployerPostBlocked(id: number): Promise<void> {
-    await baseService.post(`/admin/jobposts/employer/${id}/toggle-block`);
+  async toggleEmployerPostBlocked(id: number, reason?: string): Promise<void> {
+    await baseService.post(`/admin/jobposts/employer/${id}/toggle-block`, {
+      reason: reason?.trim() ?? ''
+    });
   },
 
   async getJobSeekerPosts(filters: AdminPostFilters = {}): Promise<PagedResult<AdminJobSeekerPost>> {
@@ -52,8 +54,10 @@ const adminJobPostService = {
     return await baseService.get<AdminJobSeekerPostDetail>(`/admin/jobposts/jobseeker/${id}`);
   },
 
-  async toggleJobSeekerPostArchived(id: number): Promise<void> {
-    await baseService.post(`/admin/jobposts/jobseeker/${id}/toggle-archive`);
+  async toggleJobSeekerPostArchived(id: number, reason?: string): Promise<void> {
+    await baseService.post(`/admin/jobposts/jobseeker/${id}/toggle-archive`, {
+      reason: reason?.trim() ?? ''
+    });
   }
 };
 
