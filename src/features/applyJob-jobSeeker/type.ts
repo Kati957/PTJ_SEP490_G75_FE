@@ -2,6 +2,7 @@
 export interface ApplyJobPayload {
   jobSeekerId: number;
   employerPostId: number;
+  cvid: number;
   note?: string;
 }
 

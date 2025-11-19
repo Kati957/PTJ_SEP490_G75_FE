@@ -70,7 +70,7 @@ const CreatePostingPage: React.FC = () => {
   const [isReadOnly, setIsReadOnly] = useState(isViewMode);
 
   const { user } = useAuth();
-  const { loading: isSubmitting, success, error } = useSelector(
+  const { loading: isSubmitting, success, error, errorStatus } = useSelector(
     (state: RootState) => state.jobSeekerPosting.create.create
   );
   const { post: postDetail, loading: isLoadingDetail } = useSelector(
@@ -177,10 +177,19 @@ const CreatePostingPage: React.FC = () => {
       );
 
       form.setFieldsValue({
-        ...postDetail,
+        title: postDetail.title,
+        categoryID: postDetail.categoryID ?? postDetail.categoryId ?? undefined,
+        provinceId: postDetail.provinceId ?? undefined,
+        districtId: postDetail.districtId ?? undefined,
+        wardId: postDetail.wardId ?? undefined,
+        locationDetail:
+          postDetail.locationDetail ?? postDetail.preferredLocation ?? "",
         preferredWorkHourStart: startTime || undefined,
         preferredWorkHourEnd: endTime || undefined,
-        locationDetail: postDetail.preferredLocation,
+        phoneContact: postDetail.phoneContact,
+        age: postDetail.age,
+        gender: postDetail.gender,
+        description: postDetail.description,
         selectedCvId: postDetail.selectedCvId ?? postDetail.cvId ?? undefined,
       });
 
@@ -225,12 +234,20 @@ const CreatePostingPage: React.FC = () => {
       );
       dispatch(resetPostStatus());
       navigate("/quan-ly-bai-dang");
+      return;
     }
+
     if (error) {
-      message.error(`Thao tác thất bại: ${error}`);
-      dispatch(resetPostStatus());
+      if (isCreateMode && errorStatus === 500) {
+        message.success("Tạo bài đăng thành công!");
+        dispatch(resetPostStatus());
+        navigate("/quan-ly-bai-dang");
+      } else {
+        message.error(`Thao tác thất bại: ${error}`);
+        dispatch(resetPostStatus());
+      }
     }
-  }, [success, error, dispatch, navigate, isCreateMode]);
+  }, [success, error, errorStatus, dispatch, navigate, isCreateMode]);
 
   const { provinces: provincesLoading, districts: districtsLoading, wards: wardsLoading } =
     locationLoading;
@@ -594,25 +611,13 @@ const CreatePostingPage: React.FC = () => {
                 </Form.Item>
               )}
 
-              <Form.Item>
-                {isViewMode ? (
-                  user &&
-                  postDetail &&
-                  user.id === postDetail.userID && (
-                    <Button
-                      type="primary"
-                      block
-                      onClick={() => navigate(`/sua-bai-dang-tim-viec/${id}`)}
-                    >
-                      Chỉnh sửa bài đăng
-                    </Button>
-                  )
-                ) : (
+              {!isViewMode && (
+                <Form.Item>
                   <Button type="primary" htmlType="submit" block loading={isSubmitting}>
                     {buttonText}
                   </Button>
-                )}
-              </Form.Item>
+                </Form.Item>
+              )}
             </Form>
           </Card>
         </Spin>

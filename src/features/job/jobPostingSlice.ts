@@ -39,15 +39,36 @@ export const createEmployerJobPost = createAsyncThunk<
   async (dto: EmployerPostDto, { rejectWithValue }) => {
     try {
       const res = await jobPostService.createJobPost(dto);
-      if (res.success) {
-        message.success(res.message || 'Đăng việc thành công!');
-      } else {
-        message.error(res.message || 'Đăng việc thất bại.');
+
+      if (res && typeof res.success === 'boolean') {
+        if (res.success) {
+          message.success(res.message || 'Đăng việc thành công!');
+          return res;
+        }
+
+        const errorMessage = res.message || 'Đăng việc thất bại.';
+        message.error(errorMessage);
+        return rejectWithValue({ ...res, message: errorMessage });
       }
-      return res;
+
+      const fallbackResponse: JobPostResponse = {
+        success: true,
+        message: res?.message || 'Đăng việc thành công!',
+        data: res?.data ?? null,
+      };
+      message.success(fallbackResponse.message);
+      return fallbackResponse;
     } catch (err: any) {
-      message.error(err.response?.data?.message || 'Lỗi máy chủ.');
-      return rejectWithValue(err.response?.data);
+      const responseData = err.response?.data;
+
+      if (responseData?.success) {
+        message.success(responseData.message || 'Đăng việc thành công!');
+        return responseData;
+      }
+
+      const errorMessage = responseData?.message || 'Lỗi máy chủ.';
+      message.error(errorMessage);
+      return rejectWithValue(responseData ?? { message: errorMessage });
     }
   }
 );

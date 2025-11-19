@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button, Input, Checkbox, Form, message } from 'antd';
-import { LinkedinOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
@@ -185,9 +184,6 @@ const LoginForm: React.FC = () => {
             />
           </div>
         </div>
-        <Button icon={<LinkedinOutlined className="text-teal-500" />} size="large" className="w-full">
-          Đăng nhập với LinkedIn
-        </Button>
       </div>
 
       <p className="text-center mt-6 text-sm">

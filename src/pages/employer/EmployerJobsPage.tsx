@@ -262,12 +262,7 @@ const EmployerJobsPage: React.FC = () => {
       dataIndex: "salary",
       key: "salary",
       sorter: true,
-      render: (salary) => (
-        <Space>
-          <MoneyCollectOutlined />
-          {salary === 0 ? "Thoả thuận" : formatCurrency(salary)}
-        </Space>
-      ),
+      render: (salary) => (salary === 0 ? "Thoả thuận" : formatCurrency(salary)),
     },
     {
       title: "Hành động",

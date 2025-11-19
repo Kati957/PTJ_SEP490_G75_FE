@@ -34,7 +34,7 @@ interface HeaderProps {
 const jobSeekerNavLinks = [
   {
     icon: <FileDoneOutlined />,
-    text: 'Việc đã đăng',
+    text: 'Bài đăng tìm việc của tôi',
     path: '/quan-ly-bai-dang'
   },
   {
@@ -51,11 +51,6 @@ const jobSeekerNavLinks = [
     icon: <FileTextOutlined />,
     text: 'CV của tôi',
     path: '/cv-cua-toi'
-  },
-  {
-    icon: <BellOutlined />,
-    text: 'Thông báo việc làm',
-    path: '/thong-bao-viec-lam'
   }
 ];
 
@@ -98,8 +93,10 @@ const GuestDropdown = () => (
     </div>
     <div className="flex">
       <div className="w-1/3 text-center border-r pr-4">
-        
-        <NavLink to="/dashboard-jobseeker"className="font-semibold"><FaBriefcase className="mx-auto text-4xl text-blue-600 mb-2" />My PTJ</NavLink>
+        <NavLink to="/tai-khoan" className="font-semibold">
+          <FaBriefcase className="mx-auto text-4xl text-blue-600 mb-2" />
+          My Profile
+        </NavLink>
       </div>
       <div className="w-2/3 pl-4">
         <ul>
@@ -122,7 +119,10 @@ const UserDropdown = ({ user, onLogout }) => (
   <div className="p-4 bg-white shadow-md rounded-lg" style={{ minWidth: '450px' }}>
     <div className="flex">
       <div className="w-1/3 text-center border-r pr-4">
-        <NavLink to="/dashboard-jobseeker"className="font-semibold"><FaBriefcase className="mx-auto text-4xl text-blue-600 mb-2" />My PTJ</NavLink>
+        <NavLink to="/tai-khoan" className="font-semibold">
+          <FaBriefcase className="mx-auto text-4xl text-blue-600 mb-2" />
+          My Profile
+        </NavLink>
       </div>
       <div className="w-2/3 pl-4">
         <ul>
@@ -138,14 +138,6 @@ const UserDropdown = ({ user, onLogout }) => (
       </div>
     </div>
     <div className="border-t mt-4 pt-4">
-      <div className="flex items-center justify-between mb-2">
-        <NavLink to="/tai-khoan">
-          <div className="flex items-center">
-            <Avatar icon={<UserOutlined />} src={user.avatar} />
-            <span className="ml-2 font-semibold">{user.username}</span>
-          </div>
-        </NavLink>
-      </div>
       <Button danger onClick={onLogout} icon={<LogoutOutlined />} className="w-full">
         Đăng xuất
       </Button>

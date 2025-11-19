@@ -31,7 +31,7 @@ const ListEmployerPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <Title level={2} className="text-center mb-6">Nhà tuyển dụng hàng đầu</Title>
+      <Title level={2} className="text-center mb-6">Nhà tuyển dụng </Title>
       <Row justify="center">
         <Col xs={24} md={20} lg={18}>
           <div className="bg-white p-6 rounded-lg shadow-md">
@@ -49,7 +49,7 @@ const ListEmployerPage: React.FC = () => {
                 {loading ? (
                   <Spin size="small" />
                 ) : (
-                  <Text strong>{totalRecords} nhà tuyển dụng được tìm thấy</Text>
+                  <Text strong>{totalRecords} nhà tuyển dụng đang có</Text>
                 )}
               </Col>
             </Row>

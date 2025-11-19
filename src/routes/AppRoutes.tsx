@@ -73,7 +73,7 @@ export const AppRoutes: React.FC = () => {
           />
           <Route
             path="sua-bai-dang-tim-viec/:id"
-            element={<CreatePostingPage />}
+            element={<ManagePostingsPage />}
           />
           <Route path="viec-lam-da-luu" element={<SavedJobsPage />} />
           <Route path="viec-da-ung-tuyen" element={<AppliedJobsPage />} />

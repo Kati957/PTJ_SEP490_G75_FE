@@ -5,6 +5,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../app/store';
 import JobCard from './JobCard';
+import { Link } from 'react-router-dom';
 
 const PrevArrow = ({ onClick }: { onClick: () => void }) => {
   return (
@@ -52,9 +53,10 @@ const FeaturedJobs: React.FC = () => {
   const jobs = useSelector((state: RootState) => state.homepage.featuredJobs);
   const carouselRef = React.useRef<CarouselRef>(null);
 
-  //Chia mảng jobs thành các trang, mỗi trang 12 jobs (3 cột * 4 hàng)
-  const jobsPerPage = 12;
-  const jobPages = chunkArray(jobs, jobsPerPage);
+  // Paginate jobs so each slide displays 6 items (3 columns x 2 rows)
+  const jobsPerPage = 6;
+  const limitedJobs = jobs.slice(0, 24);      // chỉ giữ 24 job mới nhất
+const jobPages = chunkArray(limitedJobs, jobsPerPage);
 
   const settings = {
     dots: true,
@@ -68,7 +70,7 @@ const FeaturedJobs: React.FC = () => {
     <section className="py-12 px-6">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold text-gray-800">Việc làm gần đây</h2>
-        <a href="#" className="text-blue-600 hover:underline">Xem tất cả &gt;</a>
+        <Link to="/viec-lam" className="text-blue-600 hover:underline">Xem tất cả &gt;</Link>
       </div>
 
       <div className="relative px-10 md:px-16">

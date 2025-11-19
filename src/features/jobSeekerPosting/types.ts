@@ -38,6 +38,7 @@ export interface JobSeekerPost {
   preferredWorkHourStart?: string | null;
   preferredWorkHourEnd?: string | null;
   preferredLocation?: string | null;
+  locationDetail?: string | null;
   provinceId?: number | null;
   districtId?: number | null;
   wardId?: number | null;

@@ -21,6 +21,15 @@ const buildFormData = (payload: ProfileUpdateRequest) => {
   if (payload.location !== undefined) {
     formData.append('Location', payload.location ?? '');
   }
+  if (payload.provinceId !== undefined) {
+    formData.append('ProvinceId', payload.provinceId?.toString() ?? '');
+  }
+  if (payload.districtId !== undefined) {
+    formData.append('DistrictId', payload.districtId?.toString() ?? '');
+  }
+  if (payload.wardId !== undefined) {
+    formData.append('WardId', payload.wardId?.toString() ?? '');
+  }
   if (payload.website !== undefined) {
     formData.append('Website', payload.website ?? '');
   }

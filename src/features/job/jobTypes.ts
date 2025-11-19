@@ -56,6 +56,19 @@ export interface JobPostView {
   status: 'draft' | 'active' | 'expired' | string;
 }
 
+export interface JobAiSuggestion {
+  title?: string;
+  seekerName?: string;
+  preferredLocation?: string;
+  description?: string;
+  matchPercent?: number;
+}
+
+export interface JobSuggestionResponse {
+  success: boolean;
+  data: JobAiSuggestion[];
+}
+
 export interface PaginatedJobResponse {
   success: boolean;
   total: number;

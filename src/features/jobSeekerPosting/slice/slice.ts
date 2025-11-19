@@ -6,6 +6,7 @@ interface JobSeekerPostingState {
   create: {
     loading: boolean;
     error: string | null;
+    errorStatus: number | null;
     success: boolean;
   };
   detail: {
@@ -24,6 +25,7 @@ const initialState: JobSeekerPostingState = {
   create: {
     loading: false,
     error: null,
+    errorStatus: null,
     success: false,
   },
   detail: {
@@ -34,6 +36,7 @@ const initialState: JobSeekerPostingState = {
   delete: {
     loading: false,
     error: null,
+    errorStatus: null,
     success: false,
   },
 };
@@ -45,7 +48,10 @@ export const createPosting = createAsyncThunk(
       const response = await createJobSeekerPost(payload);
       return response; // Dữ liệu trả về từ API khi thành công
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Tạo bài đăng thất bại');
+      return rejectWithValue({
+        message: error.response?.data?.message || 'Tạo bài đăng thất bại',
+        status: error.response?.status ?? null,
+      });
     }
   }
 );
@@ -93,6 +99,7 @@ const jobSeekerPostingSlice = createSlice({
     resetPostStatus: (state) => {
       state.create.loading = false;
       state.create.error = null;
+      state.create.errorStatus = null;
       state.create.success = false;
 
       state.delete.loading = false;
@@ -103,22 +110,31 @@ const jobSeekerPostingSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(createPosting.pending, (state) => {
-        state.create.loading = true;
-        state.create.error = null;
-        state.create.success = false;
-      })
-      .addCase(createPosting.fulfilled, (state) => {
-        state.create.loading = false;
-        state.create.success = true;
-      })
-      .addCase(createPosting.rejected, (state, action: PayloadAction<any>) => {
-        state.create.loading = false;
+      state.create.loading = true;
+      state.create.error = null;
+      state.create.errorStatus = null;
+      state.create.success = false;
+    })
+    .addCase(createPosting.fulfilled, (state) => {
+      state.create.loading = false;
+      state.create.errorStatus = null;
+      state.create.success = true;
+    })
+    .addCase(createPosting.rejected, (state, action: PayloadAction<any>) => {
+      state.create.loading = false;
+      if (typeof action.payload === 'object') {
+        state.create.error = action.payload.message;
+        state.create.errorStatus = action.payload.status ?? null;
+      } else {
         state.create.error = action.payload;
-      })
+        state.create.errorStatus = null;
+      }
+    })
       // Reducers for updating post
       .addCase(updatePosting.pending, (state) => {
         state.create.loading = true;
         state.create.error = null;
+        state.create.errorStatus = null;
         state.create.success = false;
       })
       .addCase(updatePosting.fulfilled, (state) => {

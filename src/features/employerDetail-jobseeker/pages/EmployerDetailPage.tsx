@@ -152,12 +152,7 @@ const EmployerDetailPage: React.FC = () => {
                                 )}
                             </div>
                             
-                            <div className="mt-6 h-40 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
-                                <div className="text-center">
-                                    <EnvironmentOutlined style={{ fontSize: '24px' }} />
-                                    <p className="text-xs mt-1">Bản đồ (Placeholder)</p>
-                                </div>
-                            </div>
+                           
                         </div>
                     </Col>
                 </Row>

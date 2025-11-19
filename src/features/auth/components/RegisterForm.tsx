@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Input, Checkbox, Form, message, Alert } from 'antd';
-import { GoogleOutlined, LinkedinOutlined } from '@ant-design/icons';
+import { GoogleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import baseService from '../../../services/baseService';
 import type { RegisterJobSeekerPayload } from '../types';
@@ -145,9 +145,6 @@ const RegisterForm: React.FC = () => {
       <div className="space-y-3">
         <Button icon={<GoogleOutlined className="text-red-500" />} size="large" className="w-full">
           Đăng ký với Google
-        </Button>
-        <Button icon={<LinkedinOutlined className="text-teal-500" />} size="large" className="w-full">
-          Đăng ký với LinkedIn
         </Button>
       </div>
 
