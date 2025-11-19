@@ -1,7 +1,7 @@
-
+﻿
 
 import React, { useEffect, useState } from 'react';
-import { Modal, Row, Col, List, Button, Divider, Spin, message, Typography, Tooltip, Avatar } from 'antd';
+import { Modal, Row, Col, List, Button, Divider, Spin, message, Typography, Tooltip, Avatar, Tag } from 'antd';
 import { HeartFilled, HeartOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 
 import { JobDetailView } from './JobDetailView';
@@ -103,6 +103,20 @@ export const JobPostDetailModal: React.FC<Props> = ({ jobPost, visible, onClose 
 
   const savedIdSet = new Set(shortlisted.map(s => s.jobSeekerId));
 
+  const renderStatusTag = (status?: string) => {
+    const normalized = status?.toLowerCase();
+    if (normalized === "accepted") {
+      return <Tag color="success">Đã duyệt</Tag>;
+    }
+    if (normalized === "rejected") {
+      return <Tag color="error">Đã từ chối</Tag>;
+    }
+    if (normalized === "pending") {
+      return <Tag color="processing">Chờ duyệt</Tag>;
+    }
+    return <Tag color="default">Chưa xem</Tag>;
+  };
+
   return (
     <Modal
       title={jobPost?.title || "Chi tiết công việc"}
@@ -151,8 +165,15 @@ export const JobPostDetailModal: React.FC<Props> = ({ jobPost, visible, onClose 
                     <List.Item.Meta
                       avatar={<Avatar icon={<UserOutlined />} />}
                       title={<a onClick={() => {/* TODO: navigate to profile */}}>{app.username}</a>}
-                      description={`Nộp ngày: ${new Date(app.applicationDate).toLocaleDateString('vi-VN')}`}
-                    />
+                      description={
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <div>{Nop ngay: }</div>
+                          <div className="flex items-center gap-2">
+                            <span>Trang thai:</span>
+                            {renderStatusTag(app.status)}
+                          </div>
+                        </div>
+                      }                    />
                   </List.Item>
                 );
               }}
@@ -195,3 +216,4 @@ export const JobPostDetailModal: React.FC<Props> = ({ jobPost, visible, onClose 
     </Modal>
   );
 };
+

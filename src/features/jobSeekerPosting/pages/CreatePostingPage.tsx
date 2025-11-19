@@ -178,7 +178,7 @@ const CreatePostingPage: React.FC = () => {
 
       form.setFieldsValue({
         title: postDetail.title,
-        categoryID: postDetail.categoryID ?? postDetail.categoryId ?? undefined,
+        categoryID: postDetail.categoryID ?? postDetail.categoryID ?? undefined,
         provinceId: postDetail.provinceId ?? undefined,
         districtId: postDetail.districtId ?? undefined,
         wardId: postDetail.wardId ?? undefined,

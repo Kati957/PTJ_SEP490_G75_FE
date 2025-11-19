@@ -12,6 +12,7 @@ import {
   Input,
   Row,
   Col,
+  Spin,
 } from "antd";
 import type { TableProps, TableColumnsType } from "antd";
 import {
@@ -24,12 +25,11 @@ import {
 import { useAuth } from "../../features/auth/hooks";
 import jobPostService from "../../features/job/jobPostService";
 import type { JobPostView } from "../../features/job/jobTypes";
-import { JobDetailView } from "../../features/job/components/employer/JobDetailView";
+import { JobDetailSuggest } from "../../features/job/components/employer/JobDetailSuggest";
 import { useCategories } from "../../features/category/hook";
 
 import { useSelector } from "react-redux";
 import type { RootState } from "../../app/store";
-import { JobPostDetailModal } from "../../features/job/components/employer/JobPostDetailModal";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -53,6 +53,8 @@ const EmployerJobsPage: React.FC = () => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobPostView | null>(null);
+  const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -160,11 +162,36 @@ const EmployerJobsPage: React.FC = () => {
     });
   };
 
+  const fetchSuggestions = async (postId: number) => {
+    setSuggestionLoading(true);
+    try {
+      const res = await jobPostService.getJobSuggestions(postId);
+      if (res && Array.isArray(res.data)) {
+        setAiSuggestions(res.data);
+      } else if (Array.isArray((res as any).suggestions)) {
+        setAiSuggestions((res as any).suggestions);
+      } else {
+        setAiSuggestions([]);
+      }
+    } catch (err: any) {
+      setAiSuggestions([]);
+      if (err?.response?.status -ne 404) {
+        message.error(
+          err.response?.data?.message ||
+            "Không thể tải đề xuất từ AI."
+        );
+      }
+    } finally {
+      setSuggestionLoading(false);
+    }
+  };
+
   const handleViewDetails = (id: number) => {
     const jobToView = allJobs.find((job) => job.employerPostId === id);
     if (jobToView) {
       setSelectedJob(jobToView);
       setIsModalVisible(true);
+      fetchSuggestions(jobToView.employerPostId);
     } else {
       message.error("Không tìm thấy chi tiết công việc.");
     }
@@ -173,8 +200,8 @@ const EmployerJobsPage: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalVisible(false);
     setSelectedJob(null);
+    setAiSuggestions([]);
   };
-
   const handleTableChange: TableProps<JobPostView>["onChange"] = (
     newPagination,
     filters,
@@ -262,7 +289,11 @@ const EmployerJobsPage: React.FC = () => {
       dataIndex: "salary",
       key: "salary",
       sorter: true,
-      render: (salary) => (salary === 0 ? "Thoả thuận" : formatCurrency(salary)),
+      render: (salary) => (
+        <Space>
+          <MoneyCollectOutlined /> {formatCurrency(salary)}
+        </Space>
+      ),
     },
     {
       title: "Hành động",
@@ -378,7 +409,7 @@ const EmployerJobsPage: React.FC = () => {
           }}
         />
 
-        {/* <Modal
+        <Modal
           title="Chi tiết công việc"
           open={isModalVisible}
           onCancel={handleCloseModal}
@@ -390,15 +421,12 @@ const EmployerJobsPage: React.FC = () => {
           width={800}
         >
           {selectedJob && <JobDetailView job={selectedJob} />}
-        </Modal> */}
-        <JobPostDetailModal
-          jobPost={selectedJob}
-          visible={isModalVisible}
-          onClose={handleCloseModal}
-        />
+        </Modal>
       </div>
     </div>
   );
 };
 
 export default EmployerJobsPage;
+
+
