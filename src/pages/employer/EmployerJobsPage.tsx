@@ -316,7 +316,7 @@ const EmployerJobsPage: React.FC = () => {
       title: "Công việc",
       dataIndex: "title",
       key: "title",
-      width: "40%",
+      width: "32%",
       sorter: true,
       ellipsis: true,
       render: (text, record) => (
@@ -366,9 +366,9 @@ const EmployerJobsPage: React.FC = () => {
     {
       title: "Hành động",
       key: "action",
-      width: "15%",
+      width: "23%",
       render: (_, record) => (
-        <Space size="middle" wrap>
+        <Space size="small" style={{ display: "flex" }}>
           <Tooltip title="Gợi ý ứng viên">
             <Button
               icon={<BulbOutlined />}
