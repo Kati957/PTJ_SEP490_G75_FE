@@ -167,7 +167,12 @@ export const JobPostDetailModal: React.FC<Props> = ({ jobPost, visible, onClose 
                       title={<a onClick={() => {/* TODO: navigate to profile */}}>{app.username}</a>}
                       description={
                         <div className="text-sm text-gray-600 space-y-1">
-                          <div>{Nop ngay: }</div>
+                          <div>
+                            Nộp ngày:{" "}
+                            {app.applicationDate
+                              ? new Date(app.applicationDate).toLocaleDateString('vi-VN')
+                              : 'N/A'}
+                          </div>
                           <div className="flex items-center gap-2">
                             <span>Trang thai:</span>
                             {renderStatusTag(app.status)}
