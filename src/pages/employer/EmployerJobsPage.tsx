@@ -96,7 +96,8 @@ const EmployerJobsPage: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobPostView | null>(null);
 
-  const [isSuggestionModalVisible, setIsSuggestionModalVisible] = useState(false);
+  const [isSuggestionModalVisible, setIsSuggestionModalVisible] =
+    useState(false);
   const [suggestionList, setSuggestionList] = useState<any[]>([]);
   const [isSuggestionLoading, setIsSuggestionLoading] = useState(false);
   const [currentJobTitle, setCurrentJobTitle] = useState("");
@@ -246,7 +247,7 @@ const EmployerJobsPage: React.FC = () => {
 
   const handleTableChange: TableProps<JobPostView>["onChange"] = (
     newPagination,
-    filters,
+    _filters,
     sorter: any
   ) => {
     setPagination({
@@ -279,7 +280,7 @@ const EmployerJobsPage: React.FC = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: 120,
+      width: "12%",
       sorter: true,
       render: (status: string) => {
         const normalized = status?.toLowerCase();
@@ -315,16 +316,18 @@ const EmployerJobsPage: React.FC = () => {
       title: "Công việc",
       dataIndex: "title",
       key: "title",
+      width: "40%",
       sorter: true,
+      ellipsis: true,
       render: (text, record) => (
-        <div>
+        <div className="max-w-full">
           <a
             onClick={() => handleViewDetails(record.employerPostId)}
             className="font-semibold text-blue-600 hover:underline cursor-pointer"
           >
             {text}
           </a>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-500 truncate">
             {record.location || "(Chưa có địa điểm)"}
           </div>
           <div className="text-xs text-gray-500">
@@ -337,7 +340,9 @@ const EmployerJobsPage: React.FC = () => {
       title: "Ngành nghề",
       dataIndex: "categoryName",
       key: "categoryName",
+      width: "18%",
       sorter: true,
+      ellipsis: true,
       render: (category) => (
         <Space>
           <AppstoreOutlined /> {category || "N/A"}
@@ -348,7 +353,9 @@ const EmployerJobsPage: React.FC = () => {
       title: "Lương",
       dataIndex: "salary",
       key: "salary",
+      width: "15%",
       sorter: true,
+      ellipsis: true,
       render: (salary) => (
         <Space>
           <MoneyCollectOutlined />
@@ -359,9 +366,10 @@ const EmployerJobsPage: React.FC = () => {
     {
       title: "Hành động",
       key: "action",
+      width: "15%",
       render: (_, record) => (
         <Space size="middle" wrap>
-          <Tooltip title="Gợi ý công việc">
+          <Tooltip title="Gợi ý ứng viên">
             <Button
               icon={<BulbOutlined />}
               size="small"
@@ -409,12 +417,18 @@ const EmployerJobsPage: React.FC = () => {
           </Tooltip>
           <Tooltip title="Xóa bài đăng">
             <Button
-              danger
-              type="text"
+              type="default"
               size="small"
               icon={<DeleteOutlined />}
+              style={{
+                backgroundColor: "#fff1f0",
+                borderColor: "#ffccc7",
+                color: "#cf1322",
+              }}
               onClick={() => handleDelete(record.employerPostId)}
-            />
+            >
+              Xóa
+            </Button>
           </Tooltip>
         </Space>
       ),
@@ -446,8 +460,9 @@ const EmployerJobsPage: React.FC = () => {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-5">
+        {/* HÀNG FILTER DÀN ĐỀU 24 CỘT */}
         <Row gutter={[16, 16]}>
-          <Col xs={24} md={12} lg={8}>
+          <Col xs={24} md={12} lg={14}>
             <Search
               placeholder="Tìm kiếm theo tiêu đề công việc..."
               onSearch={handleSearch}
@@ -455,9 +470,10 @@ const EmployerJobsPage: React.FC = () => {
               enterButton
               allowClear
               loading={isLoading}
+              style={{ width: "100%" }}
             />
           </Col>
-          <Col xs={24} md={12} lg={6}>
+          <Col xs={24} md={12} lg={10}>
             <Select
               placeholder="Lọc theo ngành nghề"
               onChange={handleCategoryChange}
@@ -480,6 +496,8 @@ const EmployerJobsPage: React.FC = () => {
           dataSource={paginatedJobs}
           loading={isLoading}
           onChange={handleTableChange}
+          tableLayout="fixed"
+          className="w-full"
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,
@@ -569,16 +587,21 @@ const EmployerJobsPage: React.FC = () => {
                     <div className="space-y-1 mt-1">
                       <div className="flex items-start gap-2 text-gray-600 text-sm">
                         <EnvironmentOutlined className="mt-1 shrink-0" />
-                        <span>{item.location || "Chưa cập nhật địa điểm"}</span>
+                        <span>
+                          {item.location || "Chưa cập nhật địa điểm"}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600 text-sm">
                         <PhoneOutlined />
                         <span>
-                          Liên hệ: <Text strong copyable>{item.phoneContact || "N/A"}</Text>
+                          Liên hệ:{" "}
+                          <Text strong copyable>
+                            {item.phoneContact || "N/A"}
+                          </Text>
                         </span>
                       </div>
                       <div className="text-xs text-gray-400 mt-2">
-                        Đăng bởi: {item.employerName} • {" "}
+                        Đăng bởi: {item.employerName} •{" "}
                         {item.createdAt
                           ? new Date(item.createdAt).toLocaleDateString("vi-VN")
                           : ""}
