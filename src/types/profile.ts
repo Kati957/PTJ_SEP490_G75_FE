@@ -14,6 +14,7 @@ export interface Profile {
   contactEmail?: string;
   website?: string;
   location?: string;
+  fullLocation?: string;
   provinceId?: number | null;
   districtId?: number | null;
   wardId?: number | null;
@@ -29,6 +30,7 @@ export interface ProfileUpdateRequest {
   contactEmail?: string;
   website?: string;
   location?: string;
+  fullLocation?: string;
   provinceId?: number | null;
   districtId?: number | null;
   wardId?: number | null;

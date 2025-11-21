@@ -1,42 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { Carousel, Input, Button, Select } from 'antd'; // Import Select
-import { SearchOutlined, EnvironmentOutlined } from '@ant-design/icons';
-import Tuyendung1 from '../assets/Tuyendung1.png';
+import { Carousel, Input, Button, Select } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+import Tuyendung1 from '../assets/anhlidehomepage.png';
+import HomeBackground from '../assets/anhhome.png';
 
-const { Option } = Select; // Destructure Option from Select
+const { Option } = Select;
 
-const SlideZalo: React.FC = () => (
-  <div className="relative h-64 md:h-80 bg-gradient-to-r from-blue-600 to-blue-800 text-white flex items-center justify-center p-6 pt-24 md:pt-6">
-    <div className="text-center z-10">
-      <h2 className="text-3xl md:text-4xl font-bold">Part-Time Job Finder</h2>
-      <p className="mt-2 text-xl md:text-2xl">nay đã có mặt trên Zalo OA</p>
-      <Button 
-        type="primary" 
-        size="large" 
-        className="mt-6 bg-green-500 hover:bg-green-600 border-none"
+const slideHeightClasses = 'h-64 md:h-72 lg:h-[280px]';
+
+const SlidePrimary: React.FC = () => (
+  <div className={`relative ${slideHeightClasses} flex items-center justify-center overflow-hidden bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-800 text-white`}>
+    <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.45),_transparent)]" />
+    <div className="text-center z-10 px-6">
+      <h2 className="text-3xl md:text-4xl font-bold tracking-wide">Part-Time Job Finder</h2>
+      <p className="mt-2 text-lg md:text-xl text-blue-100">Ket noi viec lam nhanh tren moi nen tang</p>
+      <Button
+        type="primary"
+        size="large"
+        className="mt-6 bg-white text-sky-700 border-none hover:bg-blue-100"
       >
-        Tìm Hiểu Thêm
+        Tim hieu them
       </Button>
     </div>
   </div>
 );
 
-const SlidePromotion: React.FC = () => (
-  <div className="relative h-64 md:h-80 bg-gradient-to-r from-indigo-700 to-purple-800 text-white flex items-center justify-center p-6 pt-24 md:pt-6">
-    <div className="text-center z-10">
-      <h2 className="text-3xl md:text-4xl font-bold">Tìm việc siêu tốc</h2>
-      <p className="mt-2 text-xl md:text-2xl">Hàng ngàn công việc mới được cập nhật mỗi ngày</p>
-      <Button type="primary" size="large" className="mt-6">
-        Xem Ngay
+const SlideSecondary: React.FC = () => (
+  <div className={`relative ${slideHeightClasses} flex items-center justify-center overflow-hidden bg-gradient-to-r from-blue-900 via-slate-900 to-sky-900 text-white`}>
+    <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_bottom,_rgba(56,189,248,0.4),_transparent)]" />
+    <div className="text-center z-10 px-6">
+      <h2 className="text-3xl md:text-4xl font-bold">Tim viec sieu toc</h2>
+      <p className="mt-2 text-lg md:text-xl text-blue-100">Hang ngan co hoi moi duoc cap nhat moi ngay</p>
+      <Button type="primary" size="large" className="mt-6 bg-sky-500 border-none hover:bg-sky-400">
+        Xem ngay
       </Button>
     </div>
   </div>
 );
 
-// Component chính HeroSection
 const HeroSection: React.FC = () => {
   const [provinces, setProvinces] = useState([]);
-  const [selectedProvinces, setSelectedProvinces] = useState<string[]>([]); // Thay đổi thành mảng
+  const [selectedProvinces, setSelectedProvinces] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchProvinces = async () => {
@@ -52,75 +56,83 @@ const HeroSection: React.FC = () => {
     fetchProvinces();
   }, []);
 
-  const handleProvinceChange = (values: string[]) => { // Nhận một mảng các giá trị
+  const handleProvinceChange = (values: string[]) => {
     setSelectedProvinces(values);
-    // Bạn có thể làm gì đó với giá trị tỉnh đã chọn ở đây
     console.log('Selected provinces:', values);
   };
 
   return (
-    <>     
-      <section className="relative bg-blue-50">
-        
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-full max-w-6xl px-4 z-20">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            
-            <Input
-              size="large"
-              placeholder="Nhập tên vị trí, công ty, từ khoá"
-              prefix={<SearchOutlined className="text-gray-400" />}
-              className="w-full md:flex-1 rounded-lg shadow-md !h-14 placeholder-gray-600"
-            />
-            
-            <Select
-              mode="multiple"
-              showSearch
-              size="large"
-              placeholder="Chọn tỉnh, thành phố"
-              optionFilterProp="children"
-              onChange={handleProvinceChange}
-              filterOption={(input, option) =>
-                (option?.children as unknown as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }
-              className="w-full md:flex-1 rounded-lg shadow-md !h-14 placeholder-gray-600" // Thêm class cho Select
-            >
-              {provinces.map((province: any) => (
-                <Option key={province.code} value={province.name}>
-                  {province.name}
-                </Option>
-              ))}
-            </Select>
-            
-            <Button 
-              type="primary" 
-              size="large" 
-              className="w-full md:w-auto rounded-lg !h-14"
-            >
-              <SearchOutlined />
-              <span className="ml-1">Tìm kiếm</span>
-            </Button>
+    <section
+      className="relative pt-28 pb-16 overflow-hidden"
+      style={{
+        backgroundImage: `url(${HomeBackground})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-white/10 pointer-events-none" />
+
+      <div className="relative max-w-6xl mx-auto px-4 space-y-6">
+        <div className="flex flex-col md:flex-row gap-4 items-center bg-white rounded-2xl shadow-2xl border border-gray-200 p-6">
+          <Input
+            size="large"
+            placeholder="Nhap ten viec lam, cong ty, tu khoa"
+            prefix={<SearchOutlined className="text-blue-400" />}
+            className="w-full md:flex-1 rounded-xl shadow-sm !h-14 placeholder-gray-600 border-gray-200 focus:border-blue-500"
+          />
+
+          <Select
+            mode="multiple"
+            showSearch
+            size="large"
+            placeholder="Chon tinh, thanh pho"
+            optionFilterProp="children"
+            onChange={handleProvinceChange}
+            filterOption={(input, option) =>
+              (option?.children as unknown as string)
+                ?.toLowerCase()
+                .includes(input.toLowerCase())
+            }
+            className="w-full md:w-64 rounded-xl shadow-sm !h-14 border-gray-200 focus:border-blue-500"
+          >
+            {provinces.map((province: any) => (
+              <Option key={province.code} value={province.name}>
+                {province.name}
+              </Option>
+            ))}
+          </Select>
+
+          <Button
+            type="primary"
+            size="large"
+            className="w-full md:w-auto rounded-xl !h-14 bg-gradient-to-r from-sky-500 to-blue-600 border-none shadow-lg"
+          >
+            <SearchOutlined />
+            <span className="ml-1">Tim kiem</span>
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-6 items-stretch">
+          <div className="hidden lg:block rounded-[32px] border border-slate-200/60 bg-white/10 backdrop-blur-sm shadow-lg min-h-[260px]" />
+
+          <div className="rounded-[24px] overflow-hidden border border-gray-200 shadow-[0_25px_80px_rgba(15,23,42,0.35)] bg-white">
+            <Carousel arrows autoplay dots className="hero-carousel">
+              <div className={slideHeightClasses}>
+                <img src={Tuyendung1} alt="Tuyen dung" className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <SlidePrimary />
+              </div>
+              <div>
+                <SlideSecondary />
+              </div>
+            </Carousel>
           </div>
         </div>
-
-        <div className="rounded-lg overflow-hidden">
-          <Carousel arrows className="hero-carousel" autoplay>
-            {/* Slide 1 */}
-            <div className="h-64 md:h-80"> 
-              <img src={Tuyendung1} alt="Tuyển dụng" className="w-full h-full object-cover" />
-            </div>
-            
-            {/* Slide 2 */}
-            <div>
-              <SlidePromotion />
-            </div>
-          
-            
-          </Carousel>
-        </div>
-
-      </section>
-    </>
+      </div>
+    </section>
   );
 };
 
 export default HeroSection;
+

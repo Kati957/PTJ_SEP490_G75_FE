@@ -155,6 +155,16 @@ const AdminJobPostManagementPage: React.FC = () => {
     value !== null && value !== undefined
       ? `${value.toLocaleString('vi-VN')} VND`
       : undefined;
+  const formatLocation = (
+    province?: string | null,
+    district?: string | null,
+    ward?: string | null
+  ) => {
+    const parts = [ward, district, province].filter(
+      (part): part is string => Boolean(part && part.trim())
+    );
+    return parts.length ? parts.join(', ') : undefined;
+  };
 
   const employerFilterParams = useMemo(
     () => ({
@@ -672,13 +682,13 @@ const AdminJobPostManagementPage: React.FC = () => {
                 label="Loại bài đăng"
                 value={detailState.type === 'employer' ? 'Nhà tuyển dụng' : 'Ứng viên'}
               />
-              <DetailField label="Trạng thái" value={detailState.data.status} />
-              <DetailField
-                label="Tạo lúc"
-                value={formatDateTime(detailState.data.createdAt)}
-              />
               <DetailField label="Tiêu đề" value={detailState.data.title} span={2} />
               <DetailField label="Chuyên mục" value={detailState.data.categoryName || undefined} />
+            </DetailSection>
+
+            <DetailSection title="Trạng thái & thời gian">
+              <DetailField label="Trạng thái" value={detailState.data.status} />
+              <DetailField label="Tạo lúc" value={formatDateTime(detailState.data.createdAt)} />
             </DetailSection>
 
             {detailState.type === 'employer' ? (
@@ -689,8 +699,16 @@ const AdminJobPostManagementPage: React.FC = () => {
                     value={formatCurrency(detailState.data.salary)}
                   />
                   <DetailField
+                    label="Giờ làm việc"
+                    value={detailState.data.workHours || undefined}
+                  />
+                  <DetailField
                     label="Địa điểm"
-                    value={detailState.data.location || undefined}
+                    value={formatLocation(
+                      detailState.data.provinceName,
+                      detailState.data.districtName,
+                      detailState.data.wardName
+                    )}
                   />
                   <DetailField
                     label="Mô tả công việc"
@@ -747,8 +765,12 @@ const AdminJobPostManagementPage: React.FC = () => {
                     value={detailState.data.gender || undefined}
                   />
                   <DetailField
-                    label="Nơi mong muốn"
-                    value={detailState.data.preferredLocation || undefined}
+                    label="Khu vực"
+                    value={formatLocation(
+                      detailState.data.provinceName,
+                      detailState.data.districtName,
+                      detailState.data.wardName
+                    )}
                   />
                   <DetailField
                     label="Giờ làm mong muốn"
@@ -771,6 +793,11 @@ const AdminJobPostManagementPage: React.FC = () => {
                 </DetailSection>
               </>
             )}
+
+            <DetailSection title="Trạng thái & thời gian">
+              <DetailField label="Trạng thái" value={detailState.data.status} />
+              <DetailField label="Tạo lúc" value={formatDateTime(detailState.data.createdAt)} />
+            </DetailSection>
           </div>
         ) : (
           <p>Không có dữ liệu.</p>

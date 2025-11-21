@@ -12,6 +12,7 @@ export interface EmployerPostDto {
   wardId: number | null;
   detailAddress: string | null;
   categoryID: number | null;
+  subCategoryId?: number | null;
   phoneContact: string | null;
 }
 
@@ -30,6 +31,7 @@ export interface JobPostData {
   wardId: number | null;
   location: string;
   categoryID: number | null;
+  subCategoryId: number | null;
   contactPhone: string;
 }
 
@@ -51,6 +53,8 @@ export interface JobPostView {
   phoneContact: string | null;
   categoryId?: number | null;
   categoryName: string | null;
+  subCategoryId?: number | null;
+  subCategoryName?: string | null;
   employerName: string;
   createdAt: string;
   status: 'draft' | 'active' | 'expired' | string;
@@ -147,5 +151,6 @@ export interface JobSuggestionDto {
   employerName: string;
   createdAt: string;
   categoryName?: string;
+  subCategoryName?: string;
   requirements?: string;
 }

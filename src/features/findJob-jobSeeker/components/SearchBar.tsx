@@ -5,12 +5,13 @@ import locationService, {
   type LocationOption,
 } from "../../location/locationService";
 import { useCategories } from "../../category/hook";
+import { useSubCategories } from "../../subcategory/hook";
 import type { JobSearchFilters } from "../types";
 
 const SALARY_OPTIONS = [
-  { value: "all", label: "Tất cả mức lương" },
-  { value: "hasValue", label: "Có thông tin lương" },
-  { value: "negotiable", label: "Thỏa thuận" },
+  { value: "all", label: "Tat ca muc luong" },
+  { value: "hasValue", label: "Co thong tin luong" },
+  { value: "negotiable", label: "Thoa thuan" },
 ];
 
 const normalizeNumberValue = (
@@ -33,6 +34,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onSearch }) => {
   const [provinces, setProvinces] = useState<LocationOption[]>([]);
 
   const { categories, isLoading: isLoadingCategories } = useCategories();
+  const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories(
+    formState.categoryId ?? null
+  );
 
   useEffect(() => {
     const fetchProvinces = async () => {
@@ -55,6 +59,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onSearch }) => {
     field: T,
     newValue: JobSearchFilters[T]
   ) => {
+    if (field === "categoryId") {
+      setFormState((prev) => ({
+        ...prev,
+        categoryId: newValue as number | null,
+        subCategoryId: null,
+      }));
+      return;
+    }
     setFormState((prev) => ({ ...prev, [field]: newValue }));
   };
 
@@ -67,7 +79,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onSearch }) => {
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 items-center">
         <Input
           prefix={<SearchOutlined className="text-gray-400 mr-1" />}
-          placeholder="Nhập tên công việc"
+          placeholder="Nhap ten cong viec"
           value={formState.keyword}
           onChange={(e) => handleChange("keyword", e.target.value)}
           onPressEnter={handleSearch}
@@ -75,7 +87,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onSearch }) => {
           size="large"
         />
         <Select
-          placeholder="Chọn thành phố"
+          placeholder="Chon thanh pho"
           value={formState.provinceId ?? undefined}
           onChange={(value) =>
             handleChange("provinceId", normalizeNumberValue(value))
@@ -92,7 +104,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onSearch }) => {
           ))}
         </Select>
         <Select
-          placeholder="Ngành nghề"
+          placeholder="Nganh nghe"
           value={formState.categoryId ?? undefined}
           onChange={(value) =>
             handleChange("categoryId", normalizeNumberValue(value))
@@ -110,6 +122,25 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onSearch }) => {
           ))}
         </Select>
         <Select
+          placeholder="Nhom nghe"
+          value={formState.subCategoryId ?? undefined}
+          onChange={(value) =>
+            handleChange("subCategoryId", normalizeNumberValue(value))
+          }
+          allowClear
+          showSearch
+          optionFilterProp="children"
+          size="large"
+          loading={isLoadingSubCategories}
+          disabled={!formState.categoryId}
+        >
+          {subCategories.map((sub: any) => (
+            <Select.Option key={sub.subCategoryId} value={sub.subCategoryId}>
+              {sub.name}
+            </Select.Option>
+          ))}
+        </Select>
+        <Select
           placeholder="Muc luong"
           value={formState.salary}
           onChange={(value) => handleChange("salary", value)}
@@ -122,7 +153,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onSearch }) => {
           ))}
         </Select>
         <Button type="primary" size="large" onClick={handleSearch}>
-          Tìm kiếm
+          Tim kiem
         </Button>
       </div>
     </Card>

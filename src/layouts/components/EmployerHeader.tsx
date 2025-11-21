@@ -30,7 +30,7 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
   const handleLogout = () => {
     dispatch(logout());
     removeAccessToken();
-    navigate("/nha-tuyen-dung");
+    navigate("/login");
     message.success("Đăng xuất thành công!");
   };
 
@@ -38,6 +38,10 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
     {
       key: "1",
       label: <NavLink to="/nha-tuyen-dung/ho-so">Hồ sơ của tôi</NavLink>,
+    },
+    {
+      key: "change-password",
+      label: <NavLink to="/nha-tuyen-dung/doi-mat-khau">Đổi mật khẩu</NavLink>,
     },
     {
       key: "2",
@@ -88,12 +92,20 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
             </a>
           </Dropdown>
         ) : (
-          <NavLink
-            to="/nha-tuyen-dung/register"
-            className="text-white hover:text-gray-200 text-sm font-medium"
-          >
-            Đăng ký
-          </NavLink>
+          <div className="flex items-center space-x-4">
+            <NavLink
+              to="/login"
+              className="text-white hover:text-gray-200 text-sm font-medium"
+            >
+              Đăng nhập
+            </NavLink>
+            <NavLink
+              to="/nha-tuyen-dung/register"
+              className="text-white hover:text-gray-200 text-sm font-medium"
+            >
+              Đăng ký
+            </NavLink>
+          </div>
         )}
 
         <div className="border-l border-blue-700 h-6"></div>

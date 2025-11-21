@@ -85,7 +85,7 @@ const JobListSection: React.FC<JobListSectionProps> = ({
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { keyword, provinceId, categoryId, salary } = filters;
+  const { keyword, provinceId, categoryId, subCategoryId, salary } = filters;
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -129,10 +129,18 @@ const JobListSection: React.FC<JobListSectionProps> = ({
       const jobCategoryId = normalizeNumericId(
         job.categoryId ?? (job as any).categoryID
       );
+      const jobSubCategoryId = normalizeNumericId(
+        job.subCategoryId ?? (job as any).subCategoryID
+      );
       const categoryMatch =
         categoryId === null ||
         categoryId === undefined ||
         jobCategoryId === categoryId;
+
+      const subCategoryMatch =
+        subCategoryId === null ||
+        subCategoryId === undefined ||
+        jobSubCategoryId === subCategoryId;
 
       let salaryMatch = true;
       if (salary === "hasValue") {
@@ -141,9 +149,15 @@ const JobListSection: React.FC<JobListSectionProps> = ({
         salaryMatch = !job.salary || job.salary <= 0;
       }
 
-      return titleMatch && provinceMatch && categoryMatch && salaryMatch;
+      return (
+        titleMatch &&
+        provinceMatch &&
+        categoryMatch &&
+        subCategoryMatch &&
+        salaryMatch
+      );
     });
-  }, [jobs, keyword, provinceId, categoryId, salary]);
+  }, [jobs, keyword, provinceId, categoryId, subCategoryId, salary]);
 
   const sortedJobs = useMemo(() => {
     const getSalaryValue = (job: JobPostView) =>
@@ -171,7 +185,7 @@ const JobListSection: React.FC<JobListSectionProps> = ({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [keyword, provinceId, categoryId, salary, sortOrder]);
+  }, [keyword, provinceId, categoryId, subCategoryId, salary, sortOrder]);
 
   const paginatedJobs = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;

@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/hooks";
 import jobPostService from "../../features/job/jobPostService";
 import type { JobPostView } from "../../features/job/jobTypes";
+import { JobPostDetailModal } from "../../features/job/components/employer/JobPostDetailModal";
 
 // ---
 // GHI CHÚ QUAN TRỌNG:
@@ -29,6 +30,8 @@ const EmployerDashboard: React.FC = () => {
 
   const [recentApps, setRecentApps] = useState<any[]>([]);
   const [loadingApps, setLoadingApps] = useState(true);
+  const [selectedJob, setSelectedJob] = useState<JobPostView | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -149,6 +152,18 @@ const EmployerDashboard: React.FC = () => {
               <div
                 key={job.employerPostId}
                 className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow transition-all cursor-pointer"
+                onClick={() => {
+                  setSelectedJob(job);
+                  setIsModalVisible(true);
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setSelectedJob(job);
+                    setIsModalVisible(true);
+                  }
+                }}
               >
                 <div className="flex items-start justify-between">
                   <div>
@@ -166,6 +181,14 @@ const EmployerDashboard: React.FC = () => {
           </div>
         )}
       </div>
+      <JobPostDetailModal
+        jobPost={selectedJob}
+        visible={isModalVisible}
+        onClose={() => {
+          setIsModalVisible(false);
+          setSelectedJob(null);
+        }}
+      />
     </div>
   );
 };

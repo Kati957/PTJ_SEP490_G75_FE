@@ -1,0 +1,65 @@
+﻿  const renderDetailContent = () => {
+    if (!detailRecord) {
+      return <p>KhÃ´ng cÃ³ dá»¯ liá»‡u.</p>;
+    }
+
+    if (detailRecord.type === 'system') {
+      return (
+        <Descriptions column={1} bordered size="small">
+          <Descriptions.Item label="TiÃªu Ä‘á»">{detailRecord.data.title}</Descriptions.Item>
+          <Descriptions.Item label="NgÆ°á»i gá»­i">{detailRecord.data.userEmail}</Descriptions.Item>
+          {detailRecord.data.fullName && (
+            <Descriptions.Item label="TÃªn hiá»ƒn thá»‹">{detailRecord.data.fullName}</Descriptions.Item>
+          )}
+          {detailRecord.data.description && (
+            <Descriptions.Item label="MÃ´ táº£">{detailRecord.data.description}</Descriptions.Item>
+          )}
+          <Descriptions.Item label="Tráº¡ng thÃ¡i">{statusTag(detailRecord.data.status)}</Descriptions.Item>
+          <Descriptions.Item label="NgÃ y táº¡o">
+            {new Date(detailRecord.data.createdAt).toLocaleString('vi-VN')}
+          </Descriptions.Item>
+          <Descriptions.Item label="Cáº­p nháº­t">
+            {detailRecord.data.updatedAt
+              ? new Date(detailRecord.data.updatedAt).toLocaleString('vi-VN')
+              : '---'}
+          </Descriptions.Item>
+        </Descriptions>
+      );
+    }
+
+    return (
+      <Descriptions column={1} bordered size="small">
+        <Descriptions.Item label="Loáº¡i report">
+          {reportTypeTag(detailRecord.data.reportType)}
+        </Descriptions.Item>
+        <Descriptions.Item label="NgÆ°á»i bÃ¡o cÃ¡o">{detailRecord.data.reporterEmail}</Descriptions.Item>
+        {detailRecord.data.targetUserEmail && (
+          <Descriptions.Item label="NgÆ°á»i bá»‹ bÃ¡o cÃ¡o">
+            {detailRecord.data.targetUserEmail}
+          </Descriptions.Item>
+        )}
+        {detailRecord.data.targetUserRole && (
+          <Descriptions.Item label="Vai trÃ² ngÆ°á»i bá»‹ bÃ¡o cÃ¡o">
+            {detailRecord.data.targetUserRole}
+          </Descriptions.Item>
+        )}
+        {detailRecord.data.reason && (
+          <Descriptions.Item label="LÃ½ do">{detailRecord.data.reason}</Descriptions.Item>
+        )}
+        <Descriptions.Item label="Tráº¡ng thÃ¡i">{detailRecord.data.status}</Descriptions.Item>
+        <Descriptions.Item label="Thá»i gian">
+          {new Date(detailRecord.data.createdAt).toLocaleString('vi-VN')}
+        </Descriptions.Item>
+        {detailRecord.data.employerPostTitle && (
+          <Descriptions.Item label="BÃ i Ä‘Äƒng nhÃ  tuyá»ƒn dá»¥ng">
+            {detailRecord.data.employerPostTitle}
+          </Descriptions.Item>
+        )}
+        {detailRecord.data.jobSeekerPostTitle && (
+          <Descriptions.Item label="BÃ i Ä‘Äƒng á»©ng viÃªn">
+            {detailRecord.data.jobSeekerPostTitle}
+          </Descriptions.Item>
+        )}
+      </Descriptions>
+    );
+  }

@@ -19,11 +19,17 @@ const JobListPage: React.FC = () => {
     // Implement pagination logic here
   };
 
+  const placeholderFilters: JobSearchFilters = {
+    keyword: '',
+    provinceId: null,
+    categoryId: null,
+    subCategoryId: null,
+    salary: 'all',
+  };
+
   return (
     <div className="container mx-auto p-4">
-      <SearchBar value={undefined} onSearch={function (filters: JobSearchFilters): void {
-        throw new Error('Function not implemented.');
-      } } />
+      <SearchBar value={placeholderFilters} onSearch={() => {}} />
       <Breadcrumb className="mb-4">
         <Breadcrumb.Item href="/">Trang chủ</Breadcrumb.Item>
         <Breadcrumb.Item href="/viec-lam">Việc làm</Breadcrumb.Item>

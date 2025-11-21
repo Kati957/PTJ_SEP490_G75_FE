@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Form,
   Input,
@@ -28,6 +28,7 @@ import {
   fetchPostSuggestions,
 } from "../slice/slice";
 import { useCategories } from "../../category/hook";
+import { useSubCategories } from "../../subcategory/hook";
 import type {
   CreateJobSeekerPostPayload,
   UpdateJobSeekerPostPayload,
@@ -84,6 +85,11 @@ const CreatePostingPage: React.FC = () => {
   );
 
   const { categories, isLoading: isLoadingCategories } = useCategories();
+  const selectedCategoryId = Form.useWatch("categoryID", form);
+  const lastCategoryRef = useRef<number | null>(null);
+  const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories(
+    selectedCategoryId ?? null
+  );
   const [provinces, setProvinces] = useState<LocationOption[]>([]);
   const [districts, setDistricts] = useState<LocationOption[]>([]);
   const [wards, setWards] = useState<LocationOption[]>([]);
@@ -175,6 +181,19 @@ const CreatePostingPage: React.FC = () => {
   }, [dispatch, isViewMode, id]);
 
   useEffect(() => {
+    const normalized =
+      typeof selectedCategoryId === "number"
+        ? selectedCategoryId
+        : selectedCategoryId
+        ? Number(selectedCategoryId)
+        : null;
+    if (lastCategoryRef.current !== normalized) {
+      lastCategoryRef.current = normalized;
+      form.setFieldsValue({ subCategoryId: undefined });
+    }
+  }, [selectedCategoryId, form]);
+
+  useEffect(() => {
     if (postDetail && (isViewMode || isEditMode)) {
       const fallbackParts =
         postDetail.preferredWorkHours
@@ -194,7 +213,11 @@ const CreatePostingPage: React.FC = () => {
         preferredWorkHourEnd: endTime || undefined,
         locationDetail: postDetail.preferredLocation,
         selectedCvId: postDetail.selectedCvId ?? postDetail.cvId ?? undefined,
+        subCategoryId: postDetail.subCategoryId ?? undefined,
       });
+
+      lastCategoryRef.current =
+        postDetail.categoryID ?? postDetail.categoryID ?? null;
 
       (async () => {
         if (postDetail.provinceId) {
@@ -282,6 +305,7 @@ const CreatePostingPage: React.FC = () => {
       preferredWorkHourStart,
       preferredWorkHourEnd,
       selectedCvId,
+      subCategoryId,
       ...rest
     } = values;
 
@@ -297,6 +321,7 @@ const CreatePostingPage: React.FC = () => {
       userID: user.id,
       age: Number(rest.age),
       categoryID: Number(rest.categoryID),
+      subCategoryId: subCategoryId ? Number(subCategoryId) : undefined,
       provinceId: Number(provinceId),
       districtId: Number(districtId),
       wardId: Number(wardId),
@@ -344,7 +369,7 @@ const CreatePostingPage: React.FC = () => {
             ]}
           >
             <Input
-              placeholder="Ví dụ: Sinh viên năm 2 tìm việc làm phục vụ"
+              placeholder="Ví dụ: Sinh viên nam năm 2 tìm việc làm phục vụ"
               readOnly={isReadOnly}
             />
           </Form.Item>
@@ -369,6 +394,28 @@ const CreatePostingPage: React.FC = () => {
                   value={category.categoryId}
                 >
                   {category.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="subCategoryId"
+            label="Nhóm nghề cụ thể"
+            rules={[{ required: true, message: "Vui lòng chọn nhóm nghề!" }]}
+          >
+            <Select
+              placeholder={
+                selectedCategoryId ? "Chọn nhóm nghề" : "Chọn ngành trước"
+              }
+              disabled={isReadOnly || !selectedCategoryId}
+              loading={isLoadingSubCategories}
+              showSearch
+              optionFilterProp="children"
+            >
+              {subCategories.map((sub) => (
+                <Select.Option key={sub.subCategoryId} value={sub.subCategoryId}>
+                  {sub.name}
                 </Select.Option>
               ))}
             </Select>
@@ -611,7 +658,7 @@ const CreatePostingPage: React.FC = () => {
           {!isViewMode && (
             <Form.Item name="selectedCvId" label="Chọn CV đính kèm">
               <Select
-                placeholder="Chọn một CV để AI ưu tiên gửi cho việc làm"
+                placeholder="Chọn một CV để AI ưu tiên gợi ý cho việc làm"
                 loading={isLoadingCvs}
                 allowClear
                 showSearch

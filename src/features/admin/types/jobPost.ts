@@ -15,8 +15,10 @@ export interface AdminEmployerPostDetail extends AdminEmployerPost {
   salary?: number | null;
   requirements?: string | null;
   workHours?: string | null;
-  location?: string | null;
   phoneContact?: string | null;
+  provinceName?: string | null;
+  districtName?: string | null;
+  wardName?: string | null;
 }
 
 export interface AdminJobSeekerPost {
@@ -31,9 +33,11 @@ export interface AdminJobSeekerPost {
 
 export interface AdminJobSeekerPostDetail extends AdminJobSeekerPost {
   description?: string | null;
-  preferredLocation?: string | null;
   preferredWorkHours?: string | null;
   gender?: string | null;
+  provinceName?: string | null;
+  districtName?: string | null;
+  wardName?: string | null;
 }
 
 export interface AdminPostFilters {

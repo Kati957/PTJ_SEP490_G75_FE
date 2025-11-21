@@ -10,6 +10,7 @@ const DEFAULT_FILTERS: JobSearchFilters = {
   keyword: "",
   provinceId: null,
   categoryId: null,
+  subCategoryId: null,
   salary: "all",
 };
 

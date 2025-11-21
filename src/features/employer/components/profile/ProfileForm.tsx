@@ -44,6 +44,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       description: profile?.description ?? '',
       website: profile?.website ?? '',
       location: profile?.location ?? '',
+      fullLocation: profile?.fullLocation ?? '',
       provinceId: normalizeLocationId(profile?.provinceId ?? undefined),
       districtId: normalizeLocationId(profile?.districtId ?? undefined),
       wardId: normalizeLocationId(profile?.wardId ?? undefined),
@@ -314,6 +315,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
                   rules={[{ type: 'url', message: 'Đường dẫn website không hợp lệ!' }]}
                 >
                   <Input placeholder="https://nha-tuyen-dung.com" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item name="fullLocation" label="Địa chỉ chi tiết">
+                  <Input placeholder="Số nhà, đường, khu vực" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>

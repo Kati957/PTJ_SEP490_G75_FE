@@ -5,18 +5,57 @@ import type {
   MeApiResponse,
   GooglePrepareResponse,
   GoogleCompletePayload,
+  RegisterJobSeekerPayload,
+  RegisterEmployerPayload,
+  ForgotPasswordPayload,
+  ResetPasswordPayload,
+  ChangePasswordPayload,
+  RequestChangePasswordPayload,
+  ConfirmChangePasswordPayload,
 } from './types';
 
 /**
- * Gọi API đăng nhập cho người tìm việc.
+ * Gọi API đăng nhập chung cho tất cả vai trò.
  */
-export const loginJobSeeker = (credentials: any): Promise<LoginResponse> => {
+export const login = (credentials: any): Promise<LoginResponse> => {
   const requestBody = {
     usernameOrEmail: credentials.email, 
     password: credentials.password,
     deviceInfo: 'WebApp' 
   };
   return baseService.post('/Auth/login', requestBody);
+};
+
+export const registerJobSeeker = (payload: RegisterJobSeekerPayload) => {
+  return baseService.post('/Auth/register/jobseeker', payload);
+};
+
+export const registerEmployer = (payload: RegisterEmployerPayload) => {
+  return baseService.post('/Auth/register/employer', payload);
+};
+
+export const verifyEmail = (token: string) => {
+  return baseService.post('/Auth/verify-email', { token });
+};
+
+export const requestPasswordReset = (payload: ForgotPasswordPayload) => {
+  return baseService.post('/Auth/forgot-password', payload);
+};
+
+export const resetPassword = (payload: ResetPasswordPayload) => {
+  return baseService.post('/Auth/reset-password', payload);
+};
+
+export const changePassword = (payload: ChangePasswordPayload) => {
+  return baseService.post('/User/change-password', payload);
+};
+
+export const requestChangePassword = (payload: RequestChangePasswordPayload) => {
+  return baseService.post('/change-password/request', payload);
+};
+
+export const confirmChangePassword = (payload: ConfirmChangePasswordPayload) => {
+  return baseService.post('/change-password/confirm', payload);
 };
 
 /**

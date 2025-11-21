@@ -58,7 +58,10 @@ const JobSeekerPostListPage: React.FC = () => {
                           <Text type="secondary"><EnvironmentOutlined className="mr-2" />{post.preferredLocation}</Text>
                         </div>
                         <div className="mt-4">
-                          <Tag icon={<TagOutlined />} color="blue">{post.categoryName}</Tag>
+                          <Tag icon={<TagOutlined />} color="blue">
+                            {post.categoryName}
+                            {post.subCategoryName ? ` / ${post.subCategoryName}` : ""}
+                          </Tag>
                         </div>
                       </div>
                     }

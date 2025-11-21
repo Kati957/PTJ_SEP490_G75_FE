@@ -25,6 +25,7 @@ import {
 import ProfileHeader from '../../features/employer/components/profile/ProfileHeader';
 import ProfileForm from '../../features/employer/components/profile/ProfileForm';
 import type { ProfileUpdateRequest, Rating } from '../../types/profile';
+import locationService from '../../features/location/locationService';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -33,6 +34,7 @@ const EmployerProfilePage: React.FC = () => {
   const { profile, loading, error } = useSelector((state: RootState) => state.profile);
   const authUser = useSelector((state: RootState) => state.auth.user);
   const [showAllRatings, setShowAllRatings] = useState(false);
+  const [resolvedLocation, setResolvedLocation] = useState('');
 
   useEffect(() => {
     void dispatch(fetchEmployerProfile());
@@ -60,6 +62,69 @@ const EmployerProfilePage: React.FC = () => {
       : undefined;
   const ratingAverage = profile?.averageRating ?? computeAverage(ratings);
   const ratingCount = ratings.length;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveLocation = async () => {
+      if (!profile) {
+        if (!cancelled) {
+          setResolvedLocation('');
+        }
+        return;
+      }
+
+      if (profile.location) {
+        if (!cancelled) {
+          setResolvedLocation(profile.location);
+        }
+        return;
+      }
+
+      const parts: string[] = [];
+      if (profile.fullLocation) {
+        parts.push(profile.fullLocation);
+      }
+
+      try {
+        if (profile.districtId && profile.wardId) {
+          const wards = await locationService.getWards(profile.districtId);
+          const wardName = wards.find((ward) => ward.code === profile.wardId)?.name;
+          if (wardName) {
+            parts.push(wardName);
+          }
+        }
+
+        if (profile.provinceId && profile.districtId) {
+          const districts = await locationService.getDistricts(profile.provinceId);
+          const districtName = districts.find((district) => district.code === profile.districtId)?.name;
+          if (districtName) {
+            parts.push(districtName);
+          }
+        }
+
+        if (profile.provinceId) {
+          const provinces = await locationService.getProvinces();
+          const provinceName = provinces.find((province) => province.code === profile.provinceId)?.name;
+          if (provinceName) {
+            parts.push(provinceName);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to resolve employer location', error);
+      }
+
+      if (!cancelled) {
+        setResolvedLocation(parts.join(', '));
+      }
+    };
+
+    void resolveLocation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profile]);
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -105,7 +170,7 @@ const EmployerProfilePage: React.FC = () => {
             )}
           </Descriptions.Item>
           <Descriptions.Item label="Địa điểm">
-            {profile.location ?? 'Chưa cập nhật'}
+            {resolvedLocation || 'Chưa cập nhật'}
           </Descriptions.Item>
         </Descriptions>
       </Card>
@@ -145,6 +210,7 @@ const EmployerProfilePage: React.FC = () => {
             loading={loading}
             ratingCount={ratingCount}
             isVerified={authUser?.verified}
+            locationLabel={resolvedLocation}
           />
 
           <Card

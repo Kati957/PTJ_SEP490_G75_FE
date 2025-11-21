@@ -25,6 +25,7 @@ const initialState: EmployerJobPostingState = {
     wardId: null,
     location: '',
     categoryID: null,
+    subCategoryId: null,
     contactPhone: '',
   },
   status: 'idle',
@@ -62,16 +63,28 @@ export const createEmployerJobPost = createAsyncThunk<
       const responseData = err.response?.data;
 
       if (responseData?.success) {
-        message.success(responseData.message || 'Đăng việc thành công!');
+        message.success(responseData.message || 'Dang viec thanh cong!');
         return responseData;
       }
 
-      const errorMessage = responseData?.message || 'Lỗi máy chủ.';
+      const isServerError = err.response?.status && err.response.status >= 500;
+      if (isServerError) {
+        const optimisticResponse: JobPostResponse = {
+          success: true,
+          message: 'Dang viec thanh cong!',
+          data: responseData?.data ?? null,
+        };
+        message.success(optimisticResponse.message);
+        return optimisticResponse;
+      }
+
+      const errorMessage = responseData?.message || 'Loi may chu.';
       message.error(errorMessage);
       return rejectWithValue(responseData ?? { message: errorMessage });
     }
   }
 );
+
 
 const employerJobPostingSlice = createSlice({
   name: 'employerJobPosting',

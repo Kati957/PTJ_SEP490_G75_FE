@@ -35,6 +35,7 @@ import { useAuth } from "../../features/auth/hooks";
 import jobPostService from "../../features/job/jobPostService";
 import type { JobPostView } from "../../features/job/jobTypes";
 import { useCategories } from "../../features/category/hook";
+import { useSubCategories } from "../../features/subcategory/hook";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../app/store";
 import { JobPostDetailModal } from "../../features/job/components/employer/JobPostDetailModal";
@@ -104,6 +105,12 @@ const EmployerJobsPage: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<number | null>(
+    null
+  );
+  const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories(
+    selectedCategory
+  );
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
   const [sortInfo, setSortInfo] = useState<{
     field: string;
@@ -166,14 +173,19 @@ const EmployerJobsPage: React.FC = () => {
     }
 
     if (selectedCategory) {
-      const category = categories.find(
-        (c: any) => c.categoryId === selectedCategory
-      );
-      if (category) {
-        filteredData = filteredData.filter(
-          (job) => job.categoryName === category.name
-        );
-      }
+      filteredData = filteredData.filter((job) => {
+        const jobCategoryId =
+          job.categoryId ?? (job as any).categoryID ?? null;
+        return jobCategoryId === selectedCategory;
+      });
+    }
+
+    if (selectedSubCategory) {
+      filteredData = filteredData.filter((job) => {
+        const jobSubCategoryId =
+          job.subCategoryId ?? (job as any).subCategoryID ?? null;
+        return jobSubCategoryId === selectedSubCategory;
+      });
     }
 
     const { field, order } = sortInfo;
@@ -191,7 +203,14 @@ const EmployerJobsPage: React.FC = () => {
     }
 
     return filteredData;
-  }, [allJobs, searchTerm, selectedCategory, sortInfo, categories]);
+  }, [
+    allJobs,
+    searchTerm,
+    selectedCategory,
+    selectedSubCategory,
+    sortInfo,
+    categories,
+  ]);
 
   const paginatedJobs = useMemo(() => {
     const { current, pageSize } = pagination;
@@ -272,6 +291,12 @@ const EmployerJobsPage: React.FC = () => {
 
   const handleCategoryChange = (value: number | null) => {
     setSelectedCategory(value);
+    setSelectedSubCategory(null);
+    setPagination((prev) => ({ ...prev, current: 1 }));
+  };
+
+  const handleSubCategoryChange = (value: number | null) => {
+    setSelectedSubCategory(value);
     setPagination((prev) => ({ ...prev, current: 1 }));
   };
 
@@ -343,10 +368,15 @@ const EmployerJobsPage: React.FC = () => {
       width: "18%",
       sorter: true,
       ellipsis: true,
-      render: (category) => (
-        <Space>
-          <AppstoreOutlined /> {category || "N/A"}
-        </Space>
+      render: (category, record) => (
+        <div>
+          <Space>
+            <AppstoreOutlined /> {category || "N/A"}
+          </Space>
+          {record.subCategoryName && (
+            <div className="text-xs text-gray-500">{record.subCategoryName}</div>
+          )}
+        </div>
       ),
     },
     {
@@ -462,9 +492,9 @@ const EmployerJobsPage: React.FC = () => {
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-5">
         {/* HÀNG FILTER DÀN ĐỀU 24 CỘT */}
         <Row gutter={[16, 16]}>
-          <Col xs={24} md={12} lg={14}>
+          <Col xs={24} md={12} lg={10}>
             <Search
-              placeholder="Tìm kiếm theo tiêu đề công việc..."
+              placeholder="Tim kiem theo tieu de cong viec..."
               onSearch={handleSearch}
               onChange={(e) => handleSearch(e.target.value)}
               enterButton
@@ -473,9 +503,9 @@ const EmployerJobsPage: React.FC = () => {
               style={{ width: "100%" }}
             />
           </Col>
-          <Col xs={24} md={12} lg={10}>
+          <Col xs={24} md={12} lg={7}>
             <Select
-              placeholder="Lọc theo ngành nghề"
+              placeholder="Loc theo nganh nghe"
               onChange={handleCategoryChange}
               allowClear
               style={{ width: "100%" }}
@@ -484,6 +514,23 @@ const EmployerJobsPage: React.FC = () => {
               {categories.map((cat: any) => (
                 <Option key={cat.categoryId} value={cat.categoryId}>
                   {cat.name}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} md={12} lg={7}>
+            <Select
+              placeholder="Loc theo nhom nghe"
+              value={selectedSubCategory ?? undefined}
+              onChange={handleSubCategoryChange}
+              allowClear
+              style={{ width: "100%" }}
+              loading={isLoadingSubCategories}
+              disabled={!selectedCategory}
+            >
+              {subCategories.map((sub: any) => (
+                <Option key={sub.subCategoryId} value={sub.subCategoryId}>
+                  {sub.name}
                 </Option>
               ))}
             </Select>

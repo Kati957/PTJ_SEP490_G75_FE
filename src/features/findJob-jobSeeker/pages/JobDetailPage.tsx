@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Card, message, Modal, Form, Input, Select } from 'antd';
 import DOMPurify from 'dompurify';
@@ -38,14 +39,15 @@ const JobDetailPage: React.FC = () => {
   const [similarLoading, setSimilarLoading] = useState(false);
 
   const navRef = useRef<HTMLDivElement>(null);
+  const applyRequestLock = useRef(false);
 
   useEffect(() => {
     if (!jobSeekerId) {
       setCvOptions([]);
       return;
     }
-    dispatch(fetchSavedJobs(jobSeekerId));
-    dispatch(fetchAppliedJobs(jobSeekerId));
+    dispatch(fetchSavedJobs(String(jobSeekerId)));
+    dispatch(fetchAppliedJobs(Number(jobSeekerId)));
 
     let isMounted = true;
     const loadCvs = async () => {
@@ -57,6 +59,7 @@ const JobDetailPage: React.FC = () => {
         }
       } catch (err) {
         message.error('Không thể tải danh sách CV. Vui lòng thử lại sau.');
+        console.error('Failed to load CV list', err);
       } finally {
         if (isMounted) {
           setCvLoading(false);
@@ -162,11 +165,11 @@ const JobDetailPage: React.FC = () => {
 
     try {
       if (isSaved) {
-        await dispatch(removeSavedJob({ jobSeekerId, jobId })).unwrap();
+        await dispatch(removeSavedJob({ jobSeekerId: String(jobSeekerId), jobId })).unwrap();
         message.success('Đã hủy lưu công việc');
         setIsSaved(false);
       } else {
-        await dispatch(addSavedJob({ jobSeekerId, jobId })).unwrap();
+        await dispatch(addSavedJob({ jobSeekerId: String(jobSeekerId), jobId })).unwrap();
         message.success('Đã lưu công việc thành công');
         setIsSaved(true);
       }
@@ -185,13 +188,96 @@ const JobDetailPage: React.FC = () => {
     setIsApplyModalVisible(true);
   };
 
+  const refreshJobData = async () => {
+    const refreshTasks: Array<Promise<unknown>> = [];
+
+    if (jobSeekerId) {
+      refreshTasks.push(
+        dispatch(fetchAppliedJobs(Number(jobSeekerId)))
+          .unwrap()
+          .catch((err) => {
+            console.error('Failed to refresh applied jobs', err);
+          })
+      );
+    }
+
+    if (id) {
+      refreshTasks.push(
+        dispatch(fetchJobDetail(id))
+          .unwrap()
+          .catch((err) => {
+            console.error('Failed to refresh job detail', err);
+          })
+      );
+    }
+
+    if (refreshTasks.length > 0) {
+      await Promise.all(refreshTasks);
+    }
+  };
+
+  const handleApplySuccess = async (successMessage: string) => {
+    message.success(successMessage);
+    setIsApplyModalVisible(false);
+    form.resetFields();
+    setHasApplied(true);
+    await refreshJobData();
+  };
+
+  const extractAxiosErrorMessage = (error: unknown): string | null => {
+    if (!axios.isAxiosError(error)) {
+      return null;
+    }
+    const data = error.response?.data as { message?: string; error?: string; title?: string } | string | undefined;
+    if (!data) {
+      return null;
+    }
+    if (typeof data === 'string') {
+      return data;
+    }
+    if (typeof data.message === 'string') {
+      return data.message;
+    }
+    if (typeof data.error === 'string') {
+      return data.error;
+    }
+    if (typeof data.title === 'string') {
+      return data.title;
+    }
+    return null;
+  };
+
+  const isDuplicateApplicationError = (error: unknown): boolean => {
+    if (!axios.isAxiosError(error)) {
+      return false;
+    }
+
+    if (error.response?.status === 409) {
+      return true;
+    }
+
+    const messageText = extractAxiosErrorMessage(error);
+    if (!messageText) {
+      return false;
+    }
+
+    const normalized = messageText.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const duplicateMarkers = ['da ung tuyen', 'da nop don', 'already applied'];
+
+    return duplicateMarkers.some((marker) => normalized.includes(marker));
+  };
+
   const handleApplySubmit = async (values: { note: string; cvId?: number }) => {
     if (!job || !jobSeekerId) return;
     if (!values.cvId) {
-      message.warning('Vui lòng chọn CV để ứng tuyển.');
+      message.warning('Vui long chon CV de ung tuyen.');
+      return;
+    }
+    if (applying || applyRequestLock.current) {
       return;
     }
 
+    applyRequestLock.current = true;
     setApplying(true);
     try {
       await applyJobService.applyJob({
@@ -200,15 +286,17 @@ const JobDetailPage: React.FC = () => {
         cvid: values.cvId,
         note: values.note,
       });
-      message.success('Nộp đơn ứng tuyển thành công!');
-      setIsApplyModalVisible(false);
-      form.resetFields();
-      setHasApplied(true);
+      await handleApplySuccess('Nop don ung tuyen thanh cong!');
     } catch (error) {
       console.error('Apply failed:', error);
-      message.error('Nộp đơn thất bại. Có thể bạn đã ứng tuyển công việc này rồi.');
+      if (isDuplicateApplicationError(error)) {
+        await handleApplySuccess('Ban da nop don cong viec nay truoc do. Da cap nhat lai thong tin.');
+      } else {
+        message.error('Nop don that bai. Vui long thu lai sau.');
+      }
     } finally {
       setApplying(false);
+      applyRequestLock.current = false;
     }
   };
 
@@ -450,3 +538,4 @@ const JobDetailPage: React.FC = () => {
 };
 
 export default JobDetailPage;
+
