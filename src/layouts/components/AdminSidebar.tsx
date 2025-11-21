@@ -7,6 +7,7 @@ import {
   AppstoreOutlined,
   FlagOutlined,
   NotificationOutlined,
+  SolutionOutlined,
 } from "@ant-design/icons";
 
 interface AdminNavItem {
@@ -19,38 +20,44 @@ interface AdminNavItem {
 const adminNavItems: AdminNavItem[] = [
   {
     path: "/admin/dashboard",
-    label: "Tổng quan",
-    description: "Theo dõi trạng thái hệ thống",
+    label: "Tong quan",
+    description: "Theo doi trang thai he thong",
     icon: <HomeOutlined />,
   },
   {
     path: "/admin/accounts",
-    label: "Tài khoản",
-    description: "Quản lý người dùng và quyền hạn",
+    label: "Tai khoan",
+    description: "Quan ly nguoi dung va quyen han",
     icon: <UserSwitchOutlined />,
   },
   {
     path: "/admin/job-posts",
-    label: "Bài đăng việc làm",
-    description: "Duyệt và kiểm soát bài tuyển dụng",
+    label: "Bai dang viec lam",
+    description: "Duyet va kiem soat bai tuyen dung",
     icon: <FileTextOutlined />,
   },
   {
+    path: "/admin/employer-registrations",
+    label: "Ho so nha tuyen dung",
+    description: "Duyet tai khoan nha tuyen dung",
+    icon: <SolutionOutlined />,
+  },
+  {
     path: "/admin/categories",
-    label: "Danh mục",
-    description: "Điều chỉnh cấu trúc danh mục",
+    label: "Danh muc",
+    description: "Dieu chinh cau truc danh muc",
     icon: <AppstoreOutlined />,
   },
   {
     path: "/admin/reports",
-    label: "Báo cáo",
-    description: "Xử lý phản hồi và vi phạm",
+    label: "Bao cao",
+    description: "Xu ly phan hoi va vi pham",
     icon: <FlagOutlined />,
   },
   {
     path: "/admin/news",
-    label: "Tin tức",
-    description: "Quản lý tin tức và thông báo",
+    label: "Tin tuc",
+    description: "Quan ly tin tuc va thong bao",
     icon: <NotificationOutlined />,
   },
 ];
@@ -61,8 +68,8 @@ const AdminSidebar: React.FC = () => {
   return (
     <aside className="bg-white border-r border-gray-100 w-72 flex-shrink-0 h-[calc(100vh-68px)] sticky top-[68px] overflow-y-auto shadow-md">
       <div className="px-5 py-4 border-b border-gray-100">
-        <p className="text-xs uppercase tracking-widest text-gray-400">Trung tâm quản trị</p>
-        <p className="text-sm text-gray-500 mt-1">Chọn module bạn muốn quản lý</p>
+        <p className="text-xs uppercase tracking-widest text-gray-400">Trung tam quan tri</p>
+        <p className="text-sm text-gray-500 mt-1">Chon module ban muon quan ly</p>
       </div>
       <nav className="p-4 flex flex-col gap-3">
         {adminNavItems.map((item) => {
@@ -93,4 +100,3 @@ const AdminSidebar: React.FC = () => {
 };
 
 export default AdminSidebar;
-

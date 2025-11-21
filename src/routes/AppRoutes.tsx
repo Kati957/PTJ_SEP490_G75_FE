@@ -40,6 +40,7 @@ import AdminReportManagementPage from "../pages/admin/AdminReportManagementPage"
 import ListEmployerPage from "../features/listEmployer-jobSeeker/pages/ListEmployerPage";
 import JobSeekerProfilePage from "../features/profile-JobSeeker/pages/JobSeekerProfilePage";
 import AdminEmployerPostPage from "../features/admin-employer-post/pages/AdminEmployerPostPage";
+import AdminEmployerRegistrationPage from "../pages/admin/AdminEmployerRegistrationPage";
 import CandidateListPage from "../features/applyJob-employer/pages/CandidateListPage";
 import ShortlistedCandidatesPage from "../features/candidate/pages/ShortlistedCandidatesPage";
 import JobSeekerPostListPage from '../features/jobseekerList-jobSeeker/pages/JobSeekerPostListPage';
@@ -150,6 +151,10 @@ export const AppRoutes: React.FC = () => {
           <Route
             path="admin/employer-post"
             element={<AdminEmployerPostPage />}
+          />
+          <Route
+            path="admin/employer-registrations"
+            element={<AdminEmployerRegistrationPage />}
           />
         </Route>
       </Route>

@@ -1,51 +1,61 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Checkbox, Alert, message } from 'antd';
-import { UserOutlined, MailOutlined, LockOutlined, PhoneOutlined, LinkOutlined } from '@ant-design/icons';
+import {
+  BankOutlined,
+  MailOutlined,
+  LockOutlined,
+  PhoneOutlined,
+  HomeOutlined,
+} from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { registerEmployer } from '../services';
 import type { RegisterEmployerPayload } from '../types';
-import { useNavigate } from 'react-router-dom';
 
 const phoneRegex = /^0\d{9}$/;
 
 const EmployerRegisterForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (values: any) => {
     setLoading(true);
     try {
       const payload: RegisterEmployerPayload = {
-        displayName: values.displayName,
+        companyName: values.companyName,
+        contactPhone: values.contactPhone,
+        contactEmail: values.contactEmail || undefined,
+        address: values.address,
+        companyDescription: '',
+        contactPerson: '',
         email: values.email,
         password: values.password,
-        contactPhone: values.contactPhone,
-        website: values.website,
       };
-      await registerEmployer(payload);
-      setSuccess(true);
-    } catch (error: any) {
-      message.error(
-        error.response?.data?.message || 'Không thể đăng ký nhà tuyển dụng, vui lòng thử lại.'
+
+      const res = await registerEmployer(payload);
+      setSuccessMessage(
+        res?.message ?? 'Gui yeu cau dang ky thanh cong. Vui long cho quan tri vien phe duyet.'
       );
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Khong the dang ky nha tuyen dung, vui long thu lai.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (success) {
+  if (successMessage) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center rounded-3xl border border-blue-100 bg-white/90 p-8 text-center shadow-xl">
         <Alert
           type="success"
-          message="Đăng ký nhà tuyển dụng thành công!"
-          description="Kiểm tra email để xác minh tài khoản trước khi đăng nhập quản trị."
+          message="Gui yeu cau thanh cong!"
+          description={successMessage}
           showIcon
           className="mb-6 text-left"
         />
         <Button type="primary" size="large" onClick={() => navigate('/login')}>
-          Trở về đăng nhập
+          Tro ve dang nhap
         </Button>
       </div>
     );
@@ -53,129 +63,122 @@ const EmployerRegisterForm: React.FC = () => {
 
   return (
     <div className="flex h-full w-full flex-col rounded-3xl border border-white/40 bg-gradient-to-br from-cyan-50 via-blue-50 to-emerald-50 p-6 shadow-xl sm:p-8">
-      <h3 className="text-center text-2xl font-semibold text-slate-900 mb-6">
-        Đăng ký nhà tuyển dụng
-      </h3>
-      <Form
-        layout="vertical"
-        autoComplete="off"
-        onFinish={handleSubmit}
-        name="employer_register_form"
-      >
+      <h3 className="text-center text-2xl font-semibold text-slate-900 mb-6">Dang ky nha tuyen dung</h3>
+      <Form layout="vertical" autoComplete="off" onFinish={handleSubmit} name="employer_register_form">
         <Form.Item
-          label="Họ và tên"
-          name="displayName"
-          rules={[{ required: true, message: 'Vui lòng nhập họ và tên.' }]}
+          label="Ten cong ty"
+          name="companyName"
+          rules={[{ required: true, message: 'Vui long nhap ten cong ty.' }]}
         >
           <Input
             size="large"
-            placeholder="Ví dụ: Nguyễn Văn A"
-            prefix={<UserOutlined className="text-slate-400" />}
+            placeholder="VD: Cong ty ABC"
+            prefix={<BankOutlined className="text-slate-400" />}
           />
         </Form.Item>
 
         <Form.Item
-          label="Email"
-          name="email"
+          label="So dien thoai lien he"
+          name="contactPhone"
           rules={[
-            { required: true, message: 'Vui lòng nhập email.' },
-            { type: 'email', message: 'Email không hợp lệ.' },
+            { required: true, message: 'Vui long nhap so dien thoai.' },
+            {
+              pattern: phoneRegex,
+              message: 'Vui long nhap so dien thoai Viet Nam hop le (10 so bat dau bang 0).',
+            },
           ]}
         >
           <Input
             size="large"
-            placeholder="Email liên hệ"
+            placeholder="VD: 0912345678"
+            prefix={<PhoneOutlined className="text-slate-400" />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Email lien he (khong bat buoc)"
+          name="contactEmail"
+          rules={[{ type: 'email', message: 'Email lien he khong hop le.' }]}
+        >
+          <Input size="large" placeholder="Email lien he" prefix={<MailOutlined className="text-slate-400" />} />
+        </Form.Item>
+
+        <Form.Item
+          label="Dia chi (khong bat buoc)"
+          name="address"
+          rules={[{ max: 500, message: 'Dia chi toi da 500 ky tu.' }]}
+        >
+          <Input
+            size="large"
+            placeholder="So nha, duong, quan/huyen, tinh/thanh pho"
+            prefix={<HomeOutlined className="text-slate-400" />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Email tai khoan"
+          name="email"
+          rules={[
+            { required: true, message: 'Vui long nhap email tai khoan.' },
+            { type: 'email', message: 'Email khong hop le.' },
+          ]}
+        >
+          <Input
+            size="large"
+            placeholder="Email dang nhap"
             prefix={<MailOutlined className="text-slate-400" />}
           />
         </Form.Item>
 
         <Form.Item
-          label="Mật khẩu"
+          label="Mat khau"
           name="password"
           rules={[
-            { required: true, message: 'Vui lòng nhập mật khẩu.' },
-            { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự.' },
+            { required: true, message: 'Vui long nhap mat khau.' },
+            { min: 6, message: 'Mat khau phai co it nhat 6 ky tu.' },
           ]}
         >
           <Input
             size="large"
-            placeholder="Mật khẩu"
+            placeholder="Mat khau"
             type={passwordVisible ? 'text' : 'password'}
             prefix={<LockOutlined className="text-slate-400" />}
           />
         </Form.Item>
 
         <Form.Item
-          label="Xác nhận mật khẩu"
+          label="Xac nhan mat khau"
           name="confirmPassword"
           dependencies={['password']}
           rules={[
-            { required: true, message: 'Vui lòng xác nhận mật khẩu.' },
+            { required: true, message: 'Vui long xac nhan mat khau.' },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('password') === value) {
                   return Promise.resolve();
                 }
-                return Promise.reject(new Error('Mật khẩu không khớp.'));
+                return Promise.reject(new Error('Mat khau khong khop.'));
               },
             }),
           ]}
         >
           <Input
             size="large"
-            placeholder="Nhập lại mật khẩu"
+            placeholder="Nhap lai mat khau"
             type={passwordVisible ? 'text' : 'password'}
             prefix={<LockOutlined className="text-slate-400" />}
           />
         </Form.Item>
 
-        <Form.Item
-          label="Số điện thoại liên hệ"
-          name="contactPhone"
-          rules={[
-            {
-              pattern: phoneRegex,
-              message: 'Vui lòng nhập số điện thoại Việt Nam hợp lệ (10 số bắt đầu bằng 0).',
-            },
-          ]}
-        >
-          <Input
-            size="large"
-            placeholder="Ví dụ: 0912345678"
-            prefix={<PhoneOutlined className="text-slate-400" />}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Website (không bắt buộc)"
-          name="website"
-          rules={[{ type: 'url', message: 'Vui lòng nhập URL hợp lệ.' }]}
-        >
-          <Input
-            size="large"
-            placeholder="https://company.vn"
-            prefix={<LinkOutlined className="text-slate-400" />}
-          />
-        </Form.Item>
-
         <div className="mb-4">
-          <Checkbox
-            checked={passwordVisible}
-            onChange={(e) => setPasswordVisible(e.target.checked)}
-          >
-            Hiển thị mật khẩu
+          <Checkbox checked={passwordVisible} onChange={(e) => setPasswordVisible(e.target.checked)}>
+            Hien thi mat khau
           </Checkbox>
         </div>
 
         <Form.Item>
-          <Button
-            type="primary"
-            htmlType="submit"
-            size="large"
-            className="w-full"
-            loading={loading}
-          >
-            Đăng ký
+          <Button type="primary" htmlType="submit" size="large" className="w-full" loading={loading}>
+            Dang ky
           </Button>
         </Form.Item>
       </Form>
