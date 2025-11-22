@@ -7,17 +7,20 @@ export interface AdminUser {
   isVerified: boolean;
   createdAt: string;
   lastLogin?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface AdminUserDetail extends AdminUser {
   fullName?: string | null;
   gender?: string | null;
   birthYear?: number | null;
-  phoneNumber?: string | null;
-  address?: string | null;
-  preferredLocation?: string | null;
+  contactPhone?: string | null;
+  fullLocation?: string | null;
+  provinceName?: string | null;
+  districtName?: string | null;
+  wardName?: string | null;
   companyName?: string | null;
-  avatarUrl?: string | null;
+  website?: string | null;
 }
 
 export interface AdminUserFilters {

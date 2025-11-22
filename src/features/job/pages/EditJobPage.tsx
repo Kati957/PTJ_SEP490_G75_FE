@@ -25,6 +25,7 @@ const transformDtoToFormData = (dto: JobPostView): JobPostData => {
     wardId: dto.wardId ?? null,
     location: dto.location || '',
     categoryID: dto.categoryId ?? null,
+    subCategoryId: dto.subCategoryId ?? null,
     contactPhone: dto.phoneContact || '',
   };
 };
@@ -44,6 +45,7 @@ const emptyState: JobPostData = {
   wardId: null,
   location: '',
   categoryID: null,
+  subCategoryId: null,
   contactPhone: '',
 };
 

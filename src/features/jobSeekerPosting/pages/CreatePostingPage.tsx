@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Form,
   Input,
@@ -28,6 +28,7 @@ import {
   fetchPostSuggestions,
 } from "../slice/slice";
 import { useCategories } from "../../category/hook";
+import { useSubCategories } from "../../subcategory/hook";
 import type {
   CreateJobSeekerPostPayload,
   UpdateJobSeekerPostPayload,
@@ -84,6 +85,11 @@ const CreatePostingPage: React.FC = () => {
   );
 
   const { categories, isLoading: isLoadingCategories } = useCategories();
+  const selectedCategoryId = Form.useWatch("categoryID", form);
+  const lastCategoryRef = useRef<number | null>(null);
+  const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories(
+    selectedCategoryId ?? null
+  );
   const [provinces, setProvinces] = useState<LocationOption[]>([]);
   const [districts, setDistricts] = useState<LocationOption[]>([]);
   const [wards, setWards] = useState<LocationOption[]>([]);
@@ -175,6 +181,19 @@ const CreatePostingPage: React.FC = () => {
   }, [dispatch, isViewMode, id]);
 
   useEffect(() => {
+    const normalized =
+      typeof selectedCategoryId === "number"
+        ? selectedCategoryId
+        : selectedCategoryId
+        ? Number(selectedCategoryId)
+        : null;
+    if (lastCategoryRef.current !== normalized) {
+      lastCategoryRef.current = normalized;
+      form.setFieldsValue({ subCategoryId: undefined });
+    }
+  }, [selectedCategoryId, form]);
+
+  useEffect(() => {
     if (postDetail && (isViewMode || isEditMode)) {
       const fallbackParts =
         postDetail.preferredWorkHours
@@ -194,7 +213,11 @@ const CreatePostingPage: React.FC = () => {
         preferredWorkHourEnd: endTime || undefined,
         locationDetail: postDetail.preferredLocation,
         selectedCvId: postDetail.selectedCvId ?? postDetail.cvId ?? undefined,
+        subCategoryId: postDetail.subCategoryId ?? undefined,
       });
+
+      lastCategoryRef.current =
+        postDetail.categoryID ?? postDetail.categoryID ?? null;
 
       (async () => {
         if (postDetail.provinceId) {
@@ -244,8 +267,11 @@ const CreatePostingPage: React.FC = () => {
     }
   }, [success, error, dispatch, navigate, isCreateMode]);
 
-  const { provinces: provincesLoading, districts: districtsLoading, wards: wardsLoading } =
-    locationLoading;
+  const {
+    provinces: provincesLoading,
+    districts: districtsLoading,
+    wards: wardsLoading,
+  } = locationLoading;
 
   const buildPreferredLocation = (values: any) => {
     const provinceName = provinces.find(
@@ -279,6 +305,7 @@ const CreatePostingPage: React.FC = () => {
       preferredWorkHourStart,
       preferredWorkHourEnd,
       selectedCvId,
+      subCategoryId,
       ...rest
     } = values;
 
@@ -294,6 +321,7 @@ const CreatePostingPage: React.FC = () => {
       userID: user.id,
       age: Number(rest.age),
       categoryID: Number(rest.categoryID),
+      subCategoryId: subCategoryId ? Number(subCategoryId) : undefined,
       provinceId: Number(provinceId),
       districtId: Number(districtId),
       wardId: Number(wardId),
@@ -341,7 +369,7 @@ const CreatePostingPage: React.FC = () => {
             ]}
           >
             <Input
-              placeholder="Ví dụ: Sinh viên năm 2 tìm việc làm phục vụ"
+              placeholder="Ví dụ: Sinh viên nam năm 2 tìm việc làm phục vụ"
               readOnly={isReadOnly}
             />
           </Form.Item>
@@ -349,7 +377,9 @@ const CreatePostingPage: React.FC = () => {
           <Form.Item
             name="categoryID"
             label="Ngành nghề mong muốn"
-            rules={[{ required: true, message: "Vui lòng chọn ngành nghề!" }]}
+            rules={[
+              { required: true, message: "Vui lòng chọn ngành nghề!" },
+            ]}
           >
             <Select
               placeholder="Chọn ngành nghề"
@@ -370,13 +400,40 @@ const CreatePostingPage: React.FC = () => {
           </Form.Item>
 
           <Form.Item
+            name="subCategoryId"
+            label="Nhóm nghề cụ thể"
+            rules={[{ required: true, message: "Vui lòng chọn nhóm nghề!" }]}
+          >
+            <Select
+              placeholder={
+                selectedCategoryId ? "Chọn nhóm nghề" : "Chọn ngành trước"
+              }
+              disabled={isReadOnly || !selectedCategoryId}
+              loading={isLoadingSubCategories}
+              showSearch
+              optionFilterProp="children"
+            >
+              {subCategories.map((sub) => (
+                <Select.Option key={sub.subCategoryId} value={sub.subCategoryId}>
+                  {sub.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
             name="provinceId"
             label="Tỉnh / Thành phố"
-            rules={[{ required: true, message: "Vui lòng chọn tỉnh/thành!" }]}
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng chọn tỉnh/thành!",
+              },
+            ]}
           >
             <Select
               showSearch
-              placeholder="Chọn tỉnh / thành"
+              placeholder="Chọn tỉnh / thành phố"
               optionFilterProp="children"
               disabled={isReadOnly}
               loading={provincesLoading}
@@ -396,7 +453,12 @@ const CreatePostingPage: React.FC = () => {
           <Form.Item
             name="districtId"
             label="Quận / Huyện"
-            rules={[{ required: true, message: "Vui lòng chọn quận/huyện!" }]}
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng chọn quận/huyện!",
+              },
+            ]}
           >
             <Select
               placeholder="Chọn quận / huyện"
@@ -418,7 +480,12 @@ const CreatePostingPage: React.FC = () => {
           <Form.Item
             name="wardId"
             label="Phường / Xã"
-            rules={[{ required: true, message: "Vui lòng chọn phường/xã!" }]}
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng chọn phường/xã!",
+              },
+            ]}
           >
             <Select
               placeholder="Chọn phường / xã"
@@ -438,7 +505,10 @@ const CreatePostingPage: React.FC = () => {
             name="locationDetail"
             label="Địa chỉ chi tiết"
             rules={[
-              { required: true, message: "Vui lòng nhập địa chỉ chi tiết!" },
+              {
+                required: true,
+                message: "Vui lòng nhập địa chỉ chi tiết!",
+              },
             ]}
           >
             <Input
@@ -457,7 +527,10 @@ const CreatePostingPage: React.FC = () => {
                 name="preferredWorkHourStart"
                 noStyle
                 rules={[
-                  { required: true, message: "Vui lòng chọn giờ bắt đầu!" },
+                  {
+                    required: true,
+                    message: "Vui lòng chọn giờ bắt đầu!",
+                  },
                 ]}
               >
                 <TimePicker
@@ -472,7 +545,10 @@ const CreatePostingPage: React.FC = () => {
                 noStyle
                 dependencies={["preferredWorkHourStart"]}
                 rules={[
-                  { required: true, message: "Vui lòng chọn giờ kết thúc!" },
+                  {
+                    required: true,
+                    message: "Vui lòng chọn giờ kết thúc!",
+                  },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       const start: Dayjs | undefined = getFieldValue(
@@ -482,7 +558,9 @@ const CreatePostingPage: React.FC = () => {
                         return Promise.resolve();
                       }
                       return Promise.reject(
-                        new Error("Giờ kết thúc phải sau giờ bắt đầu")
+                        new Error(
+                          "Giờ kết thúc phải sau giờ bắt đầu"
+                        )
                       );
                     },
                   }),
@@ -519,7 +597,12 @@ const CreatePostingPage: React.FC = () => {
           <Form.Item
             name="age"
             label="Tuổi"
-            rules={[{ required: true, message: "Vui lòng nhập tuổi của bạn!" }]}
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng nhập tuổi của bạn!",
+              },
+            ]}
           >
             <InputNumber
               min={16}
@@ -532,7 +615,12 @@ const CreatePostingPage: React.FC = () => {
           <Form.Item
             name="gender"
             label="Giới tính"
-            rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng chọn giới tính!",
+              },
+            ]}
           >
             <Radio.Group disabled={isReadOnly}>
               <Radio value="Nam">Nam</Radio>
@@ -553,7 +641,7 @@ const CreatePostingPage: React.FC = () => {
                     ? Promise.resolve()
                     : Promise.reject(
                         new Error(
-                          "Mô tả phải có ít nhất 20 ký tự để hệ thống hiểu rõ về bạn"
+                          "Mô tả phải có ít nhất 20 ký tự để nhà tuyển dụng hiểu rõ về bạn"
                         )
                       );
                 },
@@ -570,7 +658,7 @@ const CreatePostingPage: React.FC = () => {
           {!isViewMode && (
             <Form.Item name="selectedCvId" label="Chọn CV đính kèm">
               <Select
-                placeholder="Chọn một CV để AI ưu tiên gợi ý việc làm"
+                placeholder="Chọn một CV để AI ưu tiên gợi ý cho việc làm"
                 loading={isLoadingCvs}
                 allowClear
                 showSearch
@@ -620,16 +708,14 @@ const CreatePostingPage: React.FC = () => {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      <div className={`${isViewMode ? 'max-w-7xl' : 'max-w-2xl'} mx-auto`}>
+      <div className={`${isViewMode ? "max-w-7xl" : "max-w-2xl"} mx-auto`}>
         <Title level={2} className="mb-6 text-center">
           {pageTitle}
         </Title>
-        
+
         {isViewMode ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              {MainContent}
-            </div>
+            <div className="lg:col-span-2">{MainContent}</div>
 
             <div className="lg:col-span-1">
               <div className="sticky top-4">
@@ -641,12 +727,18 @@ const CreatePostingPage: React.FC = () => {
                   <div className="flex flex-col gap-4">
                     {suggestedJobs && suggestedJobs.length > 0 ? (
                       suggestedJobs.map((job) => (
-                        <div key={job.id} className="transform hover:scale-102 transition-transform duration-200">
-                           <JobCard job={job} />
+                        <div
+                          key={job.id}
+                          className="transform hover:scale-102 transition-transform duration-200"
+                        >
+                          <JobCard job={job} />
                         </div>
                       ))
                     ) : (
-                      <Empty description="Chưa tìm thấy công việc phù hợp" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                      <Empty
+                        description="Chưa tìm thấy công việc phù hợp"
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      />
                     )}
                   </div>
                 </Spin>

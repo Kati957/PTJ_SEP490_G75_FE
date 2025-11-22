@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+﻿import React, { useState, useEffect, useMemo } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Button,
@@ -6,7 +6,6 @@ import {
   Table,
   Tag,
   Space,
-  Dropdown,
   message,
   Modal,
   Input,
@@ -16,11 +15,11 @@ import {
   Progress,
   Avatar,
   Typography,
+  Tooltip,
 } from "antd";
 import type { TableProps, TableColumnsType } from "antd";
 import {
   PlusOutlined,
-  MoreOutlined,
   SyncOutlined,
   MoneyCollectOutlined,
   AppstoreOutlined,
@@ -28,11 +27,15 @@ import {
   EnvironmentOutlined,
   PhoneOutlined,
   UserOutlined,
+  DeleteOutlined,
+  UsergroupAddOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../features/auth/hooks";
 import jobPostService from "../../features/job/jobPostService";
 import type { JobPostView } from "../../features/job/jobTypes";
 import { useCategories } from "../../features/category/hook";
+import { useSubCategories } from "../../features/subcategory/hook";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../app/store";
 import { JobPostDetailModal } from "../../features/job/components/employer/JobPostDetailModal";
@@ -94,13 +97,20 @@ const EmployerJobsPage: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobPostView | null>(null);
 
-  const [isSuggestionModalVisible, setIsSuggestionModalVisible] = useState(false);
+  const [isSuggestionModalVisible, setIsSuggestionModalVisible] =
+    useState(false);
   const [suggestionList, setSuggestionList] = useState<any[]>([]);
   const [isSuggestionLoading, setIsSuggestionLoading] = useState(false);
   const [currentJobTitle, setCurrentJobTitle] = useState("");
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<number | null>(
+    null
+  );
+  const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories(
+    selectedCategory
+  );
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
   const [sortInfo, setSortInfo] = useState<{
     field: string;
@@ -135,11 +145,11 @@ const EmployerJobsPage: React.FC = () => {
     setCurrentJobTitle(jobTitle);
     setIsSuggestionModalVisible(true);
     setIsSuggestionLoading(true);
-    setSuggestionList([]); 
+    setSuggestionList([]);
 
     try {
       const res: any = await jobPostService.getSuggestions(postId);
-      
+
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         setSuggestionList(res.data);
       } else {
@@ -163,14 +173,19 @@ const EmployerJobsPage: React.FC = () => {
     }
 
     if (selectedCategory) {
-      const category = categories.find(
-        (c: any) => c.categoryId === selectedCategory
-      );
-      if (category) {
-        filteredData = filteredData.filter(
-          (job) => job.categoryName === category.name
-        );
-      }
+      filteredData = filteredData.filter((job) => {
+        const jobCategoryId =
+          job.categoryId ?? (job as any).categoryID ?? null;
+        return jobCategoryId === selectedCategory;
+      });
+    }
+
+    if (selectedSubCategory) {
+      filteredData = filteredData.filter((job) => {
+        const jobSubCategoryId =
+          job.subCategoryId ?? (job as any).subCategoryID ?? null;
+        return jobSubCategoryId === selectedSubCategory;
+      });
     }
 
     const { field, order } = sortInfo;
@@ -188,7 +203,14 @@ const EmployerJobsPage: React.FC = () => {
     }
 
     return filteredData;
-  }, [allJobs, searchTerm, selectedCategory, sortInfo, categories]);
+  }, [
+    allJobs,
+    searchTerm,
+    selectedCategory,
+    selectedSubCategory,
+    sortInfo,
+    categories,
+  ]);
 
   const paginatedJobs = useMemo(() => {
     const { current, pageSize } = pagination;
@@ -208,7 +230,7 @@ const EmployerJobsPage: React.FC = () => {
     Modal.confirm({
       title: "Bạn có chắc muốn xóa bài đăng này?",
       content: "Hành động này không thể hoàn tác.",
-      okText: "Xác nhận Xóa",
+      okText: "Xác nhận xóa",
       okType: "danger",
       cancelText: "Hủy",
       onOk: async () => {
@@ -244,7 +266,7 @@ const EmployerJobsPage: React.FC = () => {
 
   const handleTableChange: TableProps<JobPostView>["onChange"] = (
     newPagination,
-    filters,
+    _filters,
     sorter: any
   ) => {
     setPagination({
@@ -269,6 +291,12 @@ const EmployerJobsPage: React.FC = () => {
 
   const handleCategoryChange = (value: number | null) => {
     setSelectedCategory(value);
+    setSelectedSubCategory(null);
+    setPagination((prev) => ({ ...prev, current: 1 }));
+  };
+
+  const handleSubCategoryChange = (value: number | null) => {
+    setSelectedSubCategory(value);
     setPagination((prev) => ({ ...prev, current: 1 }));
   };
 
@@ -277,34 +305,54 @@ const EmployerJobsPage: React.FC = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      width: "12%",
       sorter: true,
-      render: (status: string) => (
-        <>
-          {status.toLowerCase() === "draft" && <Tag color="grey">BẢN TẠM</Tag>}
-          {status.toLowerCase() === "active" && (
-            <Tag color="green">ĐANG ĐĂNG</Tag>
-          )}
-          {status.toLowerCase() === "expired" && <Tag color="red">HẾT HẠN</Tag>}
-          {!["draft", "active", "expired"].includes(status.toLowerCase()) && (
-            <Tag>{status.toUpperCase()}</Tag>
-          )}
-        </>
-      ),
+      render: (status: string) => {
+        const normalized = status?.toLowerCase();
+        if (normalized === "draft") {
+          return (
+            <Tag color="default" style={{ fontSize: 12, padding: "2px 8px" }}>
+              Bản nháp
+            </Tag>
+          );
+        }
+        if (normalized === "active") {
+          return (
+            <Tag color="green" style={{ fontSize: 12, padding: "2px 8px" }}>
+              Đang đăng
+            </Tag>
+          );
+        }
+        if (normalized === "expired") {
+          return (
+            <Tag color="red" style={{ fontSize: 12, padding: "2px 8px" }}>
+              Hết hạn
+            </Tag>
+          );
+        }
+        return (
+          <Tag style={{ fontSize: 12, padding: "2px 8px" }}>
+            {status || "Khác"}
+          </Tag>
+        );
+      },
     },
     {
       title: "Công việc",
       dataIndex: "title",
       key: "title",
+      width: "32%",
       sorter: true,
+      ellipsis: true,
       render: (text, record) => (
-        <div>
+        <div className="max-w-full">
           <a
             onClick={() => handleViewDetails(record.employerPostId)}
             className="font-semibold text-blue-600 hover:underline cursor-pointer"
           >
             {text}
           </a>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-500 truncate">
             {record.location || "(Chưa có địa điểm)"}
           </div>
           <div className="text-xs text-gray-500">
@@ -317,79 +365,101 @@ const EmployerJobsPage: React.FC = () => {
       title: "Ngành nghề",
       dataIndex: "categoryName",
       key: "categoryName",
+      width: "18%",
       sorter: true,
-      render: (category) => (
-        <Space>
-          <AppstoreOutlined /> {category || "N/A"}
-        </Space>
+      ellipsis: true,
+      render: (category, record) => (
+        <div>
+          <Space>
+            <AppstoreOutlined /> {category || "N/A"}
+          </Space>
+          {record.subCategoryName && (
+            <div className="text-xs text-gray-500">{record.subCategoryName}</div>
+          )}
+        </div>
       ),
     },
     {
       title: "Lương",
       dataIndex: "salary",
       key: "salary",
+      width: "15%",
       sorter: true,
+      ellipsis: true,
       render: (salary) => (
         <Space>
           <MoneyCollectOutlined />
-          {salary === 0 ? "Thoả thuận" : formatCurrency(salary)}
+          {salary === 0 ? "Thỏa thuận" : formatCurrency(salary)}
         </Space>
       ),
     },
     {
       title: "Hành động",
       key: "action",
+      width: "23%",
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            icon={<BulbOutlined />}
-            size="small"
-            className="text-yellow-600 border-yellow-500 hover:!text-yellow-700 hover:!border-yellow-700"
-            onClick={() =>
-              handleShowSuggestions(record.employerPostId, record.title)
-            }
-          >
-            Gợi ý
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            className="!px-0"
-            onClick={() => handleEdit(record.employerPostId)}
-          >
-            Sửa
-          </Button>
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: "1",
-                  label: "Xem ứng viên (Shortlist)",
-                  onClick: () =>
-                    navigate(
-                      `/nha-tuyen-dung/ung-vien/${record.employerPostId}`
-                    ),
-                },
-                {
-                  key: "saved",
-                  label: "Đã lưu (Saved)",
-                  onClick: () =>
-                    navigate(
-                      `/nha-tuyen-dung/da-luu/${record.employerPostId}`
-                    ),
-                },
-                {
-                  key: "3",
-                  label: "Xóa",
-                  danger: true,
-                  onClick: () => handleDelete(record.employerPostId),
-                },
-              ],
-            }}
-            trigger={["click"]}
-          >
-            <Button type="text" icon={<MoreOutlined />} />
-          </Dropdown>
+        <Space size="small" style={{ display: "flex" }}>
+          <Tooltip title="Gợi ý ứng viên">
+            <Button
+              icon={<BulbOutlined />}
+              size="small"
+              style={{
+                backgroundColor: "#fffbe6",
+                borderColor: "#fadb14",
+                color: "#ad8b00",
+              }}
+              onClick={() =>
+                handleShowSuggestions(record.employerPostId, record.title)
+              }
+            >
+              Gợi ý
+            </Button>
+          </Tooltip>
+          <Tooltip title="Ứng viên & Đã lưu">
+            <Button
+              icon={<UsergroupAddOutlined />}
+              size="small"
+              style={{
+                backgroundColor: "#f6ffed",
+                borderColor: "#b7eb8f",
+                color: "#389e0d",
+              }}
+              onClick={() =>
+                navigate(`/nha-tuyen-dung/ung-vien/${record.employerPostId}`)
+              }
+            >
+              Ứng viên
+            </Button>
+          </Tooltip>
+          <Tooltip title="Chỉnh sửa bài đăng">
+            <Button
+              icon={<EditOutlined />}
+              size="small"
+              style={{
+                backgroundColor: "#e6f4ff",
+                borderColor: "#91caff",
+                color: "#0958d9",
+              }}
+              onClick={() => handleEdit(record.employerPostId)}
+            >
+              Sửa
+            </Button>
+          </Tooltip>
+          <Tooltip title="Xóa bài đăng">
+            <Button
+              type="default"
+              size="small"
+              icon={<DeleteOutlined />}
+              style={{
+                backgroundColor: "#fff1f0",
+                borderColor: "#ffccc7",
+                color: "#cf1322",
+              }}
+              onClick={() => handleDelete(record.employerPostId)}
+            >
+              Xóa
+            </Button>
+          </Tooltip>
         </Space>
       ),
     },
@@ -420,20 +490,22 @@ const EmployerJobsPage: React.FC = () => {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-5">
+        {/* HÀNG FILTER DÀN ĐỀU 24 CỘT */}
         <Row gutter={[16, 16]}>
-          <Col xs={24} md={12} lg={8}>
+          <Col xs={24} md={12} lg={10}>
             <Search
-              placeholder="Tìm kiếm theo tiêu đề công việc..."
+              placeholder="Tim kiem theo tieu de cong viec..."
               onSearch={handleSearch}
               onChange={(e) => handleSearch(e.target.value)}
               enterButton
               allowClear
               loading={isLoading}
+              style={{ width: "100%" }}
             />
           </Col>
-          <Col xs={24} md={12} lg={6}>
+          <Col xs={24} md={12} lg={7}>
             <Select
-              placeholder="Lọc theo ngành nghề"
+              placeholder="Loc theo nganh nghe"
               onChange={handleCategoryChange}
               allowClear
               style={{ width: "100%" }}
@@ -446,6 +518,23 @@ const EmployerJobsPage: React.FC = () => {
               ))}
             </Select>
           </Col>
+          <Col xs={24} md={12} lg={7}>
+            <Select
+              placeholder="Loc theo nhom nghe"
+              value={selectedSubCategory ?? undefined}
+              onChange={handleSubCategoryChange}
+              allowClear
+              style={{ width: "100%" }}
+              loading={isLoadingSubCategories}
+              disabled={!selectedCategory}
+            >
+              {subCategories.map((sub: any) => (
+                <Option key={sub.subCategoryId} value={sub.subCategoryId}>
+                  {sub.name}
+                </Option>
+              ))}
+            </Select>
+          </Col>
         </Row>
 
         <Table
@@ -454,6 +543,8 @@ const EmployerJobsPage: React.FC = () => {
           dataSource={paginatedJobs}
           loading={isLoading}
           onChange={handleTableChange}
+          tableLayout="fixed"
+          className="w-full"
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,
@@ -543,7 +634,9 @@ const EmployerJobsPage: React.FC = () => {
                     <div className="space-y-1 mt-1">
                       <div className="flex items-start gap-2 text-gray-600 text-sm">
                         <EnvironmentOutlined className="mt-1 shrink-0" />
-                        <span>{item.location || "Chưa cập nhật địa điểm"}</span>
+                        <span>
+                          {item.location || "Chưa cập nhật địa điểm"}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600 text-sm">
                         <PhoneOutlined />
@@ -556,7 +649,9 @@ const EmployerJobsPage: React.FC = () => {
                       </div>
                       <div className="text-xs text-gray-400 mt-2">
                         Đăng bởi: {item.employerName} •{" "}
-                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString("vi-VN") : ""}
+                        {item.createdAt
+                          ? new Date(item.createdAt).toLocaleDateString("vi-VN")
+                          : ""}
                       </div>
                     </div>
                   }

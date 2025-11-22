@@ -1,0 +1,454 @@
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button, Card, message, Modal, Form, Input, Select } from 'antd';
+import DOMPurify from 'dompurify';
+import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+import type { RootState } from '../../../app/store';
+import JobCard from '../../homepage-jobSeeker/components/JobCard';
+import { fetchJobDetail } from '../jobDetailSlice';
+import { addSavedJob, fetchSavedJobs, removeSavedJob } from '../../savedJob-jobSeeker/slice';
+import { fetchAppliedJobs } from '../../applyJob-jobSeeker/slices/appliedJobsSlice';
+import applyJobService from '../../applyJob-jobSeeker/services';
+import jobSeekerCvService from '../../jobSeekerCv/services';
+import jobPostService from '../../job/jobPostService';
+import type { JobSeekerCv } from '../../jobSeekerCv/types';
+import type { Job } from '../../../types';
+
+const { TextArea } = Input;
+
+const JobDetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [form] = Form.useForm();
+
+  const { job, status, error } = useAppSelector((state: RootState) => state.jobDetail);
+  const { jobs: savedJobs } = useAppSelector((state: RootState) => state.savedJobs);
+  const { jobs: appliedJobs } = useAppSelector((state: RootState) => state.appliedJobs);
+  const jobSeekerId = useAppSelector((state: RootState) => state.auth.user?.id);
+
+  const [isSticky, setIsSticky] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isApplyModalVisible, setIsApplyModalVisible] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [cvOptions, setCvOptions] = useState<JobSeekerCv[]>([]);
+  const [cvLoading, setCvLoading] = useState(false);
+  const [similarJobs, setSimilarJobs] = useState<Job[]>([]);
+  const [similarLoading, setSimilarLoading] = useState(false);
+
+  const navRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!jobSeekerId) {
+      setCvOptions([]);
+      return;
+    }
+    dispatch(fetchSavedJobs(jobSeekerId));
+    dispatch(fetchAppliedJobs(jobSeekerId));
+
+    let isMounted = true;
+    const loadCvs = async () => {
+      setCvLoading(true);
+      try {
+        const cvs = await jobSeekerCvService.fetchMyCvs();
+        if (isMounted) {
+          setCvOptions(cvs);
+        }
+      } catch (err) {
+        message.error('KhÃ´ng thá»ƒ táº£i danh sÃ¡ch CV. Vui lÃ²ng thá»­ láº¡i sau.');
+      } finally {
+        if (isMounted) {
+          setCvLoading(false);
+        }
+      }
+    };
+
+    void loadCvs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, jobSeekerId]);
+
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchJobDetail(id));
+    }
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    if (job && savedJobs.some((savedJob) => savedJob.id === String(job.employerPostId))) {
+      setIsSaved(true);
+    } else {
+      setIsSaved(false);
+    }
+  }, [job, savedJobs]);
+
+  useEffect(() => {
+    if (!job || !jobSeekerId) {
+      setHasApplied(false);
+      return;
+    }
+    const applied = appliedJobs.some(
+      (application) =>
+        application.employerPostId === job.employerPostId &&
+        application.status?.toLowerCase() !== 'withdraw'
+    );
+    setHasApplied(applied);
+  }, [appliedJobs, job, jobSeekerId]);
+
+  useEffect(() => {
+    const fetchSimilarJobs = async () => {
+      if (!job?.categoryName) {
+        setSimilarJobs([]);
+        return;
+      }
+      setSimilarLoading(true);
+      try {
+        const response = await jobPostService.getAllJobs();
+        const allJobs = response.data ?? [];
+        const filteredJobs = allJobs
+          .filter(
+            (post) =>
+              post.categoryName === job.categoryName &&
+              post.employerPostId !== job.employerPostId
+          )
+          .slice(0, 5)
+          .map((post) => ({
+            id: String(post.employerPostId),
+            title: post.title,
+            description: post.description || '',
+            company: post.employerName || null,
+            location: post.location || null,
+            salary:
+              post.salaryText ||
+              (typeof post.salary === 'number'
+                ? `${post.salary.toLocaleString()} VNÄ`
+                : null),
+            updatedAt: post.createdAt,
+            companyLogo: null,
+            isHot: null,
+          }));
+        setSimilarJobs(filteredJobs);
+      } catch (err) {
+        console.error('Failed to fetch similar jobs', err);
+        setSimilarJobs([]);
+      } finally {
+        setSimilarLoading(false);
+      }
+    };
+
+    void fetchSimilarJobs();
+  }, [job?.categoryName, job?.employerPostId]);
+
+  useEffect(() => {
+    if (cvOptions.length === 0) {
+      form.setFieldsValue({ cvId: undefined });
+      return;
+    }
+    const currentCv = form.getFieldValue('cvId');
+    if (!currentCv) {
+      form.setFieldsValue({ cvId: cvOptions[0].cvid });
+    }
+  }, [cvOptions, form]);
+
+  const handleSaveToggle = async () => {
+    if (!job || !jobSeekerId) {
+      message.warning('Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ thá»±c hiá»‡n chá»©c nÄƒng nÃ y.');
+      return;
+    }
+    const jobId = String(job.employerPostId);
+
+    try {
+      if (isSaved) {
+        await dispatch(removeSavedJob({ jobSeekerId, jobId })).unwrap();
+        message.success('ÄÃ£ há»§y lÆ°u cÃ´ng viá»‡c');
+        setIsSaved(false);
+      } else {
+        await dispatch(addSavedJob({ jobSeekerId, jobId })).unwrap();
+        message.success('ÄÃ£ lÆ°u cÃ´ng viá»‡c thÃ nh cÃ´ng');
+        setIsSaved(true);
+      }
+    } catch (err) {
+      message.error('ÄÃ£ cÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
+      console.error('Failed to save/unsave the job: ', err);
+    }
+  };
+
+  const handleApplyNow = () => {
+    if (!jobSeekerId) {
+      message.warning('Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ á»©ng tuyá»ƒn.');
+      navigate('/login'); // Redirect to login page
+      return;
+    }
+    setIsApplyModalVisible(true);
+  };
+
+  const handleApplySubmit = async (values: { note: string; cvId?: number }) => {
+    if (!job || !jobSeekerId) return;
+    if (!values.cvId) {
+      message.warning('Vui lÃ²ng chá»n CV Ä‘á»ƒ á»©ng tuyá»ƒn.');
+      return;
+    }
+
+    setApplying(true);
+    try {
+      await applyJobService.applyJob({
+        jobSeekerId,
+        employerPostId: job.employerPostId,
+        cvid: values.cvId,
+        note: values.note,
+      });
+      message.success('Ná»™p Ä‘Æ¡n á»©ng tuyá»ƒn thÃ nh cÃ´ng!');
+      setIsApplyModalVisible(false);
+      form.resetFields();
+      setHasApplied(true);
+    } catch (error) {
+      console.error('Apply failed:', error);
+      message.error('Ná»™p Ä‘Æ¡n tháº¥t báº¡i. CÃ³ thá»ƒ báº¡n Ä‘Ã£ á»©ng tuyá»ƒn cÃ´ng viá»‡c nÃ y rá»“i.');
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (navRef.current) {
+        const offsetTop = navRef.current.offsetTop;
+        setIsSticky(window.scrollY > offsetTop);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  if (status === 'loading') {
+    return <div className="container mx-auto p-4 text-center">Äang táº£i...</div>;
+  }
+
+  if (status === 'failed') {
+    return <div className="container mx-auto p-4 text-center">Lá»—i: {error}</div>;
+  }
+
+  if (!job) {
+    return null;
+  }
+
+  return (
+    <div className="bg-gray-100">
+      <div className="container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+          {/* Job Header */}
+          <div className="flex items-start mb-4">
+            <img src="/src/assets/no-logo.png" alt="company logo" className="w-24 h-24 object-contain mr-6" />
+            <div>
+              <h1 className="text-2xl font-bold text-blue-800">{job.title}</h1>
+              <p className="text-lg text-gray-700 mt-1">{job.employerName}</p>
+              <div className="flex items-center text-gray-500 text-sm mt-2">
+                <i className="fas fa-map-marker-alt mr-2"></i>
+                <span>{job.location}</span>
+              </div>
+              <div className="flex items-center text-gray-500 text-sm mt-1">
+                <i className="fas fa-briefcase mr-2"></i>
+                <span>{job.workHours}</span>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                NgÃ y Ä‘Äƒng: {new Date(job.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex space-x-4 mb-6">
+            <Button
+              type="primary"
+              size="large"
+              className="bg-blue-600"
+              onClick={handleApplyNow}
+              disabled={hasApplied}
+            >
+              {hasApplied ? 'ÄÃ£ ná»™p Ä‘Æ¡n' : 'Ná»™p Ä‘Æ¡n ngay'}
+            </Button>
+            <Button size="large" onClick={handleSaveToggle} icon={isSaved ? <i className="fas fa-heart text-red-500"></i> : <i className="far fa-heart"></i>}>
+              {isSaved ? 'ÄÃ£ lÆ°u' : 'LÆ°u'}
+            </Button>
+          </div>
+
+          {/* Sticky Nav */}
+          <div ref={navRef} className={`bg-white border-b transition-all duration-300 ${isSticky ? 'fixed top-0 left-0 right-0 shadow-md z-10' : ''}`}>
+            <div className="container mx-auto">
+              <nav className="flex space-x-8 p-4">
+                {['MÃ´ táº£ cÃ´ng viá»‡c', 'YÃªu cáº§u', 'Chi tiáº¿t cÃ´ng viá»‡c', 'LiÃªn há»‡'].map(item => (
+                  <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} onClick={(e) => { e.preventDefault(); scrollToSection(item.toLowerCase().replace(/ /g, '-')); }} className="text-gray-600 hover:text-blue-600 font-semibold">
+                    {item}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          </div>
+
+          {/* Sections */}
+          <div id="mÃ´-táº£-cÃ´ng-viá»‡c" className="pt-8">
+            <h2 className="text-xl font-bold mb-4">MÃ´ táº£ cÃ´ng viá»‡c</h2>
+            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(job.description || '') }}></div>
+          </div>
+
+          <div id="yÃªu-cáº§u" className="pt-8">
+            <h2 className="text-xl font-bold mb-4">YÃªu cáº§u á»©ng viÃªn</h2>
+            <ul className="list-disc pl-5 prose max-w-none">
+              {job.requirements && job.requirements.split('\n').map((line, index) => (
+                line.trim() && <li key={index}>{line.replace(/^- /, '')}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div id="chi-tiáº¿t-cÃ´ng-viá»‡c" className="pt-8">
+            <h2 className="text-xl font-bold mb-4">Chi tiáº¿t cÃ´ng viá»‡c</h2>
+            <Card>
+              <div className="grid grid-cols-2 gap-4">
+                <div><p className="font-semibold">LÆ°Æ¡ng</p><p>{job.salary ? `${job.salary.toLocaleString()} VNÄ` : 'ThÆ°Æ¡ng lÆ°á»£ng'}</p></div>
+                <div><p className="font-semibold">Giá» lÃ m viá»‡c</p><p>{job.workHours}</p></div>
+                <div><p className="font-semibold">NgÃ nh nghá»</p><p>{job.categoryName}</p></div>
+                <div><p className="font-semibold">Tráº¡ng thÃ¡i</p><p>{job.status}</p></div>
+              </div>
+            </Card>
+          </div>
+
+          <div id="liÃªn-há»‡" className="pt-8">
+            <h2 className="text-xl font-bold mb-4">ThÃ´ng tin liÃªn há»‡</h2>
+            <p><span className="font-semibold">Äiá»‡n thoáº¡i:</span> {job.phoneContact}</p>
+            <p className="mt-2"><span className="font-semibold">Äá»‹a chá»‰:</span> {job.location}</p>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div className="lg:col-span-1 space-y-4">
+          <Card title="Việc làm tương tự">
+            {similarLoading ? (
+              <p>Đang tải việc làm tương tự...</p>
+            ) : (
+            <div className="space-y-4">
+              {similarJobs.length > 0 ? (
+                similarJobs.map((similarJob) => (
+                  <JobCard key={similarJob.id} job={similarJob} />
+                ))
+              ) : (
+                <p>Chưa có việc nào cùng ngành.</p>
+              )}
+            </div>
+            )}
+          </Card>
+        </div>
+      </div>
+
+      {/* Sticky Apply/Save Popup */}
+      {isSticky && job && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4 z-10 border-t">
+          <div className="container mx-auto flex justify-between items-center">
+            <div>
+              <h3 className="font-bold text-lg">{job.title}</h3>
+              <p className="text-gray-600">{job.employerName}</p>
+            </div>
+            <div className="flex space-x-4">
+              <Button size="large" onClick={handleSaveToggle} icon={isSaved ? <i className="fas fa-heart text-red-500"></i> : <i className="far fa-heart"></i>}>
+                {isSaved ? 'ÄÃ£ lÆ°u' : 'LÆ°u'}
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                className="bg-blue-600"
+                onClick={handleApplyNow}
+                disabled={hasApplied}
+              >
+                {hasApplied ? 'ÄÃ£ ná»™p Ä‘Æ¡n' : 'Ná»™p Ä‘Æ¡n ngay'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Apply Job Modal */}
+      <Modal
+        title={`á»¨ng tuyá»ƒn: ${job.title}`}
+        visible={isApplyModalVisible}
+        onCancel={() => setIsApplyModalVisible(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleApplySubmit}
+          initialValues={{ note: '', cvId: undefined }}
+        >
+          <Form.Item
+            name="note"
+            label="Lá»i nháº¯n Ä‘áº¿n nhÃ  tuyá»ƒn dá»¥ng"
+          >
+            <TextArea rows={4} placeholder="Viáº¿t má»™t vÃ i Ä‘iá»u vá» báº£n thÃ¢n hoáº·c táº¡i sao báº¡n nghÄ© mÃ¬nh phÃ¹ há»£p vá»›i vá»‹ trÃ­ nÃ y." />
+          </Form.Item>
+
+          <Form.Item
+            name="cvId"
+            label="Chá»n CV cá»§a báº¡n"
+            rules={[{ required: true, message: 'Vui lÃ²ng chá»n má»™t CV Ä‘á»ƒ á»©ng tuyá»ƒn!' }]}
+          >
+            <Select
+              placeholder="Chá»n CV"
+              loading={cvLoading}
+              disabled={cvOptions.length === 0}
+            >
+              {cvOptions.map((cv) => (
+                <Select.Option key={cv.cvid} value={cv.cvid}>
+                  {cv.cvTitle || `CV #${cv.cvid}`}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          {cvOptions.length === 0 && (
+            <p className="text-sm text-gray-500 mb-4">
+              Báº¡n chÆ°a cÃ³ CV nÃ o.{' '}
+              <button
+                type="button"
+                className="text-blue-600 underline"
+                onClick={() => {
+                  setIsApplyModalVisible(false);
+                  navigate('/cv-cua-toi');
+                }}
+              >
+                Táº¡o CV ngay
+              </button>
+              .
+            </p>
+          )}
+
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={applying}
+              block
+              disabled={cvOptions.length === 0}
+            >
+              XÃ¡c nháº­n á»©ng tuyá»ƒn
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
+  );
+};
+
+export default JobDetailPage;
+
+

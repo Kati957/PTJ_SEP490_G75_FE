@@ -14,6 +14,10 @@ export interface Profile {
   contactEmail?: string;
   website?: string;
   location?: string;
+  fullLocation?: string;
+  provinceId?: number | null;
+  districtId?: number | null;
+  wardId?: number | null;
   averageRating?: number;
   ratings?: Rating[];
 }
@@ -26,6 +30,10 @@ export interface ProfileUpdateRequest {
   contactEmail?: string;
   website?: string;
   location?: string;
+  fullLocation?: string;
+  provinceId?: number | null;
+  districtId?: number | null;
+  wardId?: number | null;
   imageFile?: File | null;
 }
 

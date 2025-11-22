@@ -33,7 +33,7 @@ const JobSeekerPostListPage: React.FC = () => {
   return (
     <div className="p-8 bg-gray-50">
       <div className="max-w-6xl mx-auto">
-        <Title level={2} className="mb-6">Danh sách ứng viên tìm việc</Title>
+        <Title level={2} className="mb-6">Danh sách bài đăng tìm việc</Title>
         <List
           grid={{
             gutter: 24,
@@ -58,7 +58,10 @@ const JobSeekerPostListPage: React.FC = () => {
                           <Text type="secondary"><EnvironmentOutlined className="mr-2" />{post.preferredLocation}</Text>
                         </div>
                         <div className="mt-4">
-                          <Tag icon={<TagOutlined />} color="blue">{post.categoryName}</Tag>
+                          <Tag icon={<TagOutlined />} color="blue">
+                            {post.categoryName}
+                            {post.subCategoryName ? ` / ${post.subCategoryName}` : ""}
+                          </Tag>
                         </div>
                       </div>
                     }

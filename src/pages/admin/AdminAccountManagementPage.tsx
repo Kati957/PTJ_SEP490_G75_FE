@@ -263,7 +263,7 @@ const AdminAccountManagementPage: React.FC = () => {
             size="small"
             onClick={() => openDetail(record.userId)}
           >
-            Chi tiet
+            Chi tiết
           </Button>
           <Button
             icon={<UserSwitchOutlined />}
@@ -272,7 +272,7 @@ const AdminAccountManagementPage: React.FC = () => {
             loading={toggleLoadingId === record.userId}
             onClick={() => handleToggleActive(record)}
           >
-            {record.isActive ? 'KhoA' : 'Mo Khoa'}
+            {record.isActive ? 'Khóa' : 'Mở khóa'}
           </Button>
         </Space>
       )
@@ -389,30 +389,54 @@ const AdminAccountManagementPage: React.FC = () => {
 
             <Divider plain>Thông tin chi tiết</Divider>
 
-            <DetailSection title="Thông tin liên hệ">
-              <DetailFieldBox label="Họ tên" value={selectedUser.fullName || undefined} />
+            <DetailSection title="Thông tin tài khoản">
+              <DetailFieldBox label="Tên đăng nhập" value={selectedUser.username} />
               <DetailFieldBox label="Email" value={selectedUser.email} />
-              <DetailFieldBox label="Số điện thoại" value={selectedUser.phoneNumber || undefined} />
-              <DetailFieldBox label="Địa chỉ" value={selectedUser.address || undefined} span={2} />
             </DetailSection>
 
-            <DetailSection title="Thông tin khác">
-              <DetailFieldBox label="Công ty" value={selectedUser.companyName || undefined} />
+            <DetailSection
+              title={selectedUser.role === 'Employer' ? 'Thông tin nhà tuyển dụng' : 'Thông tin ứng viên'}
+            >
+              {selectedUser.role === 'Employer' ? (
+                <>
+                  <DetailFieldBox
+                    label="Tên nhà tuyển dụng"
+                    value={selectedUser.companyName || undefined}
+                  />
+                  <DetailFieldBox label="Website" value={selectedUser.website || undefined} />
+                  <DetailFieldBox
+                    label="Số điện thoại liên hệ"
+                    value={selectedUser.contactPhone || undefined}
+                  />
+                </>
+              ) : (
+                <>
+                  <DetailFieldBox label="Họ tên" value={selectedUser.fullName || undefined} />
+                  <DetailFieldBox label="Giới tính" value={selectedUser.gender || undefined} />
+                  <DetailFieldBox
+                    label="Năm sinh"
+                    value={selectedUser.birthYear ? selectedUser.birthYear.toString() : undefined}
+                  />
+                  <DetailFieldBox
+                    label="Số điện thoại"
+                    value={selectedUser.contactPhone || undefined}
+                  />
+                </>
+              )}
+            </DetailSection>
+
+            <DetailSection title="Địa chỉ">
               <DetailFieldBox
-                label="Nơi mong muốn"
-                value={selectedUser.preferredLocation || undefined}
+                label="Địa chỉ đầy đủ"
+                value={selectedUser.fullLocation || undefined}
+                span={2}
               />
+              <DetailFieldBox label="Tỉnh / Thành phố" value={selectedUser.provinceName || undefined} />
+              <DetailFieldBox label="Quận / Huyện" value={selectedUser.districtName || undefined} />
+              <DetailFieldBox label="Phường / Xã" value={selectedUser.wardName || undefined} />
             </DetailSection>
 
             <DetailSection title="Hoạt động tài khoản">
-              <DetailFieldBox
-                label="Trạng thái"
-                value={selectedUser.isActive ? 'Đang hoạt động' : 'Bị khóa'}
-              />
-              <DetailFieldBox
-                label="Xác thực"
-                value={selectedUser.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
-              />
               <DetailFieldBox
                 label="Tài khoản tạo lúc"
                 value={new Date(selectedUser.createdAt).toLocaleString('vi-VN')}

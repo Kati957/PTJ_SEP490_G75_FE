@@ -24,6 +24,7 @@ import type { Dayjs } from "dayjs";
 import locationService, {
   type LocationOption,
 } from "../../../location/locationService";
+import { useSubCategories } from "../../../subcategory/hook";
 
 const FormField: React.FC<{
   label: string;
@@ -46,6 +47,9 @@ export const JobInfoFormSection: React.FC<{
 }> = ({ data, onDataChange }) => {
   const editor = useRef(null);
   const { categories, isLoading } = useCategories();
+  const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories(
+    data.categoryID ?? null
+  );
 
   const [validation, setValidation] = useState<Record<string, boolean>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -311,6 +315,10 @@ export const JobInfoFormSection: React.FC<{
       isInvalid = value === null || value === undefined;
     }
 
+    if (field === "subCategoryId") {
+      isInvalid = value === null || value === undefined;
+    }
+
     if (field === "salaryValue") {
       isInvalid = !isNegotiable && (!value || value <= 0);
     }
@@ -328,7 +336,14 @@ export const JobInfoFormSection: React.FC<{
   };
 
   const handleChange = (field: keyof JobPostData, value: any) => {
-    onDataChange(field, value);
+    if (field === "categoryID") {
+      onDataChange(field, value);
+      onDataChange("subCategoryId", null);
+      setValidation((prev) => ({ ...prev, subCategoryId: false }));
+    } else {
+      onDataChange(field, value);
+    }
+
     if (validation[field]) {
       setValidation((prev) => ({ ...prev, [field]: false }));
     }
@@ -515,7 +530,7 @@ export const JobInfoFormSection: React.FC<{
           formatter={(value) =>
             `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
           }
-          parser={(value) => value!.replace(/\$\s?|(,*)/g, "")}
+          parser={(value) => Number(value!.replace(/\$\s?|(,*)/g, ""))}
         />
         <Checkbox
           checked={isNegotiable}
@@ -618,6 +633,29 @@ export const JobInfoFormSection: React.FC<{
         <style>{`.select-invalid .ant-select-selector { border-color: #ef4444 !important; }`}</style>
       </FormField>
 
+      <FormField label="Nhom nghe" required>
+        <Select
+          size="large"
+          placeholder={data.categoryID
+            ? (isLoadingSubCategories ? "Dang tai nhom nghe..." : "Chon nhom nghe")
+            : "Chon nganh truoc"}
+          loading={isLoadingSubCategories}
+          disabled={!data.categoryID}
+          value={data.subCategoryId ?? undefined}
+          onChange={(value) => handleChange("subCategoryId", value)}
+          onBlur={() => handleBlur("subCategoryId", data.subCategoryId)}
+          className={validation.subCategoryId ? "select-invalid" : ""}
+          options={subCategories.map((sub: any) => ({
+            value: sub.subCategoryId,
+            label: sub.name,
+          }))}
+          allowClear
+        />
+        {validation.subCategoryId && (
+          <p className="text-red-500 text-sm mt-1">Vui long chon nhom nghe</p>
+        )}
+      </FormField>
+
       <FormField label="Số điện thoại liên hệ" required>
         <Input
           size="large"
@@ -638,3 +676,4 @@ export const JobInfoFormSection: React.FC<{
     </div>
   );
 };
+

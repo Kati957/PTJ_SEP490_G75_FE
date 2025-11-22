@@ -19,7 +19,39 @@ export interface LoginResponse {
 export interface RegisterJobSeekerPayload {
   email: string;
   password: string;
-  fullName?: string;
+  fullName: string;
+}
+
+export interface RegisterEmployerPayload {
+  displayName: string;
+  email: string;
+  password: string;
+  contactPhone?: string;
+  website?: string;
+}
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface RequestChangePasswordPayload {
+  currentPassword: string;
+}
+
+export interface ConfirmChangePasswordPayload {
+  token: string;
+  newPassword: string;
+  confirmNewPassword: string;
 }
 
 /**

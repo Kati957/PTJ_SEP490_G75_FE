@@ -36,3 +36,11 @@ export interface EmployerPostDtoOut {
   createdAt: string; 
   status: string;
 }
+
+export interface JobSearchFilters {
+  keyword: string;
+  provinceId: number | null;
+  categoryId: number | null;
+  subCategoryId: number | null;
+  salary: "all" | "hasValue" | "negotiable";
+}

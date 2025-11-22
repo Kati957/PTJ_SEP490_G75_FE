@@ -16,19 +16,14 @@ const JobSeekerHomePage: React.FC = () => {
   }, [dispatch]);
 
   return (
-    <>
-      {/* Hero Section */}
-      <HeroSection />
-
-      {/* Featured Jobs Section */}
-      <FeaturedJobs />
-
-      {/* Job Categories Section */}
-      <JobCategoriesSlider />
-
-      {/* Top Employers Section */}
-      <TopEmployersSlider />
-    </>
+    <div className="min-h-screen bg-white text-slate-900">
+      <div className="space-y-16 pb-16">
+        <HeroSection />
+        <FeaturedJobs />
+        <JobCategoriesSlider />
+        <TopEmployersSlider />
+      </div>
+    </div>
   );
 };
 export default JobSeekerHomePage;

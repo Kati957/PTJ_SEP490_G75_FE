@@ -36,6 +36,11 @@ export const fetchCvDetail = async (id: number): Promise<JobSeekerCv> => {
   return res.data;
 };
 
+export const fetchCvForEmployer = async (cvId: number): Promise<JobSeekerCv> => {
+  const res = await baseService.get<CvDetailResponse>(`/employer/cv/${cvId}`);
+  return res.data;
+};
+
 export const createCv = async (payload: JobSeekerCvPayload): Promise<JobSeekerCv> => {
   const res = await baseService.post<CvCreateResponse>("/JobSeekerCv", payload);
   return res.data;
@@ -52,6 +57,7 @@ export const deleteCv = async (id: number): Promise<void> => {
 const jobSeekerCvService = {
   fetchMyCvs,
   fetchCvDetail,
+  fetchCvForEmployer,
   createCv,
   updateCv,
   deleteCv,

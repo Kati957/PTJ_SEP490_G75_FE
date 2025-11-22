@@ -6,12 +6,16 @@ export interface JobSeekerPostDtoOut {
   age?: number;
   gender?: string;
   preferredWorkHours?: string;
+  preferredWorkHourStart?: string;
+  preferredWorkHourEnd?: string;
   preferredLocation?: string;
   phoneContact?: string;
   categoryName?: string;
   seekerName?: string;
   createdAt: string;
   status?: string;
+  selectedCvId?: number | null;
+  cvId?: number | null;
 }
 
 export interface SaveCandidateDto {
@@ -26,6 +30,9 @@ export interface ShortlistedCandidateDto {
   jobSeekerName: string;
   note: string | null;
   addedAt: string;
+  jobSeekerPostId?: number | null;
+  cvId?: number | null;
+  selectedCvId?: number | null;
 }
 
 export interface ShortlistedResponse {

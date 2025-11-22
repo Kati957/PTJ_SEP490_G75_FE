@@ -1,4 +1,4 @@
-import React, { type ReactNode } from 'react';
+﻿import React, { type ReactNode } from 'react';
 import { Card, Avatar, Typography, Skeleton, Empty, Rate, Space, Divider } from 'antd';
 import {
   MailOutlined,
@@ -17,13 +17,15 @@ interface ProfileHeaderProps {
   loading: boolean;
   ratingCount?: number;
   isVerified?: boolean;
+  locationLabel?: string;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   profile,
   loading,
   ratingCount = 0,
-  isVerified
+  isVerified,
+  locationLabel
 }) => {
   if (loading) {
     return (
@@ -49,6 +51,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         profile.ratings.length
       : undefined);
 
+  const locationText = locationLabel || profile.location || profile.address;
+
   const contactDetails: Array<{ key: string; icon: ReactNode; label: string; value: ReactNode }> = [
     {
       key: 'contactName',
@@ -72,7 +76,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       key: 'address',
       icon: <EnvironmentOutlined className="text-indigo-500" />,
       label: 'Địa chỉ',
-      value: profile.address ?? profile.location
+      value: locationText
     },
     {
       key: 'website',
@@ -102,8 +106,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <Title level={3} className="mt-3 mb-0">
               {profile.displayName || 'Nhà tuyển dụng'}
             </Title>
-            <Text type="secondary">{profile.location || profile.address || 'Chưa có địa điểm'}</Text>
-            <Text className={`text-sm ${isVerified ? 'text-green-600' : 'text-red-500'}`}>
+            <Text type="secondary">{locationText || 'Chưa có địa điểm'}</Text>
+                          <Text className={`text-sm ${isVerified ? 'text-green-600' : 'text-red-500'}`}>
               {isVerified ? 'Tài khoản đã xác thực' : 'Tài khoản chưa xác thực'}
             </Text>
             {averageRating !== undefined && (
@@ -117,7 +121,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
           <Divider />
           <Paragraph className="text-gray-600 text-center">
-            {profile.description || 'Chưa có mô tả nhà tuyển dụng'}
+            {profile.description || 'ChÆ°a cÃ³ mÃ´ táº£ nhÃ  tuyá»ƒn dá»¥ng'}
           </Paragraph>
           <Divider />
           <Space direction="vertical" size="small" className="w-full">
@@ -141,3 +145,4 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 };
 
 export default ProfileHeader;
+

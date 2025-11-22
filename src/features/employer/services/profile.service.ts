@@ -21,6 +21,18 @@ const buildFormData = (payload: ProfileUpdateRequest) => {
   if (payload.location !== undefined) {
     formData.append('Location', payload.location ?? '');
   }
+  if (payload.provinceId !== undefined) {
+    formData.append('ProvinceId', payload.provinceId?.toString() ?? '');
+  }
+  if (payload.districtId !== undefined) {
+    formData.append('DistrictId', payload.districtId?.toString() ?? '');
+  }
+  if (payload.wardId !== undefined) {
+    formData.append('WardId', payload.wardId?.toString() ?? '');
+  }
+  if (payload.fullLocation !== undefined) {
+    formData.append('FullLocation', payload.fullLocation ?? '');
+  }
   if (payload.website !== undefined) {
     formData.append('Website', payload.website ?? '');
   }
@@ -36,12 +48,8 @@ const profileService = {
     return await baseService.get<Profile>('/EmployerProfile/me');
   },
 
-  async getAllEmployerProfiles(): Promise<Profile[]> {
-    return await baseService.get<Profile[]>('/EmployerProfile/all');
-  },
-
   async getEmployerProfileByUserId(userId: number): Promise<Profile> {
-    return await baseService.get<Profile>(`/EmployerProfile/${userId}`);
+    return await baseService.get<Profile>(`/EmployerProfile/public/${userId}`);
   },
 
   async updateEmployerProfile(payload: ProfileUpdateRequest): Promise<Profile> {

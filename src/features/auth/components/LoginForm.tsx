@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Button, Input, Checkbox, Form, message } from 'antd';
-import { LinkedinOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { MailOutlined, LockOutlined } from '@ant-design/icons';
+import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
-import { loginJobSeeker, googlePrepare } from '../services';
+import { login, googlePrepare } from '../services';
 import { setAccessToken } from '../../../services/baseService';
 import { loginSuccess } from '../slice';
 import { ROLES } from '../../../constants/roles';
@@ -48,7 +48,7 @@ const LoginForm: React.FC = () => {
   const onLoginFinish = async (values: any) => {
     setLoading(true);
     try {
-      const response = await loginJobSeeker(values);
+      const response = await login(values);
       const { accessToken, user } = response;
       handleLoginSuccess(user, accessToken);
     } catch (error: any) {
@@ -110,12 +110,9 @@ const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-white p-8 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-        Người tìm việc đăng nhập
-      </h2>
+    <div className="w-full bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_35px_120px_rgba(15,23,42,0.2)] border border-white/40 p-6 sm:p-8 max-w-md mx-auto">
       <Form
-        name="jobseeker_login"
+        name="platform_login"
         initialValues={{ remember: true }}
         onFinish={onLoginFinish}
         onFinishFailed={onFinishFailed}
@@ -124,9 +121,14 @@ const LoginForm: React.FC = () => {
       >
         <Form.Item
           name="email"
-          rules={[{ required: true, type: 'email', message: 'Vui lòng nhập email hợp lệ!' }]}
+          rules={[{ required: true, type: 'email', message: 'Vui l?ng nh?p email h?p l?!' }]}
         >
-          <Input size="large" placeholder="Email" />
+          <Input
+            size="large"
+            placeholder="Email"
+            prefix={<MailOutlined className="text-blue-500" />}
+            className="rounded-2xl border-gray-200 focus:border-blue-500 focus:ring-0"
+          />
         </Form.Item>
 
         <Form.Item
@@ -137,6 +139,8 @@ const LoginForm: React.FC = () => {
             size="large"
             placeholder="Mật khẩu"
             type={passwordVisible ? 'text' : 'password'}
+            prefix={<LockOutlined className="text-blue-500" />}
+            className="rounded-2xl border-gray-200 focus:border-blue-500 focus:ring-0"
           />
         </Form.Item>
 
@@ -147,9 +151,9 @@ const LoginForm: React.FC = () => {
           >
             Hiển thị mật khẩu
           </Checkbox>
-          <a href="#" className="text-sm text-blue-600 hover:underline">
+          <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
             Quên mật khẩu?
-          </a>
+          </Link>
         </div>
 
         <Form.Item>
@@ -171,23 +175,18 @@ const LoginForm: React.FC = () => {
         <div className="flex-grow border-t border-gray-300"></div>
       </div>
 
-      <div className="space-y-3">
-        <div className={`flex justify-center ${googleLoading ? 'opacity-60 pointer-events-none' : ''}`}>
-          <div className="w-full max-w-xs">
-            <GoogleLogin
-              onSuccess={handleGoogleCredential}
-              onError={() => message.error('Có lỗi xảy ra khi xử lý Google.')}
-              useOneTap={false}
-              theme="outline"
-              shape="rectangular"
-              text="continue_with"
-              size="large"
-            />
-          </div>
+      <div className={`flex justify-center ${googleLoading ? 'opacity-60 pointer-events-none' : ''}`}>
+        <div className="w-full max-w-xs">
+          <GoogleLogin
+            onSuccess={handleGoogleCredential}
+            onError={() => message.error('Có lỗi xảy ra khi xử lý Google.')}
+            useOneTap={false}
+            theme="outline"
+            shape="rectangular"
+            text="continue_with"
+            size="large"
+          />
         </div>
-        <Button icon={<LinkedinOutlined className="text-teal-500" />} size="large" className="w-full">
-          Đăng nhập với LinkedIn
-        </Button>
       </div>
 
       <p className="text-center mt-6 text-sm">

@@ -69,7 +69,10 @@ const AppliedJobCard = ({ appliedJob, onWithdraw }: AppliedJobCardProps) => {
 
         {/* Cột hiển thị trạng thái và các nút hành động */}
         <Col xs={24} sm={6} className='flex flex-col items-end justify-between'>
-          <Tag color={STATUS_COLORS[appliedJob.status]} className='mb-2 self-start sm:self-end'>
+          <Tag
+            color={STATUS_COLORS[appliedJob.status]}
+            className='mb-2 inline-flex items-center justify-center self-start rounded-full px-4 py-1 text-base font-semibold uppercase tracking-wide shadow-md sm:self-end'
+          >
             {APPLICATION_STATUS_VN[appliedJob.status as keyof typeof APPLICATION_STATUS_VN] || 'Không xác định'}
           </Tag>
           <div className='flex w-full flex-col gap-2 sm:w-auto'>

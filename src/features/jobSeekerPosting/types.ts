@@ -11,6 +11,7 @@ export interface CreateJobSeekerPostPayload {
   wardId: number;
   preferredLocation: string;
   categoryID: number;
+  subCategoryId?: number | null;
   phoneContact: string;
   selectedCvId?: number;
 }
@@ -38,12 +39,15 @@ export interface JobSeekerPost {
   preferredWorkHourStart?: string | null;
   preferredWorkHourEnd?: string | null;
   preferredLocation?: string | null;
+  locationDetail?: string | null;
   provinceId?: number | null;
   districtId?: number | null;
   wardId?: number | null;
   phoneContact: string;
   categoryID?: number | null;
   categoryName?: string;
+  subCategoryId?: number | null;
+  subCategoryName?: string;
   seekerName?: string;
   createdAt: string;
   status: string;
@@ -65,6 +69,7 @@ export interface JobSuggestionData {
   workHours: string;
   phoneContact: string;
   categoryName: string;
+  subCategoryName?: string;
   employerName: string;
   matchPercent: number;
   rawScore: number;

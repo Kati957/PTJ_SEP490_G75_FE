@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import {
   updateJobField,
@@ -27,12 +27,6 @@ export const useEmployerJobPosting = () => {
   const submitPost = useCallback((dto: EmployerPostDto) => {
     dispatch(createEmployerJobPost(dto));
   }, [dispatch]);
-
-  useEffect(() => {
-    if (status === 'succeeded') {
-      dispatch(resetJobForm());
-    }
-  }, [status, dispatch]);
 
   return { 
     jobData,

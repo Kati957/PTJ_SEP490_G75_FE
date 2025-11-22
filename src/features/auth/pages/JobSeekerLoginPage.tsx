@@ -1,77 +1,126 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
-import loginImage from '../../../assets/ImageFormLoginJobSeeker.jpg';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import loginImageOne from '../../../assets/ImageFormLoginJobSeeker.jpg';
+import backgroundTexture from '../../../assets/Nen-anh-sang-xanh-dep-mat.jpg';
+import partTimeBanner from '../../../assets/gpo-part-time-la-gi-2.jpg';
+import flexibleWorkBanner from '../../../assets/03c7c9370cb14c92893e7719db10bad6.jpg';
 import LoginForm from '../components/LoginForm';
-import RegisterForm from '../components/RegisterForm';
+
+const BANNER_SLIDES = [
+  {
+    id: 1,
+    image: loginImageOne,
+    label: 'Job Finder',
+    tagline: 'Tạo dựng tương lai',
+    title: 'Chắp cánh sự nghiệp của bạn cùng Job Finder',
+    description:
+      'Khám phá cơ hội phù hợp, kết nối với nhà tuyển dụng và bắt đầu hành trình mới đầy cảm hứng.',
+    overlay: 'from-sky-900/20 via-sky-950/60 to-sky-950/90',
+  },
+  {
+    id: 2,
+    image: partTimeBanner,
+    label: 'Job Finder',
+    tagline: 'Cơ hội part-time',
+    title: 'Lịch làm việc linh hoạt',
+    description: 'Tìm công việc part-time phù hợp, chủ động sắp xếp thời gian và thu nhập.',
+    overlay: 'from-amber-900/20 via-orange-800/60 to-rose-900/90',
+  },
+  {
+    id: 3,
+    image: flexibleWorkBanner,
+    label: 'Job Finder',
+    tagline: 'Nâng cấp kỹ năng',
+    title: 'Học hỏi từ mọi trải nghiệm',
+    description: 'Thử thách bản thân qua nhiều lĩnh vực, mở rộng mạng lưới và cách làm việc.',
+    overlay: 'from-emerald-900/20 via-teal-800/60 to-slate-950/90',
+  },
+];
+
 
 const JobSeekerAuthPage: React.FC = () => {
-  const location = useLocation();
-  const isRegisterView = location.pathname.includes('register');
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % BANNER_SLIDES.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <div className="min-h-screen flex font-sans bg-gray-50">
-      {/* Phần bên trái với ảnh và tiêu đề */}
-      <div className="w-1/2 bg-white hidden lg:flex flex-col justify-center items-center p-20 relative">
-        <img src={loginImage} alt="Decorative" className="w-full object-cover mb-8 rounded-lg" />
-        <div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            Xây dựng <span className="text-blue-600">Sự nghiệp</span>
-          </h1>
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            <span className="text-blue-600">thành công</span> cùng
-          </h1>
-          <h1 className="text-4xl font-bold text-gray-800">
-            Job Finder
-          </h1>
-        </div>
-      </div>
+    <div
+      className="relative flex min-h-screen items-center justify-center px-2 py-20 font-sans sm:px-6"
+      style={{
+        backgroundImage: `linear-gradient(rgba(4,25,38,0.85), rgba(8,47,73,0.9)), url(${backgroundTexture})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="flex w-full max-w-[1700px] flex-col overflow-hidden rounded-[36px] border border-white/10 bg-white/10 backdrop-blur-2xl shadow-[0_40px_140px_rgba(15,23,42,0.55)] lg:flex-row">
+        <div className="relative flex-1 px-8 py-14 text-white sm:px-14 lg:flex-[5]">
+          <div className="absolute inset-6 overflow-hidden rounded-[28px] border border-white/15 shadow-2xl">
+            <div className="h-full w-full overflow-hidden">
+              <div
+                className="flex h-full transition-transform duration-[1500ms] ease-in-out"
+                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+              >
+                {BANNER_SLIDES.map((slide) => (
+                  <div key={slide.id} className="relative h-full min-w-full flex-shrink-0">
+                    <img src={slide.image} alt={slide.title} className="h-full w-full object-cover" />
+                    <div className={`absolute inset-0 bg-gradient-to-b ${slide.overlay}`} />
+                    <div className="absolute inset-0 z-10 flex flex-col px-10 py-10">
+                      <div className="flex items-center justify-between text-sm uppercase tracking-[0.4em] text-white/80">
+                        <p>{slide.label}</p>
+                        <Link
+                          to="/"
+                          className="rounded-full bg-white/20 px-4 py-2 text-xs font-semibold text-white backdrop-blur transition-colors hover:bg-white/30"
+                        >
+                          Trở về trang chủ
+                        </Link>
+                      </div>
 
-      <div className="w-full lg:w-1/2 bg-blue-600 flex flex-col justify-center items-center p-8">
-        <div className="w-full max-w-md" style={{ perspective: '1000px' }}>
-          <div
-            style={{
-              position: 'relative',
-              width: '100%',
-              transformStyle: 'preserve-3d',
-              transition: 'transform 0.6s',
-              transform: isRegisterView ? 'rotateY(180deg)' : 'rotateY(0deg)',
-            }}
-          >
-            {/* Form Đăng nhập (Mặt trước) */}
-            <div
-              style={{
-                backfaceVisibility: 'hidden',
-                position: isRegisterView ? 'absolute' : 'relative',
-                width: '100%',
-                top: 0,
-                left: 0,
-              }}
-            >
-              <LoginForm />
+                      <div className="mt-auto space-y-4">
+                        <p className="text-xs uppercase tracking-[0.4em] text-white/70">{slide.tagline}</p>
+                        <h1 className="text-4xl font-semibold leading-tight text-white lg:text-5xl">
+                          {slide.title}
+                        </h1>
+                        <p className="max-w-md text-base text-white/80">{slide.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
+          </div>
 
-            {/* Form Đăng ký (Mặt sau) */}
-            <div
-              style={{
-                backfaceVisibility: 'hidden',
-                position: isRegisterView ? 'relative' : 'absolute',
-                width: '100%',
-                top: 0,
-                left: 0,
-                transform: 'rotateY(180deg)',
-              }}
-            >
-              <RegisterForm />
-            </div>
+          <div className="relative z-10 mt-6 ml-1 flex items-center gap-2">
+            {BANNER_SLIDES.map((slide, index) => (
+              <button
+                key={slide.id}
+                type="button"
+                onClick={() => setCurrentSlide(index)}
+                className={`h-2 rounded-full transition-all duration-500 ${
+                  currentSlide === index ? 'w-10 bg-white' : 'w-6 bg-white/40'
+                }`}
+                aria-label={`Chọn banner ${index + 1}`}
+              />
+            ))}
           </div>
         </div>
 
-        <p className="text-center mt-8 text-white text-sm">
-          Bạn là nhà tuyển dụng?{' '}
-          <a href="#" className="font-semibold hover:underline text-white">
-            Đăng nhập
-          </a>
-        </p>
+        <div className="flex flex-1 flex-col bg-white/95 px-8 py-12 sm:px-12 lg:flex-[2]">
+          <div className="space-y-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-500">
+              Truy cập hệ thống Job Finder
+            </p>
+            <h2 className="text-4xl font-bold text-slate-900">Đăng nhập hệ thống</h2>
+          </div>
+
+          <div className="mt-8 sm:mt-10">
+            <LoginForm />
+          </div>
+        </div>
       </div>
     </div>
   );

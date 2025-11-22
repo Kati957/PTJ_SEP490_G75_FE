@@ -65,19 +65,19 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
 
   return (
     <div
-      className="bg-white p-4 rounded-lg shadow-md flex items-start space-x-4 relative w-full border border-gray-200 h-40 cursor-pointer"
+      className="bg-white p-4 rounded-2xl shadow-md flex items-start space-x-4 relative w-full border border-gray-200 h-44 cursor-pointer hover:-translate-y-1 transition"
       onClick={handleClick}
     >
-      <img src={job.companyLogo || "/src/assets/no-logo.png"} alt="company logo" className="w-16 h-16 object-contain" />
+      <img src={job.companyLogo || "/src/assets/no-logo.png"} alt="company logo" className="w-16 h-16 object-contain rounded-xl border border-blue-50 p-1 bg-white" />
       <div className="flex-1 overflow-hidden">
         <div className="flex items-start mb-1">
-          <h3 className="text-base font-semibold text-gray-800 truncate pr-6">
-            {job.isHot && <span className="bg-orange-100 text-orange-500 text-xs font-semibold px-2.5 py-0.5 rounded mr-2">HOT</span>}
+          <h3 className="text-base font-semibold text-slate-900 truncate pr-6">
+            {job.isHot && <span className="bg-sky-100 text-sky-600 text-xs font-semibold px-2.5 py-0.5 rounded-full mr-2">HOT</span>}
             {job.title}
           </h3>
           {user && (
             <button
-              className={`absolute top-4 right-4 text-gray-400 hover:text-red-500 ${isSaved ? 'text-red-500' : ''}`}
+              className={`absolute top-4 right-4 text-slate-400 hover:text-red-500 ${isSaved ? 'text-red-500' : ''}`}
               onClick={handleSaveToggle}
             >
               <i className={`${isSaved ? 'fas' : 'far'} fa-heart`}></i>
@@ -85,19 +85,19 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
           )}
         </div>
         
-        <p className="text-gray-600 text-sm truncate">{job.company}</p>
+        <p className="text-slate-500 text-sm truncate">{job.company}</p>
         
-        <div className="flex items-center text-indigo-500 text-xs mt-2">
+        <div className="flex items-center text-blue-600 text-xs mt-2">
           <i className="fas fa-map-marker-alt mr-1"></i>
           <span>{job.location}</span>
         </div>
         
-        <div className="flex items-center text-red-600 text-xs mt-2">
+        <div className="flex items-center text-emerald-600 text-xs mt-2">
           <i className="fas fa-money-bill-wave mr-1"></i>
           <span>{job.salary}</span>
         </div>
         
-        <span className="text-gray-500 text-xs absolute bottom-4 right-4">
+        <span className="text-slate-400 text-xs absolute bottom-4 right-4">
           {formatTimeAgo(job.updatedAt)}
         </span>
       </div>

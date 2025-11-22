@@ -1,0 +1,7 @@
+﻿  const renderDetailContent = () => {
+    if (!detailRecord) {
+      return <p>KhÃ´ng cÃ³ dá»¯ liá»‡u.</p>;
+    }
+
+    if (detailRecord.type === 'system') {
+    

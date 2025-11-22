@@ -1,15 +1,19 @@
 import React, { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Card, message, Modal, Form, Input, Upload } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { Button, Card, message, Modal, Form, Input, Select } from 'antd';
 import DOMPurify from 'dompurify';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import type { RootState } from '../../../app/store';
-import { mockJobs } from '../mockData';
 import JobCard from '../../homepage-jobSeeker/components/JobCard';
 import { fetchJobDetail } from '../jobDetailSlice';
 import { addSavedJob, fetchSavedJobs, removeSavedJob } from '../../savedJob-jobSeeker/slice';
+import { fetchAppliedJobs } from '../../applyJob-jobSeeker/slices/appliedJobsSlice';
 import applyJobService from '../../applyJob-jobSeeker/services';
+import jobSeekerCvService from '../../jobSeekerCv/services';
+import type { JobSeekerCv } from '../../jobSeekerCv/types';
+import jobPostService from '../../job/jobPostService';
+import type { Job } from '../../../types';
 
 const { TextArea } = Input;
 
@@ -21,19 +25,53 @@ const JobDetailPage: React.FC = () => {
 
   const { job, status, error } = useAppSelector((state: RootState) => state.jobDetail);
   const { jobs: savedJobs } = useAppSelector((state: RootState) => state.savedJobs);
+  const { jobs: appliedJobs } = useAppSelector((state: RootState) => state.appliedJobs);
   const jobSeekerId = useAppSelector((state: RootState) => state.auth.user?.id);
 
   const [isSticky, setIsSticky] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isApplyModalVisible, setIsApplyModalVisible] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [cvOptions, setCvOptions] = useState<JobSeekerCv[]>([]);
+  const [cvLoading, setCvLoading] = useState(false);
+  const [similarJobs, setSimilarJobs] = useState<Job[]>([]);
+  const [similarLoading, setSimilarLoading] = useState(false);
 
   const navRef = useRef<HTMLDivElement>(null);
+  const applyRequestLock = useRef(false);
 
   useEffect(() => {
-    if (jobSeekerId) {
-      dispatch(fetchSavedJobs(jobSeekerId));
+    if (!jobSeekerId) {
+      setCvOptions([]);
+      return;
     }
+    dispatch(fetchSavedJobs(String(jobSeekerId)));
+    dispatch(fetchAppliedJobs(Number(jobSeekerId)));
+
+    let isMounted = true;
+    const loadCvs = async () => {
+      setCvLoading(true);
+      try {
+        const cvs = await jobSeekerCvService.fetchMyCvs();
+        if (isMounted) {
+          setCvOptions(cvs);
+        }
+      } catch (err) {
+        message.error('Không thể tải danh sách CV. Vui lòng thử lại sau.');
+        console.error('Failed to load CV list', err);
+      } finally {
+        if (isMounted) {
+          setCvLoading(false);
+        }
+      }
+    };
+
+    void loadCvs();
+
+    return () => {
+      isMounted = false;
+    };
   }, [dispatch, jobSeekerId]);
 
   useEffect(() => {
@@ -50,6 +88,74 @@ const JobDetailPage: React.FC = () => {
     }
   }, [job, savedJobs]);
 
+  useEffect(() => {
+    if (!job || !jobSeekerId) {
+      setHasApplied(false);
+      return;
+    }
+    const applied = appliedJobs.some(
+      (application) =>
+        application.employerPostId === job.employerPostId &&
+        application.status?.toLowerCase() !== 'withdraw'
+    );
+    setHasApplied(applied);
+  }, [appliedJobs, job, jobSeekerId]);
+
+  useEffect(() => {
+    const fetchSimilarJobs = async () => {
+      if (!job?.categoryName) {
+        setSimilarJobs([]);
+        return;
+      }
+      setSimilarLoading(true);
+      try {
+        const response = await jobPostService.getAllJobs();
+        const allJobs = response.data ?? [];
+        const filteredJobs = allJobs
+          .filter(
+            (post) =>
+              post.categoryName === job.categoryName &&
+              post.employerPostId !== job.employerPostId
+          )
+          .slice(0, 5)
+          .map((post) => ({
+            id: String(post.employerPostId),
+            title: post.title,
+            description: post.description || '',
+            company: post.employerName || null,
+            location: post.location || null,
+            salary:
+              post.salaryText ||
+              (typeof post.salary === 'number'
+                ? `${post.salary.toLocaleString()} VNĐ`
+                : null),
+            updatedAt: post.createdAt,
+            companyLogo: null,
+            isHot: null,
+          }));
+        setSimilarJobs(filteredJobs);
+      } catch (err) {
+        console.error('Failed to fetch similar jobs', err);
+        setSimilarJobs([]);
+      } finally {
+        setSimilarLoading(false);
+      }
+    };
+
+    void fetchSimilarJobs();
+  }, [job?.categoryName, job?.employerPostId]);
+
+  useEffect(() => {
+    if (cvOptions.length === 0) {
+      form.setFieldsValue({ cvId: undefined });
+      return;
+    }
+    const currentCv = form.getFieldValue('cvId');
+    if (!currentCv) {
+      form.setFieldsValue({ cvId: cvOptions[0].cvid });
+    }
+  }, [cvOptions, form]);
+
   const handleSaveToggle = async () => {
     if (!job || !jobSeekerId) {
       message.warning('Vui lòng đăng nhập để thực hiện chức năng này.');
@@ -59,27 +165,17 @@ const JobDetailPage: React.FC = () => {
 
     try {
       if (isSaved) {
-        await dispatch(removeSavedJob({ jobSeekerId, jobId })).unwrap();
+        await dispatch(removeSavedJob({ jobSeekerId: String(jobSeekerId), jobId })).unwrap();
         message.success('Đã hủy lưu công việc');
         setIsSaved(false);
       } else {
-        await dispatch(addSavedJob({ jobSeekerId, jobId })).unwrap();
+        await dispatch(addSavedJob({ jobSeekerId: String(jobSeekerId), jobId })).unwrap();
         message.success('Đã lưu công việc thành công');
         setIsSaved(true);
       }
     } catch (err) {
       message.error('Đã có lỗi xảy ra. Vui lòng thử lại.');
       console.error('Failed to save/unsave the job: ', err);
-    }
-  };
-
-  const handleSimilarJobSaveToggle = async (jobId: string) => {
-    if (!jobSeekerId) return;
-    const jobIsSaved = savedJobs.some((j) => j.id === jobId);
-    if (jobIsSaved) {
-      dispatch(removeSavedJob({ jobSeekerId, jobId }));
-    } else {
-      dispatch(addSavedJob({ jobSeekerId, jobId }));
     }
   };
 
@@ -92,24 +188,115 @@ const JobDetailPage: React.FC = () => {
     setIsApplyModalVisible(true);
   };
 
-  const handleApplySubmit = async (values: { note: string; cv?: any }) => {
-    if (!job || !jobSeekerId) return;
+  const refreshJobData = async () => {
+    const refreshTasks: Array<Promise<unknown>> = [];
 
+    if (jobSeekerId) {
+      refreshTasks.push(
+        dispatch(fetchAppliedJobs(Number(jobSeekerId)))
+          .unwrap()
+          .catch((err) => {
+            console.error('Failed to refresh applied jobs', err);
+          })
+      );
+    }
+
+    if (id) {
+      refreshTasks.push(
+        dispatch(fetchJobDetail(id))
+          .unwrap()
+          .catch((err) => {
+            console.error('Failed to refresh job detail', err);
+          })
+      );
+    }
+
+    if (refreshTasks.length > 0) {
+      await Promise.all(refreshTasks);
+    }
+  };
+
+  const handleApplySuccess = async (successMessage: string) => {
+    message.success(successMessage);
+    setIsApplyModalVisible(false);
+    form.resetFields();
+    setHasApplied(true);
+    await refreshJobData();
+  };
+
+  const extractAxiosErrorMessage = (error: unknown): string | null => {
+    if (!axios.isAxiosError(error)) {
+      return null;
+    }
+    const data = error.response?.data as { message?: string; error?: string; title?: string } | string | undefined;
+    if (!data) {
+      return null;
+    }
+    if (typeof data === 'string') {
+      return data;
+    }
+    if (typeof data.message === 'string') {
+      return data.message;
+    }
+    if (typeof data.error === 'string') {
+      return data.error;
+    }
+    if (typeof data.title === 'string') {
+      return data.title;
+    }
+    return null;
+  };
+
+  const isDuplicateApplicationError = (error: unknown): boolean => {
+    if (!axios.isAxiosError(error)) {
+      return false;
+    }
+
+    if (error.response?.status === 409) {
+      return true;
+    }
+
+    const messageText = extractAxiosErrorMessage(error);
+    if (!messageText) {
+      return false;
+    }
+
+    const normalized = messageText.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const duplicateMarkers = ['da ung tuyen', 'da nop don', 'already applied'];
+
+    return duplicateMarkers.some((marker) => normalized.includes(marker));
+  };
+
+  const handleApplySubmit = async (values: { note: string; cvId?: number }) => {
+    if (!job || !jobSeekerId) return;
+    if (!values.cvId) {
+      message.warning('Vui long chon CV de ung tuyen.');
+      return;
+    }
+    if (applying || applyRequestLock.current) {
+      return;
+    }
+
+    applyRequestLock.current = true;
     setApplying(true);
     try {
       await applyJobService.applyJob({
         jobSeekerId,
         employerPostId: job.employerPostId,
+        cvid: values.cvId,
         note: values.note,
       });
-      message.success('Nộp đơn ứng tuyển thành công!');
-      setIsApplyModalVisible(false);
-      form.resetFields();
+      await handleApplySuccess('Nop don ung tuyen thanh cong!');
     } catch (error) {
       console.error('Apply failed:', error);
-      message.error('Nộp đơn thất bại. Có thể bạn đã ứng tuyển công việc này rồi.');
+      if (isDuplicateApplicationError(error)) {
+        await handleApplySuccess('Ban da nop don cong viec nay truoc do. Da cap nhat lai thong tin.');
+      } else {
+        message.error('Nop don that bai. Vui long thu lai sau.');
+      }
     } finally {
       setApplying(false);
+      applyRequestLock.current = false;
     }
   };
 
@@ -170,7 +357,15 @@ const JobDetailPage: React.FC = () => {
           </div>
 
           <div className="flex space-x-4 mb-6">
-            <Button type="primary" size="large" className="bg-blue-600" onClick={handleApplyNow}>Nộp đơn ngay</Button>
+            <Button
+              type="primary"
+              size="large"
+              className="bg-blue-600"
+              onClick={handleApplyNow}
+              disabled={hasApplied}
+            >
+              {hasApplied ? 'Đã nộp đơn' : 'Nộp đơn ngay'}
+            </Button>
             <Button size="large" onClick={handleSaveToggle} icon={isSaved ? <i className="fas fa-heart text-red-500"></i> : <i className="far fa-heart"></i>}>
               {isSaved ? 'Đã lưu' : 'Lưu'}
             </Button>
@@ -226,16 +421,19 @@ const JobDetailPage: React.FC = () => {
         {/* Right Column */}
         <div className="lg:col-span-1 space-y-4">
           <Card title="Việc làm tương tự">
+            {similarLoading ? (
+              <p>Đang tải việc làm tương tự...</p>
+            ) : (
             <div className="space-y-4">
-              {mockJobs.slice(0, 5).map(j => (
-                <JobCard 
-                  key={j.id} 
-                  job={j} 
-                  isSaved={savedJobs.some(sj => sj.id === j.id)}
-                  onSaveToggle={() => handleSimilarJobSaveToggle(j.id)}
-                />
-              ))}
+              {similarJobs.length > 0 ? (
+                similarJobs.map((similarJob) => (
+                  <JobCard key={similarJob.id} job={similarJob} />
+                ))
+              ) : (
+                <p>Hiện chưa có.</p>
+              )}
             </div>
+            )}
           </Card>
         </div>
       </div>
@@ -252,7 +450,15 @@ const JobDetailPage: React.FC = () => {
               <Button size="large" onClick={handleSaveToggle} icon={isSaved ? <i className="fas fa-heart text-red-500"></i> : <i className="far fa-heart"></i>}>
                 {isSaved ? 'Đã lưu' : 'Lưu'}
               </Button>
-              <Button type="primary" size="large" className="bg-blue-600" onClick={handleApplyNow}>Nộp đơn ngay</Button>
+              <Button
+                type="primary"
+                size="large"
+                className="bg-blue-600"
+                onClick={handleApplyNow}
+                disabled={hasApplied}
+              >
+                {hasApplied ? 'Đã nộp đơn' : 'Nộp đơn ngay'}
+              </Button>
             </div>
           </div>
         </div>
@@ -270,7 +476,7 @@ const JobDetailPage: React.FC = () => {
           form={form}
           layout="vertical"
           onFinish={handleApplySubmit}
-          initialValues={{ note: '' }}
+          initialValues={{ note: '', cvId: undefined }}
         >
           <Form.Item
             name="note"
@@ -280,23 +486,48 @@ const JobDetailPage: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            name="cv"
-            label="Tải lên CV của bạn"
-            valuePropName="fileList"
-            getValueFromEvent={(e) => (Array.isArray(e) ? e : e && e.fileList)}
-            extra="Tải lên CV mới nhất của bạn (tùy chọn). API hiện tại chưa hỗ trợ upload file."
+            name="cvId"
+            label="Chọn CV của bạn"
+            rules={[{ required: true, message: 'Vui lòng chọn một CV để ứng tuyển!' }]}
           >
-            <Upload
-              name="cv"
-              beforeUpload={() => false} // Prevent auto-upload
-              maxCount={1}
+            <Select
+              placeholder="Chọn CV"
+              loading={cvLoading}
+              disabled={cvOptions.length === 0}
             >
-              <Button icon={<UploadOutlined />}>Chọn File</Button>
-            </Upload>
+              {cvOptions.map((cv) => (
+                <Select.Option key={cv.cvid} value={cv.cvid}>
+                  {cv.cvTitle || `CV #${cv.cvid}`}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
+          {cvOptions.length === 0 && (
+            <p className="text-sm text-gray-500 mb-4">
+              Bạn chưa có CV nào.{' '}
+              <button
+                type="button"
+                className="text-blue-600 underline"
+                onClick={() => {
+                  setIsApplyModalVisible(false);
+                  navigate('/cv-cua-toi');
+                }}
+              >
+                Tạo CV ngay
+              </button>
+              .
+            </p>
+          )}
+
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={applying} block>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={applying}
+              block
+              disabled={cvOptions.length === 0}
+            >
               Xác nhận ứng tuyển
             </Button>
           </Form.Item>
@@ -307,3 +538,4 @@ const JobDetailPage: React.FC = () => {
 };
 
 export default JobDetailPage;
+
