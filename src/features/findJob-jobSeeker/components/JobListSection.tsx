@@ -61,7 +61,7 @@ const JobListCard: React.FC<{ job: JobPostView }> = ({ job }) => {
 
         {job.description && (
           <p className="text-sm text-gray-600 line-clamp-2">
-            {job.description.replace(/<[^>]+>/g, "").slice(0, 200)}
+            {job.description.replaceAll(/<[^>]+>/g, "").slice(0, 200)}
             {job.description.length > 200 ? "..." : ""}
           </p>
         )}
@@ -118,29 +118,19 @@ const JobListSection: React.FC<JobListSectionProps> = ({
         job.title?.toLowerCase().includes(keywordLower) ||
         job.location?.toLowerCase().includes(keywordLower);
 
-      const jobProvinceId = normalizeNumericId(
-        job.provinceId ?? (job as any).provinceID ?? (job as any).provinceCode
-      );
       const provinceMatch =
         provinceId === null ||
         provinceId === undefined ||
-        jobProvinceId === provinceId;
+        job.provinceId === provinceId;
 
-      const jobCategoryId = normalizeNumericId(
-        job.categoryId ?? (job as any).categoryID
-      );
-      const jobSubCategoryId = normalizeNumericId(
-        job.subCategoryId ?? (job as any).subCategoryID
-      );
       const categoryMatch =
-        categoryId === null ||
-        categoryId === undefined ||
-        jobCategoryId === categoryId;
+        !categoryId ||
+        (filters.categoryName && job.categoryName === filters.categoryName);
 
       const subCategoryMatch =
-        subCategoryId === null ||
-        subCategoryId === undefined ||
-        jobSubCategoryId === subCategoryId;
+        !subCategoryId ||
+        (filters.subCategoryName &&
+          job.subCategoryName === filters.subCategoryName);
 
       let salaryMatch = true;
       if (salary === "hasValue") {
@@ -177,9 +167,7 @@ const JobListSection: React.FC<JobListSectionProps> = ({
       if (salaryA === null) return 1;
       if (salaryB === null) return -1;
 
-      return sortOrder === "salaryDesc"
-        ? salaryB - salaryA
-        : salaryA - salaryB;
+      return sortOrder === "salaryDesc" ? salaryB - salaryA : salaryA - salaryB;
     });
   }, [filteredJobs, sortOrder]);
 
@@ -195,9 +183,7 @@ const JobListSection: React.FC<JobListSectionProps> = ({
   return (
     <div className="mt-10">
       <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-3 mb-4">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Việc làm hiện hành
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-900">Việc làm hiện hành</h2>
         <div className="w-full sm:w-auto">
           <Select
             value={sortOrder}
