@@ -9,10 +9,11 @@ const JobSeekerProfilePage: React.FC = () => {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
-        <div className="max-w-5xl mx-auto px-6 h-48 flex flex-col justify-end pb-6 text-white text-center">
-  
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+      <div className="bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-500">
+        <div className="max-w-5xl mx-auto px-6 h-48 flex flex-col justify-end pb-6 text-white">
+          <h1 className="text-3xl font-bold">Hồ sơ ứng viên</h1>
+          <p className="text-white/80">{user?.username}</p>
         </div>
       </div>
 
@@ -21,7 +22,7 @@ const JobSeekerProfilePage: React.FC = () => {
           <ProfileOverview
             profile={profile}
             loading={loading}
-            email={user?.username + "@gmail.com"}
+            email={user?.username ? `${user.username}@gmail.com` : undefined}
           />
         </div>
         <div className="lg:flex-1">

@@ -23,7 +23,7 @@ const ProfileOverview: React.FC<ProfileOverviewProps> = ({ profile, loading, ema
   if (!profile) {
     return (
       <Card className="shadow-lg">
-        <Text type="secondary">Khong co thong tin ho so</Text>
+        <Text type="secondary">Chưa có thông tin hồ sơ</Text>
       </Card>
     );
   }
@@ -33,19 +33,19 @@ const ProfileOverview: React.FC<ProfileOverviewProps> = ({ profile, loading, ema
       key: "email",
       icon: <MailOutlined className="text-indigo-500" />,
       label: "Email",
-      value: email || "Chua cap nhat",
+      value: email || "Chưa cập nhật",
     },
     {
       key: "phone",
       icon: <PhoneOutlined className="text-indigo-500" />,
-      label: "Dien thoai",
-      value: profile.contactPhone || "Chua cap nhat",
+      label: "Điện thoại",
+      value: profile.contactPhone || "Chưa cập nhật",
     },
     {
       key: "location",
       icon: <EnvironmentOutlined className="text-indigo-500" />,
-      label: "Dia chi",
-      value: profile.preferredLocation || "Chua cap nhat",
+      label: "Địa chỉ",
+      value: profile.preferredLocation || "Chưa cập nhật",
     },
   ];
 
@@ -61,13 +61,13 @@ const ProfileOverview: React.FC<ProfileOverviewProps> = ({ profile, loading, ema
             className="border-4 border-white shadow-lg"
           />
           <Title level={4} className="mt-3 mb-0">
-            {profile.fullName || "Nguoi tim viec"}
+            {profile.fullName || "Người tìm việc"}
           </Title>
           <Text type="secondary">
-            {profile.preferredJobType || "Chua co cong viec mong muon"}
+            {profile.preferredJobType || "Chưa có công việc mong muốn"}
           </Text>
           <Text className="text-sm text-gray-500">
-            {profile.preferredLocation || "Chua cap nhat dia diem"}
+            {profile.preferredLocation || "Chưa cập nhật địa điểm"}
           </Text>
         </div>
         <Divider />

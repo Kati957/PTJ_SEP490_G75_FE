@@ -25,3 +25,11 @@
 .prose ol > li {
   list-style-type: decimal;
 }
+
+a:hover {
+  color: #2563eb !important;
+}
+
+button:hover {
+  border-color: #2563eb !important;
+}

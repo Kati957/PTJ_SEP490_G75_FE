@@ -404,10 +404,10 @@ export const JobInfoFormSection: React.FC<{
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
       <h3 className="text-xl font-bold text-blue-700 mb-6">
-        Thông tin công việc
+       Vui lòng điền thông tin cho bài đăng tuyển dụng
       </h3>
 
-      <FormField label="Tên công việc" required>
+      <FormField label="Tiêu đề bài tuyển dụng" required>
         <Input
           size="large"
           placeholder="Nhập tiêu đề công việc"
@@ -423,7 +423,7 @@ export const JobInfoFormSection: React.FC<{
         )}
       </FormField>
 
-      <FormField label="Địa điểm" required>
+      <FormField label="Địa điểm nơi làm việc" required>
         <div className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
@@ -502,7 +502,7 @@ export const JobInfoFormSection: React.FC<{
         </div>
       </FormField>
 
-      <FormField label="Mức lương (VND)">
+      <FormField label="Mức lương dành cho công việc (VND)">
         <InputNumber
           size="large"
           min={0}
@@ -531,7 +531,7 @@ export const JobInfoFormSection: React.FC<{
         )}
       </FormField>
 
-      <FormField label="Mô tả công việc" required>
+      <FormField label="Mô tả công việc cần tuyển dụng" required>
         <div className={validation.jobDescription ? "jodit-invalid" : ""}>
           <JoditEditor
             ref={editor}
@@ -556,7 +556,7 @@ export const JobInfoFormSection: React.FC<{
         <style>{`.jodit-invalid .jodit-container { border: 1px solid #ef4444; }`}</style>
       </FormField>
 
-      <FormField label="Yêu cầu công việc" required>
+      <FormField label="Yêu cầu công việc cho ứng viên" required>
         <Input.TextArea
           rows={3}
           placeholder="Nhập yêu cầu về kỹ năng, kinh nghiệm..."
@@ -572,7 +572,7 @@ export const JobInfoFormSection: React.FC<{
         )}
       </FormField>
 
-      <FormField label="Giờ làm việc" required>
+      <FormField label="Giờ làm việc " required>
         <Space.Compact className="w-full">
           <TimePicker
             value={timeRange[0]}

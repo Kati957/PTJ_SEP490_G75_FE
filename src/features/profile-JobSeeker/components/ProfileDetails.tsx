@@ -36,9 +36,9 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
     const profileData: JobSeekerProfileUpdateDto = { [field]: value };
     try {
       await dispatch(updateJobSeekerProfile(profileData)).unwrap();
-      message.success("Cap nhat ho so thanh cong!");
+      message.success("Cập nhật hồ sơ thành công!");
     } catch (err) {
-      message.error("Cap nhat ho so that bai!");
+      message.error("Cập nhật hồ sơ thất bại!");
     }
   };
 
@@ -46,37 +46,37 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
     const profileData: JobSeekerProfileUpdateDto = { imageFile: file };
     try {
       await dispatch(updateJobSeekerProfile(profileData)).unwrap();
-      message.success("Cap nhat anh thanh cong!");
+      message.success("Cập nhật ảnh thành công!");
     } catch (err) {
-      message.error("Cap nhat anh that bai!");
+      message.error("Cập nhật ảnh thất bại!");
     }
     return false;
   };
 
   if (error) {
-    return <Alert message="Loi" description={error} type="error" showIcon />;
+    return <Alert message="Lỗi" description={error} type="error" showIcon />;
   }
 
   if (!profile) {
     return (
       <Card className="shadow-md">
-        <Alert message="Khong tim thay ho so" type="warning" showIcon />
+        <Alert message="Không tìm thấy hồ sơ" type="warning" showIcon />
       </Card>
     );
   }
 
   return (
-    <Spin spinning={loading} tip="Dang cap nhat..." className="w-full">
+    <Spin spinning={loading} tip="Đang cập nhật..." className="w-full">
       <div className="space-y-6">
         <Card className="shadow-md">
           <div className="flex flex-col sm:flex-row gap-4 items-center">
             <Avatar size={84} src={profile.profilePicture} icon={<UserOutlined />} />
             <div className="flex-1 w-full">
               <Title level={4} className="mb-1">
-                Tai khoan
+                Tài khoản
               </Title>
               <Paragraph type="secondary" className="mb-1">
-                Hay cap nhat thong tin moi nhat. Thong tin duoi day se duoc dien khi ban tao ho so.
+                Hãy cập nhật thông tin mới nhất. Thông tin dưới đây sẽ được điền khi bạn tạo hồ sơ.
               </Paragraph>
               <Paragraph type="secondary" style={{ fontSize: "12px" }}>
                 (JPEG/PNG/GIF, duoi 1MB)
