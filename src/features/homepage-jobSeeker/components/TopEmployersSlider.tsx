@@ -117,7 +117,7 @@ const TopEmployersSlider: React.FC = () => {
 
   return (
     <section className="px-4">
-      <div className="max-w-[120rem] mx-auto bg-white border border-gray-200 rounded-3xl p-12 shadow-[0_30px_90px_rgba(15,23,42,0.1)]">
+      <div className="max-w-[120rem] mx-auto bg-white border border-gray-200 rounded-3xl p-12 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 text-slate-900">
           <div>
             <p className="uppercase text-xs tracking-[0.35em] text-blue-500">Đối tác</p>

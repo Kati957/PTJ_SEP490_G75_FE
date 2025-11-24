@@ -21,9 +21,11 @@ import type {
   AdminCategory,
   AdminCategoryDetail,
   AdminCreateCategoryPayload,
-  AdminUpdateCategoryPayload
+  AdminUpdateCategoryPayload,
+  AdminCategoryFilters
 } from '../../features/admin/types/category';
 import AdminSectionHeader from './components/AdminSectionHeader';
+
 const { Option } = Select;
 
 interface CategoryFormValues {
@@ -204,19 +206,19 @@ const AdminCategoryManagementPage: React.FC = () => {
       render: (value: boolean) => (
         <Tag color={value ? 'green' : 'red'}>{value ? 'Đang áp dụng' : 'Đang tắt'}</Tag>
       )
-    },
+    }
   ];
 
   return (
     <>
       <AdminSectionHeader
-        title="Quản lý danh mục"
+        title="Quản lý danh mục ngành nghề"
         description="Cập nhật các nhóm ngành, lĩnh vực sử dụng trong tuyển dụng và tìm việc."
         gradient="from-emerald-500 via-teal-500 to-green-500"
         extra={
           <Space>
             <Button icon={<ReloadOutlined />} onClick={() => fetchCategories()} loading={loading}>
-              Tai lai
+              Tải lại
             </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
               Tạo danh mục
@@ -344,12 +346,7 @@ const AdminCategoryManagementPage: React.FC = () => {
             <Input.TextArea rows={3} placeholder="Mô tả ngắn gọn" />
           </Form.Item>
 
-          <Form.Item
-            name="isActive"
-            label="Trạng thái"
-            valuePropName="checked"
-            initialValue={true}
-          >
+          <Form.Item name="isActive" label="Trạng thái" valuePropName="checked" initialValue={true}>
             <Switch checkedChildren="Đang áp dụng" unCheckedChildren="Đang tắt" />
           </Form.Item>
         </Form>

@@ -184,7 +184,7 @@ const AdminReportManagementPage: React.FC = () => {
         }));
       } catch (error) {
         console.error('Failed to fetch pending reports', error);
-        message.error('Không thể tải danh sách report chờ xử lý');
+        message.error('Khng th ti danh sch report ch x l');
       } finally {
         setPendingLoading(false);
       }
@@ -211,7 +211,7 @@ const AdminReportManagementPage: React.FC = () => {
         }));
       } catch (error) {
         console.error('Failed to fetch solved reports', error);
-        message.error('Không thể tải danh sách report đã xử lý');
+        message.error('Khng th ti danh sch report  x l');
       } finally {
         setSolvedLoading(false);
       }
@@ -237,7 +237,7 @@ const AdminReportManagementPage: React.FC = () => {
         }));
       } catch (error) {
         console.error('Failed to fetch system reports', error);
-        message.error('Không thể tải danh sách báo cáo hệ thống');
+        message.error('Khng th ti danh sch bo co h thng');
       } finally {
         setSystemLoading(false);
       }
@@ -300,7 +300,7 @@ const AdminReportManagementPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch detail', error);
-      message.error('Không thể tải chi tiết report');
+      message.error('Khng th ti chi tit report');
       setDetailOpen(false);
     } finally {
       setDetailLoading(false);
@@ -319,12 +319,12 @@ const AdminReportManagementPage: React.FC = () => {
     setResolveSubmitting(true);
     try {
       await adminReportService.resolveReport(resolvingReportId, values);
-      message.success('Đã xử lý report thành công');
+      message.success(' x l report thnh cng');
       setResolveModalOpen(false);
       await Promise.all([fetchPendingReports(), fetchSolvedReports()]);
     } catch (error) {
       console.error('Failed to resolve report', error);
-      message.error('Không thể xử lý report');
+      message.error('Khng th x l report');
     } finally {
       setResolveSubmitting(false);
     }
@@ -342,12 +342,12 @@ const AdminReportManagementPage: React.FC = () => {
     setSystemResolveSubmitting(true);
     try {
       await adminSystemReportService.resolveSystemReport(resolvingSystemId, values);
-      message.success('Đã cập nhật báo cáo hệ thống');
+      message.success(' cp nht bo co h thng');
       setSystemResolveModalOpen(false);
       await fetchSystemReports();
     } catch (error) {
       console.error('Failed to resolve system report', error);
-      message.error('Không thể cập nhật báo cáo hệ thống');
+      message.error('Khng th cp nht bo co h thng');
     } finally {
       setSystemResolveSubmitting(false);
     }
@@ -356,11 +356,11 @@ const AdminReportManagementPage: React.FC = () => {
   const reportTypeTag = (type: string) => {
     switch (type) {
       case 'EmployerPost':
-        return <Tag color="purple">Bài đăng nhà tuyển dụng</Tag>;
+        return <Tag color="purple">Bi ng nh tuyn dng</Tag>;
       case 'JobSeekerPost':
-        return <Tag color="blue">Bài đăng ứng viên</Tag>;
+        return <Tag color="blue">Bi ng ng vin</Tag>;
       case 'User':
-        return <Tag color="gold">Người dùng</Tag>;
+        return <Tag color="gold">Ngi dng</Tag>;
       default:
         return <Tag>{type}</Tag>;
     }
@@ -369,11 +369,11 @@ const AdminReportManagementPage: React.FC = () => {
   const reportTypeLabel = (type: string) => {
     switch (type) {
       case 'EmployerPost':
-        return 'Bài đăng nhà tuyển dụng';
+        return 'Bi ng nh tuyn dng';
       case 'JobSeekerPost':
-        return 'Bài đăng ứng viên';
+        return 'Bi ng ng vin';
       case 'User':
-        return 'Người dùng';
+        return 'Ngi dng';
       default:
         return type;
     }
@@ -411,27 +411,27 @@ const AdminReportManagementPage: React.FC = () => {
 
   const pendingColumns: ColumnsType<AdminReport> = [
     {
-      title: 'Loại',
+      title: 'Loi',
       dataIndex: 'reportType',
       key: 'reportType',
       width: 180,
       render: (value: string) => reportTypeTag(value)
     },
     {
-      title: 'Người báo cáo',
+      title: 'Ngi bo co',
       dataIndex: 'reporterEmail',
       key: 'reporterEmail',
       width: 220
     },
     {
-      title: 'Mục tiêu',
+      title: 'Mc tiu',
       dataIndex: 'targetUserEmail',
       key: 'targetUserEmail',
       width: 220,
       render: (value?: string | null) => value ?? '---'
     },
     {
-      title: 'Lý do',
+      title: 'L do',
       dataIndex: 'reason',
       key: 'reason',
       render: (value?: string | null) => (
@@ -441,14 +441,14 @@ const AdminReportManagementPage: React.FC = () => {
       )
     },
     {
-      title: 'Ngày tạo',
+      title: 'Ngy to',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 200,
       render: (value: string) => formatDateTime(value)
     },
     {
-      title: 'Hành động',
+      title: 'Hnh ng',
       key: 'actions',
       fixed: 'right',
       width: 200,
@@ -467,40 +467,40 @@ const AdminReportManagementPage: React.FC = () => {
 
   const solvedColumns: ColumnsType<AdminSolvedReport> = [
     {
-      title: 'Loại',
+      title: 'Loi',
       dataIndex: 'reportType',
       key: 'reportType',
       width: 180,
       render: (value?: string | null) => (value ? reportTypeTag(value) : '---')
     },
     {
-      title: 'Hành động',
+      title: 'Hnh ng',
       dataIndex: 'actionTaken',
       key: 'actionTaken',
       render: (value: string) => <Tag color="green">{value}</Tag>
     },
     {
-      title: 'Admin xử lý',
+      title: 'Admin x l',
       dataIndex: 'adminEmail',
       key: 'adminEmail',
       width: 220
     },
     {
-      title: 'Người bị ảnh hưởng',
+      title: 'Ngi b nh hng',
       dataIndex: 'targetUserEmail',
       key: 'targetUserEmail',
       width: 220,
       render: (value?: string | null) => value ?? '---'
     },
     {
-      title: 'Ngày xử lý',
+      title: 'Ngy x l',
       dataIndex: 'solvedAt',
       key: 'solvedAt',
       width: 200,
       render: (value: string) => formatDateTime(value)
     },
     {
-      title: 'Hành động',
+      title: 'Hnh ng',
       key: 'actions',
       fixed: 'right',
       width: 160,
@@ -514,7 +514,7 @@ const AdminReportManagementPage: React.FC = () => {
 
   const systemColumns: ColumnsType<AdminSystemReport> = [
     {
-      title: 'Tiêu đề',
+      title: 'Tiu ',
       dataIndex: 'title',
       key: 'title',
       width: 260,
@@ -525,34 +525,34 @@ const AdminReportManagementPage: React.FC = () => {
       )
     },
     {
-      title: 'Người gửi',
+      title: 'Ngi gi',
       dataIndex: 'userEmail',
       key: 'userEmail',
       width: 220
     },
     {
-      title: 'Trạng thái',
+      title: 'Trng thi',
       dataIndex: 'status',
       key: 'status',
       width: 160,
       render: (value: string) => statusTag(value)
     },
     {
-      title: 'Ngày tạo',
+      title: 'Ngy to',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 200,
       render: (value: string) => formatDateTime(value)
     },
     {
-      title: 'Cập nhật',
+      title: 'Cp nht',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
       width: 200,
       render: (value?: string | null) => formatDateTime(value)
     },
     {
-      title: 'Hành động',
+      title: 'Hnh ng',
       key: 'actions',
       fixed: 'right',
       width: 220,
@@ -568,7 +568,7 @@ const AdminReportManagementPage: React.FC = () => {
               size="small"
               onClick={() => openSystemResolveModal(record.reportId)}
             >
-              Đánh dấu đã xử lý
+              nh du  x l
             </Button>
           )}
         </Space>
@@ -582,7 +582,7 @@ const AdminReportManagementPage: React.FC = () => {
         <Space direction="vertical" size="middle" className="w-full">
           <Input
             prefix={<SearchOutlined />}
-            placeholder="Tìm theo email hoặc lý do..."
+            placeholder="Tm theo email hoc l do..."
             allowClear
             value={pendingFilters.keyword}
             onChange={(event) => handlePendingFilterChange('keyword', event.target.value)}
@@ -622,7 +622,7 @@ const AdminReportManagementPage: React.FC = () => {
         <Space direction="vertical" size="middle" className="w-full">
           <Input
             prefix={<SearchOutlined />}
-            placeholder="Lọc theo email admin xử lý..."
+            placeholder="Lc theo email admin x l..."
             allowClear
             value={solvedFilters.adminEmail}
             onChange={(event) => handleSolvedFilterChange('adminEmail', event.target.value)}
@@ -662,7 +662,7 @@ const AdminReportManagementPage: React.FC = () => {
         <Space direction="vertical" size="middle" className="w-full">
           <Input
             prefix={<SearchOutlined />}
-            placeholder="Tìm theo tiêu đề, mô tả hoặc email..."
+            placeholder="Tm theo tiu , m t hoc email..."
             allowClear
             value={systemFilters.keyword}
             onChange={(event) => handleSystemFilterChange('keyword', event.target.value)}
@@ -718,67 +718,87 @@ const AdminReportManagementPage: React.FC = () => {
 
   const renderDetailContent = () => {
     if (!detailRecord) {
-      return <p>Không có dữ liệu.</p>;
+      return <p>Khong co du lieu.</p>;
     }
 
     if (detailRecord.type === 'system') {
       return (
-        <Descriptions column={1} bordered size="small">
-          <Descriptions.Item label="Tiêu đề">{detailRecord.data.title}</Descriptions.Item>
-          <Descriptions.Item label="Người gửi">{detailRecord.data.userEmail}</Descriptions.Item>
-          {detailRecord.data.fullName && (
-            <Descriptions.Item label="Tên hiển thị">{detailRecord.data.fullName}</Descriptions.Item>
-          )}
-          {detailRecord.data.description && (
-            <Descriptions.Item label="Mô tả">{detailRecord.data.description}</Descriptions.Item>
-          )}
-          <Descriptions.Item label="Trạng thái">{statusTag(detailRecord.data.status)}</Descriptions.Item>
-          <Descriptions.Item label="Ngày tạo">
-            {new Date(detailRecord.data.createdAt).toLocaleString('vi-VN')}
-          </Descriptions.Item>
-          <Descriptions.Item label="Cập nhật">
-            {detailRecord.data.updatedAt
-              ? new Date(detailRecord.data.updatedAt).toLocaleString('vi-VN')
-              : '---'}
-          </Descriptions.Item>
-        </Descriptions>
+        <Card bordered={false} className="shadow-sm">
+          <Descriptions
+            bordered
+            size="middle"
+            layout="vertical"
+            column={2}
+            className="w-full rounded-xl"
+            labelStyle={{ fontWeight: 600, color: '#475569', width: 200 }}
+          >
+            <Descriptions.Item label="Tieu de" span={2}>{detailRecord.data.title}</Descriptions.Item>
+            <Descriptions.Item label="Nguoi gui">{detailRecord.data.userEmail}</Descriptions.Item>
+            {detailRecord.data.fullName && (
+              <Descriptions.Item label="Ten hien thi">{detailRecord.data.fullName}</Descriptions.Item>
+            )}
+            <Descriptions.Item label="Trang thai">{statusTag(detailRecord.data.status)}</Descriptions.Item>
+            <Descriptions.Item label="Ngay tao">
+              {new Date(detailRecord.data.createdAt).toLocaleString('vi-VN')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Cap nhat">
+              {detailRecord.data.updatedAt
+                ? new Date(detailRecord.data.updatedAt).toLocaleString('vi-VN')
+                : '---'}
+            </Descriptions.Item>
+            {detailRecord.data.description && (
+              <Descriptions.Item label="Mo ta" span={2}>{detailRecord.data.description}</Descriptions.Item>
+            )}
+          </Descriptions>
+        </Card>
       );
     }
 
     return (
-      <Descriptions column={1} bordered size="small">
-        <Descriptions.Item label="Loại report">
-          {reportTypeTag(detailRecord.data.reportType)}
-        </Descriptions.Item>
-        <Descriptions.Item label="Người báo cáo">{detailRecord.data.reporterEmail}</Descriptions.Item>
-        {detailRecord.data.targetUserEmail && (
-          <Descriptions.Item label="Người bị báo cáo">
-            {detailRecord.data.targetUserEmail}
+      <Card bordered={false} className="shadow-sm">
+        <Descriptions
+          bordered
+          size="middle"
+          layout="vertical"
+          column={2}
+          className="w-full rounded-xl"
+          labelStyle={{ fontWeight: 600, color: '#475569', width: 220 }}
+        >
+          <Descriptions.Item label="Loai report">
+            {reportTypeTag(detailRecord.data.reportType)}
           </Descriptions.Item>
-        )}
-        {detailRecord.data.targetUserRole && (
-          <Descriptions.Item label="Vai trò người bị báo cáo">
-            {detailRecord.data.targetUserRole}
+          <Descriptions.Item label="Trang thai">{statusTag(detailRecord.data.status)}</Descriptions.Item>
+          <Descriptions.Item label="Nguoi bao cao">{detailRecord.data.reporterEmail}</Descriptions.Item>
+          <Descriptions.Item label="Thoi gian">
+            {new Date(detailRecord.data.createdAt).toLocaleString('vi-VN')}
           </Descriptions.Item>
-        )}
-        {detailRecord.data.reason && (
-          <Descriptions.Item label="Lý do">{detailRecord.data.reason}</Descriptions.Item>
-        )}
-        <Descriptions.Item label="Trạng thái">{detailRecord.data.status}</Descriptions.Item>
-        <Descriptions.Item label="Thời gian">
-          {new Date(detailRecord.data.createdAt).toLocaleString('vi-VN')}
-        </Descriptions.Item>
-        {detailRecord.data.employerPostTitle && (
-          <Descriptions.Item label="Bài đăng nhà tuyển dụng">
-            {detailRecord.data.employerPostTitle}
-          </Descriptions.Item>
-        )}
-        {detailRecord.data.jobSeekerPostTitle && (
-          <Descriptions.Item label="Bài đăng ứng viên">
-            {detailRecord.data.jobSeekerPostTitle}
-          </Descriptions.Item>
-        )}
-      </Descriptions>
+          {detailRecord.data.targetUserEmail && (
+            <Descriptions.Item label="Nguoi bi bao cao">
+              {detailRecord.data.targetUserEmail}
+            </Descriptions.Item>
+          )}
+          {detailRecord.data.targetUserRole && (
+            <Descriptions.Item label="Vai tro nguoi bi bao cao">
+              {detailRecord.data.targetUserRole}
+            </Descriptions.Item>
+          )}
+          {detailRecord.data.reason && (
+            <Descriptions.Item label="Ly do" span={2}>
+              {detailRecord.data.reason}
+            </Descriptions.Item>
+          )}
+          {detailRecord.data.employerPostTitle && (
+            <Descriptions.Item label="Bai dang nha tuyen dung" span={2}>
+              {detailRecord.data.employerPostTitle}
+            </Descriptions.Item>
+          )}
+          {detailRecord.data.jobSeekerPostTitle && (
+            <Descriptions.Item label="Bai dang ung vien" span={2}>
+              {detailRecord.data.jobSeekerPostTitle}
+            </Descriptions.Item>
+          )}
+        </Descriptions>
+      </Card>
     );
   };
 
@@ -790,7 +810,7 @@ const AdminReportManagementPage: React.FC = () => {
         gradient="from-rose-600 via-red-500 to-orange-500"
         extra={
           <Button icon={<ReloadOutlined />} onClick={handleReload}>
-            Tải lại
+            Ti li
           </Button>
         }
       />
@@ -805,127 +825,127 @@ const AdminReportManagementPage: React.FC = () => {
       />
 
       <Drawer
-        title="Chi tiết report"
+        title="Chi tit report"
         placement="right"
         width={520}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         destroyOnClose
       >
-        {detailLoading ? <p>Đang tải...</p> : renderDetailContent()}
+        {detailLoading ? <p>ang ti...</p> : renderDetailContent()}
       </Drawer>
 
       <Modal
-        title="Xử lý report"
+        title="X l report"
         open={resolveModalOpen}
         onCancel={() => setResolveModalOpen(false)}
         onOk={() => resolveForm.submit()}
         confirmLoading={resolveSubmitting}
-        okText="Xác nhận"
-        cancelText="Hủy"
+        okText="Xc nhn"
+        cancelText="Hy"
       >
         <Form form={resolveForm} layout="vertical" onFinish={handleResolveReport}>
           <Form.Item
             name="actionTaken"
-            label="Hành động"
-            rules={[{ required: true, message: 'Vui lòng chọn hành động' }]}
+            label="Hnh ng"
+            rules={[{ required: true, message: 'Vui lng chn hnh ng' }]}
           >
-            <Select placeholder="Chọn cách xử lý">
-              <Option value="BanUser">Cấm người dùng</Option>
-              <Option value="UnbanUser">Bỏ cấm người dùng</Option>
-              <Option value="DeletePost">Xóa bài đăng</Option>
-              <Option value="Warn">Cảnh báo</Option>
-              <Option value="Ignore">Bỏ qua</Option>
+            <Select placeholder="Chn cch x l">
+              <Option value="BanUser">Cm ngi dng</Option>
+              <Option value="UnbanUser">B cm ngi dng</Option>
+              <Option value="DeletePost">Xa bi ng</Option>
+              <Option value="Warn">Cnh bo</Option>
+              <Option value="Ignore">B qua</Option>
             </Select>
           </Form.Item>
 
-          <Form.Item name="reason" label="Lý do">
-            <Input.TextArea rows={3} placeholder="Ghi chú xử lý (nếu có)" />
+          <Form.Item name="reason" label="L do">
+            <Input.TextArea rows={3} placeholder="Ghi ch x l (nu c)" />
           </Form.Item>
 
-          <Form.Item name="affectedUserId" label="Người bị tác động (User ID)">
-            <Input placeholder="Nhập ID người dùng nếu hành động ảnh hưởng" />
+          <Form.Item name="affectedUserId" label="Ngi b tc ng (User ID)">
+            <Input placeholder="Nhp ID ngi dng nu hnh ng nh hng" />
           </Form.Item>
 
-          <Form.Item name="affectedPostId" label="Bài đăng bị tác động (Post ID)">
-            <Input placeholder="Nhập ID bài đăng nếu hành động ảnh hưởng" />
+          <Form.Item name="affectedPostId" label="Bi ng b tc ng (Post ID)">
+            <Input placeholder="Nhp ID bi ng nu hnh ng nh hng" />
           </Form.Item>
 
-          <Form.Item name="affectedPostType" label="Loại bài đăng">
-            <Select allowClear placeholder="Chọn loại bài đăng">
-              <Option value="EmployerPost">Bài đăng nhà tuyển dụng</Option>
-              <Option value="JobSeekerPost">Bài đăng ứng viên</Option>
+          <Form.Item name="affectedPostType" label="Loi bi ng">
+            <Select allowClear placeholder="Chn loi bi ng">
+              <Option value="EmployerPost">Bi ng nh tuyn dng</Option>
+              <Option value="JobSeekerPost">Bi ng ng vin</Option>
             </Select>
           </Form.Item>
         </Form>
       </Modal>
       <Modal
-        title="Xử lý report bài đăng"
+        title="X l report bi ng"
         open={resolveModalOpen}
         onCancel={() => setResolveModalOpen(false)}
         onOk={() => resolveForm.submit()}
         confirmLoading={resolveSubmitting}
-        okText="Xác nhận"
-        cancelText="Hủy"
+        okText="Xc nhn"
+        cancelText="Hy"
       >
         <Form form={resolveForm} layout="vertical" onFinish={handleResolveReport}>
           <Form.Item
             name="actionTaken"
-            label="Hành động"
-            rules={[{ required: true, message: 'Vui lòng chọn hành động' }]}
+            label="Hnh ng"
+            rules={[{ required: true, message: 'Vui lng chn hnh ng' }]}
           >
-            <Select placeholder="Chọn cách xử lý">
-              <Option value="BanUser">Cấm người dùng</Option>
-              <Option value="UnbanUser">Bỏ cấm người dùng</Option>
-              <Option value="DeletePost">Xóa bài đăng</Option>
-              <Option value="Warn">Cảnh báo</Option>
-              <Option value="Ignore">Bỏ qua</Option>
+            <Select placeholder="Chn cch x l">
+              <Option value="BanUser">Cm ngi dng</Option>
+              <Option value="UnbanUser">B cm ngi dng</Option>
+              <Option value="DeletePost">Xa bi ng</Option>
+              <Option value="Warn">Cnh bo</Option>
+              <Option value="Ignore">B qua</Option>
             </Select>
           </Form.Item>
 
-          <Form.Item name="reason" label="Lý do">
-            <Input.TextArea rows={3} placeholder="Ghi chú xử lý (nếu có)" />
+          <Form.Item name="reason" label="L do">
+            <Input.TextArea rows={3} placeholder="Ghi ch x l (nu c)" />
           </Form.Item>
 
-          <Form.Item name="affectedUserId" label="Người bị tác động (User ID)">
-            <Input placeholder="Nhập ID người dùng nếu hành động ảnh hưởng" />
+          <Form.Item name="affectedUserId" label="Ngi b tc ng (User ID)">
+            <Input placeholder="Nhp ID ngi dng nu hnh ng nh hng" />
           </Form.Item>
 
-          <Form.Item name="affectedPostId" label="Bài đăng bị tác động (Post ID)">
-            <Input placeholder="Nhập ID bài đăng nếu hành động ảnh hưởng" />
+          <Form.Item name="affectedPostId" label="Bi ng b tc ng (Post ID)">
+            <Input placeholder="Nhp ID bi ng nu hnh ng nh hng" />
           </Form.Item>
 
-          <Form.Item name="affectedPostType" label="Loại bài đăng">
-            <Select allowClear placeholder="Chọn loại bài đăng">
-              <Option value="EmployerPost">Bài đăng nhà tuyển dụng</Option>
-              <Option value="JobSeekerPost">Bài đăng ứng viên</Option>
+          <Form.Item name="affectedPostType" label="Loi bi ng">
+            <Select allowClear placeholder="Chn loi bi ng">
+              <Option value="EmployerPost">Bi ng nh tuyn dng</Option>
+              <Option value="JobSeekerPost">Bi ng ng vin</Option>
             </Select>
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title="Xử lý báo cáo hệ thống"
+        title="X l bo co h thng"
         open={systemResolveModalOpen}
         onCancel={() => setSystemResolveModalOpen(false)}
         onOk={() => systemResolveForm.submit()}
         confirmLoading={systemResolveSubmitting}
-        okText="Cập nhật"
-        cancelText="Hủy"
+        okText="Cp nht"
+        cancelText="Hy"
       >
         <Form form={systemResolveForm} layout="vertical" onFinish={handleResolveSystemReport}>
           <Form.Item
             name="action"
-            label="Hành động"
-            rules={[{ required: true, message: 'Vui lòng chọn hành động' }]}
+            label="Hnh ng"
+            rules={[{ required: true, message: 'Vui lng chn hnh ng' }]}
           >
-            <Select placeholder="Chọn cách xử lý">
-              <Option value="MarkSolved">Đánh dấu đã xử lý</Option>
-              <Option value="Ignore">Bỏ qua</Option>
+            <Select placeholder="Chn cch x l">
+              <Option value="MarkSolved">nh du  x l</Option>
+              <Option value="Ignore">B qua</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="note" label="Ghi chú">
-            <Input.TextArea rows={3} placeholder="Nhập ghi chú gửi đến người dùng (nếu có)" />
+          <Form.Item name="note" label="Ghi ch">
+            <Input.TextArea rows={3} placeholder="Nhp ghi ch gi n ngi dng (nu c)" />
           </Form.Item>
         </Form>
       </Modal>

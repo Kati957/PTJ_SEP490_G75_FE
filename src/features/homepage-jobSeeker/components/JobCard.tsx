@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { addSavedJob, removeSavedJob, fetchSavedJobs } from '../../savedJob-jobSeeker/slice';
 import { formatTimeAgo } from '../../../utils/date';
 import type { Job } from '../../../types';
+import NoLogo from '../../../assets/no-logo.png';
 
 interface JobCardProps {
   job: Job;
@@ -21,12 +22,18 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
 
   useEffect(() => {
     if (user) {
-      const alreadySaved = savedJobs.some(savedJob => savedJob.id === job.id);
+      const alreadySaved = savedJobs.some((savedJob) => savedJob.id === job.id);
       setIsSaved(alreadySaved);
     } else {
       setIsSaved(false);
     }
   }, [job.id, savedJobs, user]);
+
+  useEffect(() => {
+    if (user?.id && savedJobs.length === 0) {
+      dispatch(fetchSavedJobs(String(user.id))).catch(() => undefined);
+    }
+  }, [dispatch, savedJobs.length, user?.id]);
 
 
   const handleClick = () => {
@@ -65,41 +72,49 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
 
   return (
     <div
-      className="bg-white p-4 rounded-2xl shadow-md flex items-start space-x-4 relative w-full border border-gray-200 h-44 cursor-pointer hover:-translate-y-1 transition"
+      className="bg-white p-4 rounded-2xl shadow-sm flex items-start space-x-4 relative w-full border border-gray-200 h-44 cursor-pointer hover:shadow-md hover:border-green-300 transition"
       onClick={handleClick}
     >
-      <img src={job.companyLogo || "/src/assets/no-logo.png"} alt="company logo" className="w-16 h-16 object-contain rounded-xl border border-blue-50 p-1 bg-white" />
-      <div className="flex-1 overflow-hidden">
+      <div className="w-20 flex flex-col items-start gap-2">
+        <img
+          src={job.companyLogo || NoLogo}
+          alt="company logo"
+          className="w-16 h-16 object-contain rounded-xl border border-gray-200 p-2 bg-white"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = NoLogo;
+          }}
+        />
+        <div className="flex flex-wrap gap-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-gray-50 text-sm text-slate-800">
+            <i className="fas fa-money-bill-wave text-emerald-600" />
+            <span className="whitespace-nowrap font-medium">{job.salary}</span>
+          </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-gray-50 text-sm text-slate-800">
+            <i className="fas fa-map-marker-alt text-blue-600" />
+            <span className="truncate max-w-[6rem] font-medium">{job.location}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-hidden relative">
         <div className="flex items-start mb-1">
-          <h3 className="text-base font-semibold text-slate-900 truncate pr-6">
-            {job.isHot && <span className="bg-sky-100 text-sky-600 text-xs font-semibold px-2.5 py-0.5 rounded-full mr-2">HOT</span>}
+          <h3 className="text-base font-semibold text-slate-900 leading-snug line-clamp-2 pr-10">
             {job.title}
           </h3>
           {user && (
             <button
-              className={`absolute top-4 right-4 text-slate-400 hover:text-red-500 ${isSaved ? 'text-red-500' : ''}`}
+              className={`absolute top-2 right-2 w-9 h-9 rounded-full border ${
+                isSaved ? 'border-green-500 text-green-600' : 'border-green-300 text-green-600'
+              } flex items-center justify-center hover:border-green-500 transition`}
               onClick={handleSaveToggle}
+              type="button"
             >
               <i className={`${isSaved ? 'fas' : 'far'} fa-heart`}></i>
             </button>
           )}
         </div>
-        
-        <p className="text-slate-500 text-sm truncate">{job.company}</p>
-        
-        <div className="flex items-center text-blue-600 text-xs mt-2">
-          <i className="fas fa-map-marker-alt mr-1"></i>
-          <span>{job.location}</span>
-        </div>
-        
-        <div className="flex items-center text-emerald-600 text-xs mt-2">
-          <i className="fas fa-money-bill-wave mr-1"></i>
-          <span>{job.salary}</span>
-        </div>
-        
-        <span className="text-slate-400 text-xs absolute bottom-4 right-4">
-          {formatTimeAgo(job.updatedAt)}
-        </span>
+
+        <p className="text-slate-600 text-sm uppercase tracking-wide truncate mt-1">{job.company}</p>
       </div>
     </div>
   );

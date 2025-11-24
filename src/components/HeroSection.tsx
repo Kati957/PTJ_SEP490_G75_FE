@@ -21,14 +21,14 @@ const SlidePrimary: React.FC = () => (
   >
     <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.45),_transparent)]" />
     <div className="text-center z-10 px-6">
-      <h2 className="text-3xl md:text-4xl font-bold tracking-wide">Part-Time Job Finder</h2>
-      <p className="mt-2 text-lg md:text-xl text-blue-100">Ket noi viec lam nhanh tren moi nen tang</p>
+      <h2 className="text-3xl md:text-4xl font-bold tracking-wide">Tìm việc nhanh chóng</h2>
+      <p className="mt-2 text-lg md:text-xl text-blue-100">Kết nối việc làm nhanh trên mọi nền tảng</p>
       <Button
         type="primary"
         size="large"
         className="mt-6 bg-white text-sky-700 border-none hover:bg-blue-100"
       >
-        Tim hieu them
+        Tìm hiểu thêm
       </Button>
     </div>
   </div>
@@ -40,8 +40,8 @@ const SlideSecondary: React.FC = () => (
   >
     <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_bottom,_rgba(56,189,248,0.4),_transparent)]" />
     <div className="text-center z-10 px-6">
-      <h2 className="text-3xl md:text-4xl font-bold">Tim viec sieu toc</h2>
-      <p className="mt-2 text-lg md:text-xl text-blue-100">Hang ngan co hoi moi duoc cap nhat moi ngay</p>
+      <h2 className="text-3xl md:text-4xl font-bold">Tìm việc siêu tốc</h2>
+      <p className="mt-2 text-lg md:text-xl text-blue-100">Hàng ngàn cơ hội mới được cập nhật mỗi ngày</p>
       <Button type="primary" size="large" className="mt-6 bg-sky-500 border-none hover:bg-sky-400">
         Xem ngay
       </Button>
@@ -92,7 +92,7 @@ const HeroSection: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-4 items-center bg-white rounded-2xl shadow-2xl border border-gray-200 p-6">
           <Input
             size="large"
-            placeholder="Nhap ten viec lam, cong ty, tu khoa"
+            placeholder="Nhập tên việc làm, công ty, từ khóa"
             prefix={<SearchOutlined className="text-blue-400" />}
             className="w-full md:flex-1 rounded-xl shadow-sm !h-14 placeholder-gray-600 border-gray-200 focus:border-blue-500"
           />
@@ -101,7 +101,7 @@ const HeroSection: React.FC = () => {
             mode="multiple"
             showSearch
             size="large"
-            placeholder="Chon tinh, thanh pho"
+            placeholder="Chọn tỉnh, thành phố"
             optionFilterProp="children"
             onChange={handleProvinceChange}
             filterOption={(input, option) =>
@@ -124,7 +124,7 @@ const HeroSection: React.FC = () => {
             className="w-full md:w-auto rounded-xl !h-14 bg-gradient-to-r from-sky-500 to-blue-600 border-none shadow-lg"
           >
             <SearchOutlined />
-            <span className="ml-1">Tim kiem</span>
+            <span className="ml-1">Tìm kiếm</span>
           </Button>
         </div>
 
