@@ -26,6 +26,7 @@ export interface JobApplicationResultDto {
   salary: number;
   workHours: string;
   phoneContact: string;
+  companyLogo?: string | null;
 }
 
 // Định nghĩa kiểu dữ liệu cho response của API

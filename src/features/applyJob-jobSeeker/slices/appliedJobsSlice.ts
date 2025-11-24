@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit'
 import applyJobService from '../services'
 import type { JobApplicationResultDto } from '../type'
+import { getCompanyLogoSrc, getJobDetailCached } from '../../../utils/jobPostHelpers'
 
 // Định nghĩa kiểu cho trạng thái của slice
 interface AppliedJobsState {
@@ -22,7 +23,16 @@ export const fetchAppliedJobs = createAsyncThunk(
   async (jobSeekerId: number, { rejectWithValue }) => {
     try {
       const response = await applyJobService.getAppliedJobsBySeeker(jobSeekerId)
-      return response.data
+      const jobsWithLogos: JobApplicationResultDto[] = await Promise.all(
+        response.data.map(async (job) => {
+          const detail = await getJobDetailCached(job.employerPostId.toString())
+          return {
+            ...job,
+            companyLogo: getCompanyLogoSrc(detail?.companyLogo)
+          }
+        })
+      )
+      return jobsWithLogos
     } catch (error: any) {
       return rejectWithValue(error.response.data)
     }

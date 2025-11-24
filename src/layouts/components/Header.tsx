@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { Button, Dropdown, Avatar, message } from "antd";
@@ -24,6 +24,8 @@ import { removeAccessToken } from "../../services/baseService";
 import type { User } from "../../features/auth/types";
 import LogoImage from "../../assets/logo.png";
 import NotificationDropdown from "../../features/notification/components/NotificationDropdown";
+import { useAppSelector } from "../../app/hooks";
+import { fetchJobSeekerProfile } from "../../features/profile-JobSeeker/slice/profileSlice";
 
 const LogoWhite = LogoImage;
 const LogoColor = LogoImage;
@@ -169,7 +171,28 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const jobSeekerProfile = useAppSelector(
+    (state) => state.jobSeekerProfile.profile
+  );
+  const jobSeekerProfileLoading = useAppSelector(
+    (state) => state.jobSeekerProfile.loading
+  );
   const isJobSeeker = !!user && user.roles.includes(ROLES.JOB_SEEKER);
+
+  useEffect(() => {
+    if (isJobSeeker && !jobSeekerProfile && !jobSeekerProfileLoading) {
+      dispatch(fetchJobSeekerProfile());
+    }
+  }, [dispatch, isJobSeeker, jobSeekerProfile, jobSeekerProfileLoading]);
+
+  const displayName =
+    user && isJobSeeker
+      ? jobSeekerProfile?.fullName || user.username
+      : user?.username;
+  const avatarSrc =
+    user && isJobSeeker
+      ? jobSeekerProfile?.profilePicture || user.avatar
+      : user?.avatar;
 
   const handleLogout = () => {
     dispatch(logout());
@@ -226,10 +249,11 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             >
               <Avatar
                 size="small"
-                icon={<UserOutlined />}
+                src={avatarSrc}
+                icon={!avatarSrc ? <UserOutlined /> : undefined}
                 className="bg-blue-600"
               />
-              <span className="font-medium">{user.username}</span>
+              <span className="font-medium">{displayName}</span>
               <DownOutlined style={{ fontSize: "10px" }} />
             </a>
           </Dropdown>
@@ -316,12 +340,16 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             className="flex items-center space-x-2 text-gray-600"
           >
             {user ? (
-              <Avatar size="large" icon={<UserOutlined />} src={user.avatar} />
+              <Avatar
+                size="large"
+                src={avatarSrc}
+                icon={!avatarSrc ? <UserOutlined /> : undefined}
+              />
             ) : (
               <UserOutlined className="text-2xl" />
             )}
             <span className="font-medium">
-              {user ? user.username : "Đăng nhập"}
+              {user ? displayName : "Tài khoản"}
             </span>
             <DownOutlined style={{ fontSize: "10px" }} />
           </a>
@@ -350,3 +378,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 };
 
 export default Header;
+
+
+
+

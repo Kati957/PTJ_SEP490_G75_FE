@@ -1,32 +1,35 @@
-import React from "react";
-import ProfileDetails from "../components/ProfileDetails";
-import ProfileOverview from "../components/ProfileOverview";
-import { useJobSeekerProfile } from "../hooks/useJobSeekerProfile";
-import { useAuth } from "../../auth/hooks";
+import React from 'react';
+import { Card, Tabs } from 'antd';
+import ProfileDetails from '../components/ProfileDetails';
+import ProfileOverview from '../components/ProfileOverview';
+import { useJobSeekerProfile } from '../hooks/useJobSeekerProfile';
+import { useAuth } from '../../auth/hooks';
 
 const JobSeekerProfilePage: React.FC = () => {
   const { profile, loading, error } = useJobSeekerProfile();
   const { user } = useAuth();
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
-        <div className="max-w-5xl mx-auto px-6 h-48 flex flex-col justify-end pb-6 text-white text-center">
-  
-        </div>
-      </div>
+  const email = user?.username ? `${user.username}@gmail.com` : undefined;
 
-      <div className="max-w-5xl mx-auto px-6 -mt-16 pb-10 flex flex-col gap-6 lg:flex-row">
-        <div className="lg:w-1/3">
-          <ProfileOverview
-            profile={profile}
-            loading={loading}
-            email={user?.username + "@gmail.com"}
-          />
-        </div>
-        <div className="lg:flex-1">
-          <ProfileDetails profile={profile} loading={loading} error={error} />
-        </div>
+  const tabItems = [
+    {
+      key: 'overview',
+      label: 'Tong quan',
+      children: <ProfileOverview profile={profile} loading={loading} email={email} />,
+    },
+    {
+      key: 'edit',
+      label: 'Chinh sua ho so',
+      children: <ProfileDetails profile={profile} loading={loading} error={error} />,
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-5xl mx-auto px-4">
+        <Card className="shadow-lg">
+          <Tabs defaultActiveKey="overview" items={tabItems} />
+        </Card>
       </div>
     </div>
   );

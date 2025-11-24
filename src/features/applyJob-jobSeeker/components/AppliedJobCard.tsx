@@ -42,7 +42,7 @@ const AppliedJobCard = ({ appliedJob, onWithdraw }: AppliedJobCardProps) => {
         {/* Cột hiển thị logo công ty */}
         <Col xs={24} sm={4} className='flex items-center justify-center'>
           <img
-            src="/src/assets/no-logo.png"
+            src={appliedJob.companyLogo || '/src/assets/no-logo.png'}
             alt={`${appliedJob.employerName} logo`}
             className='h-20 w-20 rounded-full object-cover'
           />

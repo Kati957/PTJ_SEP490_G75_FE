@@ -1,24 +1,33 @@
 import type { SavedJob, GetSavedJobsResponse } from './types';
 import baseService from '../../services/baseService';
+import { formatSalaryText, getCompanyLogoSrc, getJobDetailCached } from '../../utils/jobPostHelpers';
 
 // Lấy danh sách các công việc đã lưu từ backend
 export const getSavedJobs = async (jobSeekerId: string): Promise<{ jobs: SavedJob[]; total: number }> => {
   console.log('Fetching saved jobs...');
   try {
     const response = await baseService.get<GetSavedJobsResponse>(`/JobSeekerPost/saved/${jobSeekerId}`);
-    
-    const savedJobs: SavedJob[] = response.data.map(backendJob => ({
-      id: backendJob.employerPostId.toString(),
-      title: backendJob.title,
-      location: backendJob.location,
-      company: backendJob.employerName,
-      savedAt: backendJob.addedAt,
-      updatedAt: backendJob.addedAt,
-      description: null,
-      salary: null, 
-      companyLogo: null,
-      isHot: false,
-    }));
+
+    const savedJobs: SavedJob[] = await Promise.all(
+      response.data.map(async (backendJob) => {
+        const jobId = backendJob.employerPostId.toString();
+        const detail = await getJobDetailCached(jobId);
+
+        return {
+          id: jobId,
+          title: backendJob.title,
+          location: backendJob.location,
+          company: backendJob.employerName,
+          savedAt: backendJob.addedAt,
+          updatedAt: detail?.createdAt ?? backendJob.addedAt,
+          description: detail?.description ?? null,
+          salary: detail ? formatSalaryText(detail.salary ?? null) : null,
+          companyLogo: getCompanyLogoSrc(detail?.companyLogo),
+          isHot: false,
+        };
+      })
+    );
+
     return { jobs: savedJobs, total: response.total };
   } catch (error) {
     console.error('Failed to fetch saved jobs:', error);
