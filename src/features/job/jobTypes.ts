@@ -58,6 +58,7 @@ export interface JobPostView {
   employerName: string;
   createdAt: string;
   status: 'draft' | 'active' | 'expired' | string;
+  companyLogo?: string;
 }
 
 export interface JobAiSuggestion {
