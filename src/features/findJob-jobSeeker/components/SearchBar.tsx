@@ -60,10 +60,26 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onSearch }) => {
     newValue: JobSearchFilters[T]
   ) => {
     if (field === "categoryId") {
+      const selectedCat = categories.find(
+        (c: any) => c.categoryId === newValue
+      );
       setFormState((prev) => ({
         ...prev,
         categoryId: newValue as number | null,
+        categoryName: selectedCat ? (selectedCat as any).name : null,
         subCategoryId: null,
+        subCategoryName: null,
+      }));
+      return;
+    }
+    if (field === "subCategoryId") {
+      const selectedSub = subCategories.find(
+        (s: any) => s.subCategoryId === newValue
+      );
+      setFormState((prev) => ({
+        ...prev,
+        subCategoryId: newValue as number | null,
+        subCategoryName: selectedSub ? (selectedSub as any).name : null,
       }));
       return;
     }

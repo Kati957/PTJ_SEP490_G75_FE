@@ -44,6 +44,8 @@ import CandidateListPage from "../features/applyJob-employer/pages/CandidateList
 import ShortlistedCandidatesPage from "../features/candidate/pages/ShortlistedCandidatesPage";
 import JobSeekerCvPage from "../features/jobSeekerCv/pages/JobSeekerCvPage";
 import EmployerDetailPage from "../features/employerDetail-jobseeker/pages/EmployerDetailPage";
+import NewsListPage from "../features/listNew-JobSeeker/pages/NewsListPage";
+import NewsDetailPage from "../features/newsDetail-JobSeeker/pages/NewsDetailPage";
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -53,6 +55,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="viec-lam" element={<FindJobPage />} />
         <Route path="viec-lam/chi-tiet/:id" element={<JobDetailPage />} />
         <Route path="viec-lam/:slug" element={<JobListPage />} />
+        <Route path="news" element={<NewsListPage />} />
+        <Route path="newsDetail/:id" element={<NewsDetailPage />} />
         <Route path="employer" element={<ListEmployerPage />} />
         <Route path="login" element={<JobSeekerLoginPage />} />
         <Route path="register" element={<UnifiedRegisterPage />} />

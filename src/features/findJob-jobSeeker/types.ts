@@ -35,12 +35,15 @@ export interface EmployerPostDtoOut {
   employerName?: string;
   createdAt: string; 
   status: string;
+  companyLogo?: string;
 }
 
 export interface JobSearchFilters {
   keyword: string;
   provinceId: number | null;
   categoryId: number | null;
+  categoryName?: string | null;
   subCategoryId: number | null;
+  subCategoryName?: string | null;
   salary: "all" | "hasValue" | "negotiable";
 }
