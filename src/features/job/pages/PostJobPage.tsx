@@ -24,6 +24,8 @@ export const transformToEmployerPostDto = (data: JobPostData, userId: number) =>
   categoryID: data.categoryID,
   subCategoryId: data.subCategoryId ?? null,
   phoneContact: data.contactPhone,
+  images: data.images,
+  deleteImageIds: data.deleteImageIds,
 });
 
 const PostJobPage: React.FC = () => {

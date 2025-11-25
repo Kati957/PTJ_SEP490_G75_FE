@@ -10,8 +10,54 @@ import type {
   JobSuggestionResponse,
 } from './jobTypes';
 
+const appendIfDefined = (formData: FormData, key: string, value?: string | number | null) => {
+  if (value === null || value === undefined) {
+    return;
+  }
+  formData.append(key, String(value));
+};
+
+const buildEmployerPostFormData = (data: EmployerPostDto): FormData => {
+  const formData = new FormData();
+
+  appendIfDefined(formData, 'UserID', data.userID);
+  formData.append('Title', data.title ?? '');
+  formData.append('Description', data.description ?? '');
+  appendIfDefined(formData, 'Salary', data.salary);
+  if (data.salaryText) {
+    formData.append('SalaryText', data.salaryText);
+  }
+  formData.append('Requirements', data.requirements ?? '');
+  formData.append('WorkHourStart', data.workHourStart ?? '');
+  formData.append('WorkHourEnd', data.workHourEnd ?? '');
+  appendIfDefined(formData, 'ProvinceId', data.provinceId);
+  appendIfDefined(formData, 'DistrictId', data.districtId);
+  appendIfDefined(formData, 'WardId', data.wardId);
+  formData.append('DetailAddress', data.detailAddress ?? '');
+  appendIfDefined(formData, 'CategoryID', data.categoryID);
+  appendIfDefined(formData, 'SubCategoryId', data.subCategoryId ?? null);
+  formData.append('PhoneContact', data.phoneContact ?? '');
+
+  if (data.images && data.images.length > 0) {
+    data.images.forEach((file) => {
+      formData.append('Images', file);
+    });
+  }
+
+  if (data.deleteImageIds && data.deleteImageIds.length > 0) {
+    data.deleteImageIds.forEach((id) => {
+      formData.append('DeleteImageIds', String(id));
+    });
+  }
+
+  return formData;
+};
+
 export const createJobPost = async (data: EmployerPostDto): Promise<JobPostResponse> => {
-  return await baseService.post<JobPostResponse>('/EmployerPost/create', data);
+  const formData = buildEmployerPostFormData(data);
+  return await baseService.post<JobPostResponse>('/EmployerPost/create', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 };
 
 export const getJobsByUser = async (userID: number): Promise<PaginatedJobResponse> => {
@@ -23,7 +69,10 @@ export const getJobById = async (id: number): Promise<JobPostResponse> => {
 };
 
 export const updateJobPost = async (id: number, data: EmployerPostDto): Promise<UpdateJobResponse> => {
-  return await baseService.put<UpdateJobResponse>(`/EmployerPost/${id}`, data);
+  const formData = buildEmployerPostFormData(data);
+  return await baseService.put<UpdateJobResponse>(`/EmployerPost/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 };
 
 export const deleteJobPost = async (id: number): Promise<DeleteJobResponse> => {

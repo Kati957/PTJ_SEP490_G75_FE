@@ -81,7 +81,9 @@ const NewsListPage: React.FC = () => {
                              <Row gutter={[24, 32]} className="mb-10">
                                 {newsList.map((item) => (
                                     <Col xs={24} sm={12} md={8} key={item.newsID}>
-                                        <NewsCard item={item} onClick={handleCardClick} />
+                                        <div className="cursor-pointer" onClick={() => handleCardClick(item.newsID)}>
+                                            <NewsCard item={item} />
+                                        </div>
                                     </Col>
                                 ))}
                             </Row>
@@ -111,7 +113,7 @@ const NewsListPage: React.FC = () => {
         </div>
         
         {/* CSS cho ô tìm kiếm trong Hero section */}
-        <style jsx>{`
+        <style>{`
             .search-hero-input .ant-input-group-addon .ant-btn {
                 background-color: #faad14 !important;
                 border-color: #faad14 !important;

@@ -27,15 +27,21 @@ export interface EmployerPostDtoOut {
   title: string;
   description?: string;
   salary?: number;
+  salaryText?: string | null;
   requirements?: string;
   workHours?: string;
+  workHourStart?: string | null;
+  workHourEnd?: string | null;
   location?: string;
+  detailAddress?: string | null;
   phoneContact?: string;
   categoryName?: string;
+  subCategoryName?: string | null;
   employerName?: string;
   createdAt: string; 
   status: string;
   companyLogo?: string;
+  imageUrls?: string[];
 }
 
 export interface JobSearchFilters {

@@ -14,6 +14,8 @@ export interface EmployerPostDto {
   categoryID: number | null;
   subCategoryId?: number | null;
   phoneContact: string | null;
+  images?: File[];
+  deleteImageIds?: number[];
 }
 
 export interface JobPostData {
@@ -33,6 +35,10 @@ export interface JobPostData {
   categoryID: number | null;
   subCategoryId: number | null;
   contactPhone: string;
+  images: File[];
+  imagePreviews: string[];
+  existingImages: EmployerPostImage[];
+  deleteImageIds: number[];
 }
 
 export interface JobPostView {
@@ -59,6 +65,13 @@ export interface JobPostView {
   createdAt: string;
   status: 'draft' | 'active' | 'expired' | string;
   companyLogo?: string;
+  imageUrls?: string[];
+  images?: EmployerPostImage[];
+}
+
+export interface EmployerPostImage {
+  imageId: number;
+  url: string;
 }
 
 export interface JobAiSuggestion {

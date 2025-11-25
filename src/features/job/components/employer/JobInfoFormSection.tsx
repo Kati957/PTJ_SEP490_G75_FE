@@ -12,6 +12,7 @@ import {
   Checkbox,
   TimePicker,
   Space,
+  message,
 } from "antd";
 import type { CheckboxChangeEvent } from "antd/es/checkbox";
 import type { JobPostData } from "../../jobTypes";
@@ -25,6 +26,7 @@ import locationService, {
   type LocationOption,
 } from "../../../location/locationService";
 import { useSubCategories } from "../../../subcategory/hook";
+import { DeleteOutlined } from "@ant-design/icons";
 
 const FormField: React.FC<{
   label: string;
@@ -40,16 +42,28 @@ const FormField: React.FC<{
 );
 
 const timeRangeRegex = /^(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/;
+const MAX_IMAGE_COUNT = 4;
+const MAX_IMAGE_SIZE_MB = 2;
+const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
 export const JobInfoFormSection: React.FC<{
   data: JobPostData;
   onDataChange: (field: keyof JobPostData, value: any) => void;
 }> = ({ data, onDataChange }) => {
   const editor = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { categories, isLoading } = useCategories();
   const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories(
     data.categoryID ?? null
   );
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
   const [validation, setValidation] = useState<Record<string, boolean>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -416,6 +430,76 @@ export const JobInfoFormSection: React.FC<{
     updateLocationValidation("wardId", value);
   };
 
+  const handleImageInputChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) {
+      return;
+    }
+
+    const totalSelected = data.images.length + data.existingImages.length;
+    const remainingSlots = MAX_IMAGE_COUNT - totalSelected;
+    if (remainingSlots <= 0) {
+      message.warning(`Chỉ được tải tối đa ${MAX_IMAGE_COUNT} ảnh.`);
+      event.target.value = "";
+      return;
+    }
+
+    const filesToProcess = files.slice(0, remainingSlots);
+    const validFiles: File[] = [];
+
+    filesToProcess.forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        message.warning(`${file.name} không phải là hình ảnh hợp lệ.`);
+        return;
+      }
+      if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        message.warning(
+          `${file.name} vượt quá ${MAX_IMAGE_SIZE_MB}MB.`
+        );
+        return;
+      }
+      validFiles.push(file);
+    });
+
+    if (!validFiles.length) {
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const previews = await Promise.all(validFiles.map(fileToBase64));
+      handleChange("images", [...data.images, ...validFiles]);
+      handleChange("imagePreviews", [...data.imagePreviews, ...previews]);
+    } catch (error) {
+      console.error("Failed to read images", error);
+      message.error("Không thể đọc một số ảnh. Vui lòng thử lại.");
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const newImages = data.images.filter((_, idx) => idx !== index);
+    const newPreviews = data.imagePreviews.filter((_, idx) => idx !== index);
+    handleChange("images", newImages);
+    handleChange("imagePreviews", newPreviews);
+  };
+
+  const handleRemoveExistingImage = (imageId: number) => {
+    if (data.deleteImageIds.includes(imageId)) {
+      return;
+    }
+    if (imageId > 0) {
+      handleChange("deleteImageIds", [...data.deleteImageIds, imageId]);
+    }
+    handleChange(
+      "existingImages",
+      data.existingImages.filter((img) => img.imageId !== imageId)
+    );
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
       <h3 className="text-xl font-bold text-blue-700 mb-6">
@@ -571,6 +655,82 @@ export const JobInfoFormSection: React.FC<{
         <style>{`.jodit-invalid .jodit-container { border: 1px solid #ef4444; }`}</style>
       </FormField>
 
+      <FormField label="Hình ảnh bài đăng">
+        <div className="space-y-3">
+          {data.existingImages.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Hình ảnh hiện có ({data.existingImages.length})
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {data.existingImages.map((img) => (
+                  <div
+                    key={img.imageId}
+                    className="relative rounded-lg overflow-hidden border border-gray-200 group"
+                  >
+                    <img
+                      src={img.url}
+                      alt={`existing-${img.imageId}`}
+                      className="w-full h-32 object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveExistingImage(img.imageId)}
+                      className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <DeleteOutlined className="text-lg" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageInputChange}
+              className="block w-full text-sm text-gray-600"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Hỗ trợ tải tối đa {MAX_IMAGE_COUNT} ảnh, mỗi ảnh không quá {MAX_IMAGE_SIZE_MB}MB.
+            </p>
+          </div>
+
+          {data.imagePreviews.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Hình ảnh mới ({data.imagePreviews.length})
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {data.imagePreviews.map((src, index) => (
+                  <div
+                    key={index}
+                    className="relative group rounded-lg overflow-hidden border border-gray-200"
+                  >
+                    <img
+                      src={src}
+                      alt={`preview-${index}`}
+                      className="w-full h-32 object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <DeleteOutlined className="text-lg" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </FormField>
+
       <FormField label="Yêu cầu công việc" required>
         <Input.TextArea
           rows={3}
@@ -633,12 +793,16 @@ export const JobInfoFormSection: React.FC<{
         <style>{`.select-invalid .ant-select-selector { border-color: #ef4444 !important; }`}</style>
       </FormField>
 
-      <FormField label="Nhom nghe" required>
+      <FormField label="Nhóm nghề" required>
         <Select
           size="large"
-          placeholder={data.categoryID
-            ? (isLoadingSubCategories ? "Dang tai nhom nghe..." : "Chon nhom nghe")
-            : "Chon nganh truoc"}
+          placeholder={
+            data.categoryID
+              ? isLoadingSubCategories
+                ? "Đang tải nhóm nghề..."
+                : "Chọn nhóm nghề"
+              : "Chọn ngành trước"
+          }
           loading={isLoadingSubCategories}
           disabled={!data.categoryID}
           value={data.subCategoryId ?? undefined}
@@ -652,7 +816,9 @@ export const JobInfoFormSection: React.FC<{
           allowClear
         />
         {validation.subCategoryId && (
-          <p className="text-red-500 text-sm mt-1">Vui long chon nhom nghe</p>
+          <p className="text-red-500 text-sm mt-1">
+            Vui lòng chọn nhóm nghề
+          </p>
         )}
       </FormField>
 
@@ -675,5 +841,4 @@ export const JobInfoFormSection: React.FC<{
       </FormField>
     </div>
   );
-};
-
+}

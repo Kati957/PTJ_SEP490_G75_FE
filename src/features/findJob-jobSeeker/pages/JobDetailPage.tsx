@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button, Card, message, Modal, Form, Input, Select } from "antd";
@@ -18,6 +18,7 @@ import jobSeekerCvService from "../../jobSeekerCv/services";
 import type { JobSeekerCv } from "../../jobSeekerCv/types";
 import jobPostService from "../../job/jobPostService";
 import type { Job } from "../../../types";
+import { formatSalaryText, getCompanyLogoSrc, getJobDetailCached } from "../../../utils/jobPostHelpers";
 
 const { TextArea } = Input;
 
@@ -50,6 +51,68 @@ const JobDetailPage: React.FC = () => {
 
   const navRef = useRef<HTMLDivElement>(null);
   const applyRequestLock = useRef(false);
+  const workHoursDisplay = useMemo(() => {
+    if (!job) {
+      return "";
+    }
+
+    const fallback = "Không cập nhật";
+    const normalizeSegment = (value?: string | null): string | null => {
+      if (!value) {
+        return null;
+      }
+      const trimmed = value.trim();
+      if (!trimmed || trimmed === "-" || trimmed.toLowerCase() === "null") {
+        return null;
+      }
+      const match = trimmed.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+      if (!match) {
+        return trimmed;
+      }
+      const hours = match[1].padStart(2, "0");
+      const minutes = match[2];
+      return `${hours}:${minutes}`;
+    };
+
+    const buildRange = (
+      startValue?: string | null,
+      endValue?: string | null
+    ): string | null => {
+      const start = normalizeSegment(startValue);
+      const end = normalizeSegment(endValue);
+
+      if (start && end) {
+        return `${start} - ${end}`;
+      }
+      if (start) {
+        return start;
+      }
+      if (end) {
+        return end;
+      }
+      return null;
+    };
+
+    if (job.workHours) {
+      const cleaned = job.workHours.trim();
+      if (cleaned && cleaned !== "-") {
+        const hyphenParts = cleaned.split("-").map((part) => part?.trim());
+        if (hyphenParts.length === 2) {
+          const normalized = buildRange(hyphenParts[0], hyphenParts[1]);
+          if (normalized) {
+            return normalized;
+          }
+        }
+        return cleaned;
+      }
+    }
+
+    const normalizedFromFields = buildRange(
+      job.workHourStart,
+      job.workHourEnd
+    );
+    return normalizedFromFields ?? fallback;
+  }, [job]);
 
   useEffect(() => {
     if (!jobSeekerId) {
@@ -124,28 +187,41 @@ const JobDetailPage: React.FC = () => {
       try {
         const response = await jobPostService.getAllJobs();
         const allJobs = response.data ?? [];
-        const filteredJobs = allJobs
-          .filter(
-            (post) =>
-              post.categoryName === job.categoryName &&
-              post.employerPostId !== job.employerPostId
-          )
-          .slice(0, 5)
-          .map((post) => ({
-            id: String(post.employerPostId),
-            title: post.title,
-            description: post.description || "",
-            company: post.employerName || null,
-            location: post.location || null,
-            salary:
-              post.salaryText ||
-              (typeof post.salary === "number"
-                ? `${post.salary.toLocaleString()} VNĐ`
-                : null),
-            updatedAt: post.createdAt,
-            companyLogo: post.companyLogo || null,
-            isHot: null,
-          }));
+        const filteredJobs = await Promise.all(
+          allJobs
+            .filter(
+              (post) =>
+                post.categoryName === job.categoryName &&
+                post.employerPostId !== job.employerPostId
+            )
+            .slice(0, 5)
+            .map(async (post) => {
+              const salaryDisplay =
+                post.salaryText && post.salaryText.trim().length > 0
+                  ? post.salaryText
+                  : formatSalaryText(post.salary);
+
+              let logoSource = post.companyLogo;
+              if (!logoSource || logoSource.trim().length === 0) {
+                const detail = await getJobDetailCached(
+                  String(post.employerPostId)
+                );
+                logoSource = detail?.companyLogo ?? undefined;
+              }
+
+              return {
+                id: String(post.employerPostId),
+                title: post.title,
+                description: post.description || "",
+                company: post.employerName || null,
+                location: post.location || null,
+                salary: salaryDisplay,
+                updatedAt: post.createdAt,
+                companyLogo: getCompanyLogoSrc(logoSource),
+                isHot: null,
+              };
+            })
+        );
         setSimilarJobs(filteredJobs);
       } catch (err) {
         console.error("Failed to fetch similar jobs", err);
@@ -423,7 +499,7 @@ const JobDetailPage: React.FC = () => {
               </div>
               <div className="flex items-center text-gray-500 text-sm mt-1">
                 <i className="fas fa-briefcase mr-2"></i>
-                <span>{job.workHours}</span>
+                <span>{workHoursDisplay || "Không cập nhật"}</span>
               </div>
               <p className="text-sm text-gray-500 mt-1">
                 Ngày đăng: {new Date(job.createdAt).toLocaleDateString()}
@@ -490,13 +566,35 @@ const JobDetailPage: React.FC = () => {
           {/* Sections */}
           <div id="mô-tả-công-việc" className="pt-8">
             <h2 className="text-xl font-bold mb-4">Mô tả công việc</h2>
-            <div
-              className="prose max-w-none"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(job.description || ""),
-              }}
-            ></div>
-          </div>
+          <div
+            className="prose max-w-none"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(job.description || ""),
+            }}
+          ></div>
+
+          {Array.isArray(job.imageUrls) && job.imageUrls.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-3">Hình ảnh công việc</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {job.imageUrls.map((url, index) => (
+                  <div
+                    key={`${url}-${index}`}
+                    className="relative w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
+                    style={{ aspectRatio: "16 / 9" }}
+                  >
+                    <img
+                      src={url}
+                      alt={`work-preview-${index + 1}`}
+                      className="absolute inset-0 h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
           <div id="yêu-cầu" className="pt-8">
             <h2 className="text-xl font-bold mb-4">Yêu cầu ứng viên</h2>
@@ -527,11 +625,16 @@ const JobDetailPage: React.FC = () => {
                 </div>
                 <div>
                   <p className="font-semibold">Giờ làm việc</p>
-                  <p>{job.workHours}</p>
+                  <p>{workHoursDisplay || "Không cập nhật"}</p>
                 </div>
                 <div>
                   <p className="font-semibold">Ngành nghề</p>
-                  <p>{job.categoryName}</p>
+                  <div>
+                    <p>{job.categoryName || "Không cập nhật"}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Nhóm ngành: {job.subCategoryName || "Không cập nhật"}
+                    </p>
+                  </div>
                 </div>
                 <div>
                   <p className="font-semibold">Trạng thái</p>

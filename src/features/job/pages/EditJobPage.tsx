@@ -10,6 +10,13 @@ import type { JobPostData, JobPostView } from '../jobTypes';
 import { transformToEmployerPostDto } from './PostJobPage';
 
 const transformDtoToFormData = (dto: JobPostView): JobPostData => {
+  const normalizedImages =
+    dto.images?.map((img) => ({ imageId: img.imageId, url: img.url })) ??
+    (dto.imageUrls ?? []).map((url, index) => ({
+      imageId: -(index + 1),
+      url,
+    }));
+
   return {
     jobTitle: dto.title,
     jobDescription: dto.description || '',
@@ -27,6 +34,10 @@ const transformDtoToFormData = (dto: JobPostView): JobPostData => {
     categoryID: dto.categoryId ?? null,
     subCategoryId: dto.subCategoryId ?? null,
     contactPhone: dto.phoneContact || '',
+    images: [],
+    imagePreviews: [],
+    existingImages: normalizedImages,
+    deleteImageIds: [],
   };
 };
 
@@ -47,6 +58,10 @@ const emptyState: JobPostData = {
   categoryID: null,
   subCategoryId: null,
   contactPhone: '',
+  images: [],
+  imagePreviews: [],
+  existingImages: [],
+  deleteImageIds: [],
 };
 
 const EditJobPage: React.FC = () => {

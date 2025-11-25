@@ -27,6 +27,10 @@ const initialState: EmployerJobPostingState = {
     categoryID: null,
     subCategoryId: null,
     contactPhone: '',
+    images: [],
+    imagePreviews: [],
+    existingImages: [],
+    deleteImageIds: [],
   },
   status: 'idle',
 };
@@ -95,7 +99,7 @@ const employerJobPostingSlice = createSlice({
       (state.form as any)[field] = value;
     },
     resetJobForm: (state) => {
-      state.form = initialState.form;
+      state.form = { ...initialState.form, images: [], imagePreviews: [] };
       state.status = 'idle';
     },
   },

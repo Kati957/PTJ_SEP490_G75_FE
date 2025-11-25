@@ -57,11 +57,6 @@ const mainNavLinks = [
   { icon: <SearchOutlined />, text: "Danh sách việc làm", path: "/viec-lam" },
   { icon: <BankOutlined />, text: "Nhà tuyển dụng", path: "/employer" },
   { icon: <BookOutlined />, text: "Tin tức", path: "/news" },
-  {
-    icon: <UserOutlined />,
-    text: "Cho người tìm việc",
-    children: jobSeekerNavLinks,
-  },
 ];
 
 const GuestDropdown = () => (

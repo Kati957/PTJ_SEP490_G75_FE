@@ -3,21 +3,10 @@ import { useCategories } from "../../../category/hook";
 import type { Category } from "../../../category/type";
 import { useSubCategories } from "../../../subcategory/hook";
 import type { SubCategory } from "../../../subcategory/type";
+import type { JobPostData } from "../../jobTypes";
 
 interface JobPostingPreviewProps {
-  data: {
-    jobTitle: string;
-    jobDescription: string;
-    salaryValue: number | null;
-    salaryText: string | null;
-    requirements: string;
-    workHours: string;
-    detailAddress: string;
-    location: string;
-    categoryID: number | null;
-    subCategoryId: number | null;
-    contactPhone: string;
-  };
+  data: JobPostData;
 }
 
 const JobPostingPreview: React.FC<JobPostingPreviewProps> = ({ data }) => {
@@ -46,11 +35,38 @@ const JobPostingPreview: React.FC<JobPostingPreviewProps> = ({ data }) => {
     return found ? found.name : null;
   }, [data.subCategoryId, subCategories, isSubCategoriesLoading]);
 
+  const previewImages = [
+    ...data.existingImages.map((img) => img.url),
+    ...data.imagePreviews,
+  ];
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-md border border-gray-200">
       <h2 className="text-2xl font-semibold mb-4 text-gray-800">
         {data.jobTitle || "Chua dat tieu de?"}
       </h2>
+
+      {previewImages.length > 0 && (
+        <div className="mb-4">
+          <h3 className="text-lg font-medium text-gray-700 mb-2">
+            Hình ảnh bài đăng
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {previewImages.map((src, index) => (
+              <div
+                key={`${src}-${index}`}
+                className="w-full h-32 border border-gray-200 rounded-lg overflow-hidden bg-gray-50"
+              >
+                <img
+                  src={src}
+                  alt={`preview-${index}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mb-4">
         <h3 className="text-lg font-medium text-gray-700 mb-1">
