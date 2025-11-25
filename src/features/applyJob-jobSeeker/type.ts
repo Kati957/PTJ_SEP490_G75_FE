@@ -8,26 +8,27 @@ export interface ApplyJobPayload {
 
 // Định nghĩa kiểu dữ liệu cho response từ API lấy danh sách công việc đã ứng tuyển
 export interface JobApplicationResultDto {
-  candidateListId: number;
-  jobSeekerId: number;
-  jobSeekerPostId?: number;
-  cvId?: number | null;
-  selectedCvId?: number | null;
-  cvid?: number | null;
-  username: string;
-  status: string;
-  applicationDate: string;
-  notes: string;
-  employerPostId: number;
-  postTitle: string;
-  categoryName: string;
-  employerName: string;
-  location: string;
-  salary: number;
-  workHours: string;
-  phoneContact: string;
-  companyLogo?: string | null;
-}
+    candidateListId: number;
+    jobSeekerId: number;
+    jobSeekerPostId?: number;
+    cvId?: number | null;
+    selectedCvId?: number | null;
+    cvid?: number | null;
+    username: string;
+    status: string;
+    applicationDate: string;
+    notes: string;
+    employerPostId: number;
+    postTitle: string;
+    categoryName: string;
+    employerName: string;
+    location: string;
+    salary: number;
+    workHours: string;
+    phoneContact: string;
+    employerId: number;
+    companyLogo?: string | null;
+  }
 
 // Định nghĩa kiểu dữ liệu cho response của API
 export interface AppliedJobsResponse {

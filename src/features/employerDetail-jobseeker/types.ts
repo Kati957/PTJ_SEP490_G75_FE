@@ -1,6 +1,7 @@
-import { Job } from "../../types";
+import type { Job } from "../../types";
 
 export interface EmployerPublicProfile {
+    userId: string;
     displayName: string;
     description: string;
     avatarUrl: string;
@@ -8,7 +9,7 @@ export interface EmployerPublicProfile {
     contactPhone: string;
     contactEmail: string;
     location: string;
-    role: string;
+    role?: string;
 }
 
 export interface EmployerDetailState {

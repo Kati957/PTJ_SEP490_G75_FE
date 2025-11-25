@@ -19,6 +19,7 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DeleteOutlined,
+  StarOutlined,
 } from "@ant-design/icons";
 import type { TableColumnsType } from "antd";
 import { jobApplicationService } from "../jobApplicationService";
@@ -28,6 +29,7 @@ import { useAuth } from "../../auth/hooks";
 import type { JobApplicationResultDto } from "../../applyJob-jobSeeker/type";
 import type { ShortlistedCandidateDto } from "../../candidate/type";
 import type { JobSeekerCv } from "../../jobSeekerCv/types";
+import RatingModal from "../../../components/RatingModal";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -62,6 +64,18 @@ const CandidateListPage: React.FC = () => {
     loading: false,
     cv: null,
     error: null,
+  });
+
+  const [ratingModal, setRatingModal] = useState<{
+    visible: boolean;
+    rateeId: number;
+    submissionId: number;
+    rateeName: string;
+  }>({
+    visible: false,
+    rateeId: 0,
+    submissionId: 0,
+    rateeName: "",
   });
 
   const savedIdSet = new Set(savedList.map((s) => s.jobSeekerId));
@@ -322,6 +336,32 @@ const CandidateListPage: React.FC = () => {
       },
     },
     {
+      title: "??nh gi?",
+      key: "rating",
+      render: (_, record) => {
+        const currentStatus = record.status?.toLowerCase();
+        if (currentStatus !== "accepted" && currentStatus !== "completed") {
+          return null;
+        }
+        return (
+          <Tooltip title="??nh gi? ?ng vi?n">
+            <Button
+              type="text"
+              icon={<StarOutlined style={{ color: "#faad14", fontSize: 18 }} />}
+              onClick={() =>
+                setRatingModal({
+                  visible: true,
+                  rateeId: record.jobSeekerId,
+                  submissionId: record.candidateListId,
+                  rateeName: record.username || "",
+                })
+              }
+            />
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: "CV",
       key: "profile",
       render: (_, record) => (
@@ -525,6 +565,15 @@ const CandidateListPage: React.FC = () => {
           <p>Không có dữ liệu CV.</p>
         )}
       </Modal>
+
+      <RatingModal
+        visible={ratingModal.visible}
+        onCancel={() => setRatingModal({ ...ratingModal, visible: false })}
+        onSuccess={() => setRatingModal({ ...ratingModal, visible: false })}
+        rateeId={ratingModal.rateeId}
+        submissionId={ratingModal.submissionId}
+        rateeName={ratingModal.rateeName}
+      />
     </div>
   );
 };

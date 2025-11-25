@@ -5,6 +5,7 @@ export interface Employer {
   logo: string;
   jobCount: number;
   locations: string[];
+  rating?: number;
 }
 
 export interface EmployerJob {
