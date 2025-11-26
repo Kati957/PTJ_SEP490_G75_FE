@@ -13,11 +13,11 @@ export const getEmployerFullDetail = async (userId: number | string) => {
             baseService.get<any>(`${JOB_API_URL}/${userId}`)
         ]);
 
-
         const rawProfile = profileRes; 
+
         const profile: EmployerPublicProfile = {
             userId: rawProfile.userId,
-            displayName: rawProfile.displayName || "Nh? tuy?n d?ng ?n danh",
+            displayName: rawProfile.displayName || "Nhà tuyển dụng ẩn danh",
             description: rawProfile.description || "",
             avatarUrl: rawProfile.avatarUrl || "",
             website: rawProfile.website || "",
@@ -47,7 +47,7 @@ export const getEmployerFullDetail = async (userId: number | string) => {
         };
 
     } catch (error) {
-        console.error("Error fetching employer detail:", error);
+        console.error("Lỗi khi lấy thông tin chi tiết nhà tuyển dụng:", error);
         throw error;
     }
 };

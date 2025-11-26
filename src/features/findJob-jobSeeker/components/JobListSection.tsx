@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import jobPostService from "../../job/jobPostService";
 import type { JobPostView } from "../../job/jobTypes";
 import { formatTimeAgo } from "../../../utils/date";
+import { getCompanyLogoSrc, getJobDetailCached } from "../../../utils/jobPostHelpers";
 import type { JobSearchFilters } from "../types";
 
 const pageSize = 12;
@@ -29,11 +30,6 @@ const salaryToMillions = (salary: number): number => {
   return salary > 1_000_000 ? Math.round(salary / 1_000_000) : Math.round(salary);
 };
 
-const getInitial = (text?: string | null) => {
-  if (!text) return "J";
-  return text.trim().charAt(0).toUpperCase() || "J";
-};
-
 const JobListCard: React.FC<{ job: JobPostView }> = ({ job }) => {
   const navigate = useNavigate();
   const salaryText =
@@ -53,8 +49,18 @@ const JobListCard: React.FC<{ job: JobPostView }> = ({ job }) => {
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg font-semibold">
-            {getInitial(job.employerName)}
+          <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center border border-emerald-100 shadow-sm overflow-hidden">
+            {job.companyLogo ? (
+              <img
+                src={getCompanyLogoSrc(job.companyLogo)}
+                alt={job.employerName || "Logo"}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-emerald-700 font-semibold bg-emerald-50">
+                {(job.employerName || "J").trim().charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -143,7 +149,18 @@ const JobListSection: React.FC<JobListSectionProps> = ({
       try {
         const res = await jobPostService.getAllJobs();
         if (res.success) {
-          setJobs(res.data || []);
+          const data = res.data || [];
+          const enriched = await Promise.all(
+            data.map(async (job) => {
+              let logo = job.companyLogo;
+              if (!logo || !logo.trim()) {
+                const detail = await getJobDetailCached(String(job.employerPostId));
+                logo = detail?.companyLogo || undefined;
+              }
+              return { ...job, companyLogo: logo };
+            })
+          );
+          setJobs(enriched);
         } else {
           message.error("Không thể tải danh sách việc làm.");
         }
@@ -200,20 +217,17 @@ const JobListSection: React.FC<JobListSectionProps> = ({
 
       let salaryRangeMatch = true;
       switch (salaryRange) {
-        case "under10":
-          salaryRangeMatch = !!salaryMillions && salaryMillions < 10;
+        case "under1":
+          salaryRangeMatch = !!salaryMillions && salaryMillions < 1;
           break;
-        case "10-15":
-          salaryRangeMatch = !!salaryMillions && salaryMillions >= 10 && salaryMillions <= 15;
+        case "1-3":
+          salaryRangeMatch = !!salaryMillions && salaryMillions >= 1 && salaryMillions <= 3;
           break;
-        case "15-20":
-          salaryRangeMatch = !!salaryMillions && salaryMillions > 15 && salaryMillions <= 20;
+        case "3-5":
+          salaryRangeMatch = !!salaryMillions && salaryMillions > 3 && salaryMillions <= 5;
           break;
-        case "20-25":
-          salaryRangeMatch = !!salaryMillions && salaryMillions > 20 && salaryMillions <= 25;
-          break;
-        case "25plus":
-          salaryRangeMatch = !!salaryMillions && salaryMillions > 25;
+        case "5plus":
+          salaryRangeMatch = !!salaryMillions && salaryMillions > 5;
           break;
         case "negotiable":
           salaryRangeMatch = !numericSalary || numericSalary <= 0;

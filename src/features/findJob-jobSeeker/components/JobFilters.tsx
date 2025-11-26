@@ -6,12 +6,11 @@ import type { JobSearchFilters } from "../types";
 const { Title, Text } = Typography;
 
 const salaryOptions: { value: JobSearchFilters["salaryRange"]; label: string }[] = [
-  { value: "all", label: "Tất cả" },
-  { value: "under10", label: "Dưới 10 triệu" },
-  { value: "10-15", label: "10 - 15 triệu" },
-  { value: "15-20", label: "15 - 20 triệu" },
-  { value: "20-25", label: "20 - 25 triệu" },
-  { value: "25plus", label: "Trên 25 triệu" },
+  { value: "all", label: "Tất cả?" },
+  { value: "under1", label: "Dưới 1 triệu" },
+  { value: "1-3", label: "1 - 3 triệu" },
+  { value: "3-5", label: "3 - 5 triệu" },
+  { value: "5plus", label: "Từ 5 triệu trở lên" },
   { value: "negotiable", label: "Thỏa thuận" },
 ];
 
@@ -67,7 +66,7 @@ export const JobFilters: React.FC<JobFiltersProps> = ({
           onClick={onClear}
           className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline"
         >
-          Xóa tất cả
+         Xóa tất cả
         </button>
       </div>
 
@@ -96,7 +95,7 @@ export const JobFilters: React.FC<JobFiltersProps> = ({
 
         <div className="px-4 py-4">
           <Text strong className="block text-gray-800 mb-3">
-            Ngành nghề
+            Chọn nghề
           </Text>
           <div className="space-y-3">
             <Select
@@ -121,7 +120,7 @@ export const JobFilters: React.FC<JobFiltersProps> = ({
               ))}
             </Select>
             <Select
-              placeholder="Chọn nhóm nghề"
+              placeholder="Chọn nhóm nghề?"
               value={filters.subCategoryId ?? undefined}
               onChange={(value) =>
                 handleSubCategoryChange(

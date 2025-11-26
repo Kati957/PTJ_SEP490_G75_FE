@@ -54,11 +54,10 @@ export interface JobSearchFilters {
   salary: "all" | "hasValue" | "negotiable";
   salaryRange?:
     | "all"
-    | "under10"
-    | "10-15"
-    | "15-20"
-    | "20-25"
-    | "25plus"
+    | "under1"
+    | "1-3"
+    | "3-5"
+    | "5plus"
     | "negotiable"
     | null;
 }

@@ -27,8 +27,8 @@ const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
     <Card
       hoverable
       onClick={handleClick}
-      className="h-full flex flex-col overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg group"
-      bodyStyle={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}
+      className="group h-full flex flex-col overflow-hidden rounded-xl border border-slate-100 bg-white transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
+      bodyStyle={{ padding: 18, flex: 1, display: 'flex', flexDirection: 'column' }}
       cover={
         <div className="h-48 overflow-hidden relative">
           <img

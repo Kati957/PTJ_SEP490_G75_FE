@@ -9,6 +9,8 @@ import {
   Rate,
   List,
   Avatar,
+  Pagination,
+  Card,
 } from "antd";
 import {
   GlobalOutlined,
@@ -18,23 +20,25 @@ import {
 } from "@ant-design/icons";
 import { useEmployerDetail } from "../hooks";
 import JobCard from "../../../features/homepage-jobSeeker/components/JobCard";
-import TextArea from "antd/es/input/TextArea";
 import ratingService from "../../../services/ratingService";
 import type { Rating } from "../../../types/profile";
 
-const { Title } = Typography;
+const { Title, Paragraph } = Typography;
+const pageSize = 6;
 
 const EmployerDetailPage: React.FC = () => {
   const { profile, jobs, loading, error } = useEmployerDetail();
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [averageRating, setAverageRating] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const getPlainText = (html: string) => {
-    if (typeof window === "undefined" || !html)
-      return "Chưa có mô tả giới thiệu.";
-    const tempDiv = document.createElement("div");
+    if (!html) return "Chưa có mô tả giới thiệu.";
+    const tempDiv =
+      typeof window !== "undefined" ? document.createElement("div") : null;
+    if (!tempDiv) return "Chưa có mô tả giới thiệu.";
     tempDiv.innerHTML = html;
-    return tempDiv.innerText;
+    return tempDiv.innerText || "Chưa có mô tả giới thiệu.";
   };
 
   useEffect(() => {
@@ -54,9 +58,13 @@ const EmployerDetailPage: React.FC = () => {
     }
   }, [profile?.userId]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [jobs.length]);
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <Spin size="large" tip="Đang tải thông tin..." />
       </div>
     );
@@ -64,121 +72,139 @@ const EmployerDetailPage: React.FC = () => {
 
   if (error || !profile) {
     return (
-      <div className="text-center mt-10 text-red-500">
+      <div className="mt-10 text-center text-red-500">
         {error || "Không tìm thấy thông tin nhà tuyển dụng."}
       </div>
     );
   }
 
-  return (
-    <div className="bg-gray-50 min-h-screen pb-10">
-      <div className="relative">
-        <div className="h-[250px] w-full bg-gradient-to-r from-emerald-600 to-emerald-400 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
-        </div>
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedJobs = jobs.slice(startIndex, startIndex + pageSize);
 
-        <div className="container mx-auto px-4 relative -mt-20">
-          <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="w-32 h-32 flex-shrink-0 bg-white rounded-full border-4 border-white shadow-sm overflow-hidden flex items-center justify-center">
+  return (
+    <div className="min-h-screen bg-slate-50 pb-12 text-slate-800">
+      <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 pb-16 pt-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.15),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.15),transparent_30%)]" />
+        <div className="container mx-auto px-4 relative">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center">
+            <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl bg-white/20 backdrop-blur shadow-lg ring-2 ring-white/30">
               <img
                 src={profile.avatarUrl || "https://via.placeholder.com/150"}
                 alt={profile.displayName}
-                className="w-full h-full object-contain"
+                className="h-full w-full object-contain"
               />
             </div>
-
-            <div className="flex-1">
-              <Title level={2} className="!mb-2 !text-gray-800">
+            <div className="flex-1 text-white">
+              <p className="text-xs uppercase tracking-[0.25em] text-emerald-100">
+                Nhà tuyển dụng
+              </p>
+              <h1 className="text-3xl font-bold leading-tight md:text-4xl">
                 {profile.displayName}
-              </Title>
-              <div className="flex items-center gap-4 text-gray-500 mb-4">
+              </h1>
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-emerald-50">
                 {profile.website && (
                   <a
                     href={profile.website}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center hover:text-emerald-600"
+                    className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 hover:bg-white/20"
                   >
-                    <GlobalOutlined className="mr-1" /> Website công ty
+                    <GlobalOutlined /> Website
                   </a>
                 )}
-                <span className="flex items-center">
-                  <EnvironmentOutlined className="mr-1" />{" "}
+                <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1">
+                  <EnvironmentOutlined />{" "}
                   {profile.location || "Chưa cập nhật địa chỉ"}
                 </span>
               </div>
+            </div>
+            <div className="rounded-2xl bg-white/10 px-4 py-3 text-white shadow-lg backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-emerald-100">
+                Đánh giá
+              </p>
+              <div className="text-3xl font-bold">
+                {averageRating.toFixed(1)}
+              </div>
+              <Rate
+                disabled
+                allowHalf
+                value={averageRating}
+                className="text-sm text-yellow-300"
+              />
+              <p className="text-xs text-emerald-100">
+                {ratings.length} đánh giá
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 mt-6">
+      <div className="container mx-auto -mt-10 px-4">
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={16}>
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-t-4 border-emerald-500">
-              <Title
-                level={4}
-                className="border-l-4 border-emerald-500 pl-3 mb-4"
-              >
-                Giới thiệu công ty
-              </Title>
-              <TextArea
-                rows={8}
-                value={
-                  getPlainText(profile.description) ||
-                  "Chưa có mô tả giới thiệu."
-                }
-                readOnly
-                className="text-gray-600 leading-relaxed resize-none cursor-default"
-              />
-            </div>
+            <div className="space-y-6">
+              <Card className="rounded-2xl shadow-sm" bodyStyle={{ padding: 24 }}>
+                <div className="flex items-center justify-between">
+                  <Title level={4} className="!mb-0">
+                    Giới thiệu công ty
+                  </Title>
+                  <Tag color="green">Thông tin</Tag>
+                </div>
+                <Paragraph className="mt-3 leading-relaxed text-slate-700">
+                  {getPlainText(profile.description)}
+                </Paragraph>
+              </Card>
 
-            <div className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-emerald-500">
-              <div className="flex justify-between items-center mb-6">
-                <Title
-                  level={4}
-                  className="border-l-4 border-emerald-500 pl-3 !mb-0"
-                >
-                  Tuyển dụng
-                </Title>
-                <Tag color="green" className="text-base py-1 px-3 rounded">
-                  {jobs.length} việc làm đang tuyển
-                </Tag>
-              </div>
+              <Card className="rounded-2xl shadow-sm" bodyStyle={{ padding: 24 }}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <Title level={4} className="!mb-0">
+                    Tuyển dụng
+                  </Title>
+                  <Tag color="green" className="rounded px-3 py-1 text-base">
+                    {jobs.length} vị trí đang mở
+                  </Tag>
+                </div>
 
-              {jobs.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {jobs.map((job: any) => (
-                    <div
-                      key={job.id}
-                      className="hover:shadow-md transition-shadow"
-                    >
-                      <JobCard job={job} />
+                {paginatedJobs.length > 0 ? (
+                  <div className="mt-4 flex flex-col gap-4">
+                    {paginatedJobs.map((job: any) => (
+                      <div
+                        key={job.id}
+                        className="rounded-xl border border-slate-100 transition-shadow hover:shadow-md"
+                      >
+                        <JobCard job={job} />
+                      </div>
+                    ))}
+                    <div className="flex justify-center pt-2">
+                      <Pagination
+                        current={currentPage}
+                        pageSize={pageSize}
+                        total={jobs.length}
+                        showSizeChanger={false}
+                        onChange={setCurrentPage}
+                      />
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-10 text-gray-400 bg-gray-50 rounded">
-                  Hiện nhà tuyển dụng chưa có tin đăng nào.
-                </div>
-              )}
+                  </div>
+                ) : (
+                  <div className="mt-6 rounded-xl bg-slate-50 py-10 text-center text-gray-500">
+                    Hiện nhà tuyển dụng chưa có tin đăng nào.
+                  </div>
+                )}
+              </Card>
             </div>
           </Col>
 
           <Col xs={24} lg={8}>
-            <div className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-emerald-500">
-              <Title level={4} className="mb-4">
+            <Card className="rounded-2xl shadow-sm" bodyStyle={{ padding: 24 }}>
+              <Title level={4} className="!mb-4">
                 Thông tin liên hệ
               </Title>
-
-              <div className="space-y-4">
+              <div className="space-y-4 text-slate-700">
                 <div className="flex items-start gap-3">
-                  <EnvironmentOutlined className="text-emerald-500 mt-1 text-lg" />
+                  <EnvironmentOutlined className="mt-1 text-lg text-emerald-600" />
                   <div>
-                    <p className="font-semibold text-gray-700 mb-0">
-                      Địa chỉ công ty
-                    </p>
-                    <p className="text-gray-600 text-sm">
+                    <p className="mb-0 font-semibold">Địa chỉ công ty</p>
+                    <p className="text-sm text-slate-600">
                       {profile.location || "Chưa cập nhật"}
                     </p>
                   </div>
@@ -188,14 +214,12 @@ const EmployerDetailPage: React.FC = () => {
                   <>
                     <Divider className="my-2" />
                     <div className="flex items-start gap-3">
-                      <MailOutlined className="text-emerald-500 mt-1 text-lg" />
+                      <MailOutlined className="mt-1 text-lg text-emerald-600" />
                       <div>
-                        <p className="font-semibold text-gray-700 mb-0">
-                          Email liên hệ
-                        </p>
+                        <p className="mb-0 font-semibold">Email liên hệ</p>
                         <a
                           href={`mailto:${profile.contactEmail}`}
-                          className="text-emerald-600 text-sm hover:underline"
+                          className="text-sm text-emerald-600 hover:underline"
                         >
                           {profile.contactEmail}
                         </a>
@@ -208,12 +232,10 @@ const EmployerDetailPage: React.FC = () => {
                   <>
                     <Divider className="my-2" />
                     <div className="flex items-start gap-3">
-                      <PhoneOutlined className="text-emerald-500 mt-1 text-lg" />
+                      <PhoneOutlined className="mt-1 text-lg text-emerald-600" />
                       <div>
-                        <p className="font-semibold text-gray-700 mb-0">
-                          Điện thoại
-                        </p>
-                        <p className="text-gray-600 text-sm">
+                        <p className="mb-0 font-semibold">Điện thoại</p>
+                        <p className="text-sm text-slate-600">
                           {profile.contactPhone}
                         </p>
                       </div>
@@ -221,15 +243,21 @@ const EmployerDetailPage: React.FC = () => {
                   </>
                 )}
               </div>
-            </div>
+            </Card>
 
-            <div className="bg-white rounded-lg shadow-sm p-6 mt-6 border-t-4 border-emerald-500">
-              <Title level={4} className="mb-4">
-                Đánh giá từ ứng viên
-              </Title>
-              <div className="flex items-center gap-4 mb-6 border-b pb-6">
-                <div className="text-center w-full">
-                  <div className="text-4xl font-bold text-gray-800">
+            <Card
+              className="mt-6 rounded-2xl shadow-sm"
+              bodyStyle={{ padding: 24 }}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <Title level={4} className="!mb-0">
+                  Đánh giá từ ứng viên
+                </Title>
+                <Tag color="gold">{ratings.length} đánh giá</Tag>
+              </div>
+              <div className="mb-6 flex items-center gap-4 rounded-xl bg-slate-50 p-4">
+                <div>
+                  <div className="text-3xl font-bold text-slate-900">
                     {averageRating.toFixed(1)}
                   </div>
                   <Rate
@@ -238,9 +266,7 @@ const EmployerDetailPage: React.FC = () => {
                     value={averageRating}
                     className="text-sm text-yellow-500"
                   />
-                  <div className="text-gray-500 text-sm mt-1">
-                    {ratings.length} đánh giá
-                  </div>
+                  <div className="text-xs text-slate-500">Trung bình</div>
                 </div>
               </div>
 
@@ -277,10 +303,10 @@ const EmployerDetailPage: React.FC = () => {
                       }
                       description={
                         <div className="mt-1">
-                          <div className="text-gray-600 text-sm">
+                          <div className="text-sm text-slate-700">
                             {item.comment || "Không có nhận xét"}
                           </div>
-                          <div className="text-xs text-gray-400 mt-1">
+                          <div className="mt-1 text-xs text-slate-400">
                             {new Date(item.createdAt).toLocaleDateString(
                               "vi-VN"
                             )}
@@ -291,7 +317,7 @@ const EmployerDetailPage: React.FC = () => {
                   </List.Item>
                 )}
               />
-            </div>
+            </Card>
           </Col>
         </Row>
       </div>
