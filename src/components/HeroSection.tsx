@@ -10,6 +10,10 @@ import {
   selectCategoryList,
 } from "../features/category/slice";
 import type { AppDispatch } from "../app/store";
+import locationService, {
+  type LocationOption,
+} from "../features/location/locationService";
+import type { JobSearchFilters } from "../features/findJob-jobSeeker/types";
 
 const { Option } = Select;
 
@@ -60,8 +64,10 @@ const SlideSecondary: React.FC = () => (
 );
 
 const HeroSection: React.FC = () => {
-  const [provinces, setProvinces] = useState([]);
-  // const [selectedProvinces, setSelectedProvinces] = useState<string[]>([]);
+  const [provinces, setProvinces] = useState<LocationOption[]>([]);
+  const [loadingProvince, setLoadingProvince] = useState(false);
+  const [keyword, setKeyword] = useState("");
+  const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -69,12 +75,15 @@ const HeroSection: React.FC = () => {
 
   useEffect(() => {
     const fetchProvinces = async () => {
+      setLoadingProvince(true);
       try {
-        const response = await fetch("https://provinces.open-api.vn/api/p/");
-        const data = await response.json();
+        const data = await locationService.getProvinces();
         setProvinces(data);
       } catch (error) {
         console.error("Error fetching provinces:", error);
+        setProvinces([]);
+      } finally {
+        setLoadingProvince(false);
       }
     };
 
@@ -82,8 +91,17 @@ const HeroSection: React.FC = () => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  const handleProvinceChange = (_values: string[]) => {
-    // no-op: selected provinces not used currently
+  const handleSearchNavigate = () => {
+    const nextFilters: Partial<JobSearchFilters> = {};
+    const trimmedKeyword = keyword.trim();
+    if (trimmedKeyword) {
+      nextFilters.keyword = trimmedKeyword;
+    }
+    if (selectedProvince) {
+      nextFilters.provinceId = selectedProvince;
+    }
+
+    navigate("/viec-lam", { state: nextFilters });
   };
 
   return (
@@ -101,27 +119,33 @@ const HeroSection: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-4 items-center bg-white rounded-2xl shadow-2xl border border-gray-200 p-6">
           <Input
             size="large"
-            placeholder="Nhap ten viec lam, cong ty, tu khoa"
+            placeholder="Nhập tên việc làm"
             prefix={<SearchOutlined className="text-blue-400" />}
             className="w-full md:flex-1 rounded-xl shadow-sm !h-14 placeholder-gray-600 border-gray-200 focus:border-blue-500"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onPressEnter={handleSearchNavigate}
+            allowClear
           />
 
           <Select
-            mode="multiple"
             showSearch
             size="large"
-            placeholder="Chon tinh, thanh pho"
+            placeholder="Chọn tỉnh/thành phố"
             optionFilterProp="children"
-            onChange={handleProvinceChange}
+            value={selectedProvince ?? undefined}
+            onChange={(value) => setSelectedProvince(value ?? null)}
             filterOption={(input, option) =>
               (option?.children as unknown as string)
                 ?.toLowerCase()
                 .includes(input.toLowerCase())
             }
+            loading={loadingProvince}
+            allowClear
             className="w-full md:w-64 rounded-xl shadow-sm !h-14 border-gray-200 focus:border-blue-500"
           >
-            {provinces.map((province: any) => (
-              <Option key={province.code} value={province.name}>
+            {provinces.map((province) => (
+              <Option key={province.code} value={province.code}>
                 {province.name}
               </Option>
             ))}
@@ -131,6 +155,7 @@ const HeroSection: React.FC = () => {
             type="primary"
             size="large"
             className="w-full md:w-auto rounded-xl !h-14 bg-gradient-to-r from-sky-500 to-blue-600 border-none shadow-lg"
+            onClick={handleSearchNavigate}
           >
             <SearchOutlined />
             <span className="ml-1">Tim kiem</span>

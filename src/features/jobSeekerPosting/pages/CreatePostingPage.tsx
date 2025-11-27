@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Form,
   Input,
@@ -92,6 +92,25 @@ const CreatePostingPage: React.FC = () => {
   const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories(
     selectedCategoryId ?? null
   );
+  const mergedSubCategories = useMemo(() => {
+    if (
+      postDetail &&
+      (isViewMode || isEditMode) &&
+      postDetail.subCategoryId &&
+      !subCategories.some(
+        (sub) => sub.subCategoryId === Number(postDetail.subCategoryId)
+      )
+    ) {
+      return [
+        ...subCategories,
+        {
+          subCategoryId: Number(postDetail.subCategoryId),
+          name: postDetail.subCategoryName || "Nhóm nghề",
+        },
+      ];
+    }
+    return subCategories;
+  }, [subCategories, postDetail, isViewMode, isEditMode]);
   const [provinces, setProvinces] = useState<LocationOption[]>([]);
   const [districts, setDistricts] = useState<LocationOption[]>([]);
   const [wards, setWards] = useState<LocationOption[]>([]);
@@ -441,7 +460,7 @@ const CreatePostingPage: React.FC = () => {
               showSearch
               optionFilterProp="children"
             >
-              {subCategories.map((sub) => (
+              {mergedSubCategories.map((sub) => (
                 <Select.Option key={sub.subCategoryId} value={sub.subCategoryId}>
                   {sub.name}
                 </Select.Option>

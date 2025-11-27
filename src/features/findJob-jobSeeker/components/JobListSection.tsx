@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, Select, Pagination, Spin, Empty, message, Tag, Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import jobPostService from "../../job/jobPostService";
@@ -140,7 +140,6 @@ const JobListSection: React.FC<JobListSectionProps> = ({
   const [jobs, setJobs] = useState<JobPostView[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const matchProvinceDisabledRef = useRef(true);
 
   const { keyword, provinceId, categoryId, subCategoryId, salary, salaryRange } =
     filters;
@@ -162,11 +161,9 @@ const JobListSection: React.FC<JobListSectionProps> = ({
           return res.data;
         };
 
-        const shouldUseMatchApi = Boolean(
-          normalizedProvinceId && !matchProvinceDisabledRef.current
-        );
+        const shouldQueryByProvince = Boolean(normalizedProvinceId);
 
-        if (shouldUseMatchApi) {
+        if (shouldQueryByProvince) {
           try {
             data = await matchService.searchJobsByProvince(normalizedProvinceId);
             if (!data || data.length === 0) {
@@ -175,7 +172,6 @@ const JobListSection: React.FC<JobListSectionProps> = ({
             }
           } catch (provinceError) {
             console.warn("Match API failed, falling back to all jobs", provinceError);
-            matchProvinceDisabledRef.current = true;
             data = await fetchAllJobs();
           }
         } else {

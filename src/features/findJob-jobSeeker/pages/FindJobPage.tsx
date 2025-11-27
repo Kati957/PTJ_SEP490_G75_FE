@@ -33,16 +33,16 @@ const FindJobPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (location.state && location.state.categoryId) {
+    const stateFilters = location.state as Partial<JobSearchFilters> | null;
+    if (stateFilters && Object.keys(stateFilters).length > 0) {
       setFilters((prev) => ({
         ...prev,
-        categoryId: location.state.categoryId,
-        categoryName: location.state.categoryName,
+        ...stateFilters,
       }));
 
-      navigate(location.pathname, { replace: true, state: {} });
+      navigate(location.pathname, { replace: true, state: null });
     }
-  }, []);
+  }, [location.pathname, location.state, navigate]);
 
   const handleSearch = (newFilters: JobSearchFilters) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
