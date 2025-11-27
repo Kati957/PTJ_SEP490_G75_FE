@@ -5,6 +5,8 @@ export interface RawPagedResponse<T> {
   Data?: T[];
   total?: number;
   Total?: number;
+  totalRecords?: number;
+  TotalRecords?: number;
   totalItems?: number;
   TotalItems?: number;
   page?: number;
@@ -35,6 +37,8 @@ export const adaptPagedResult = <T>(payload: RawPagedResponse<T> | undefined): P
   const total =
     payload?.total ??
     payload?.Total ??
+    payload?.totalRecords ??
+    payload?.TotalRecords ??
     payload?.totalItems ??
     payload?.TotalItems ??
     items.length;

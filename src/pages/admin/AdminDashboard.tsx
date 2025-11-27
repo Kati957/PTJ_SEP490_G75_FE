@@ -75,9 +75,9 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       <Card
-        bordered={false}
+        variant="borderless"
         className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl text-white shadow-lg"
-        bodyStyle={{ padding: 24 }}
+        styles={{ body: { padding: 24 } }}
       >
         <Space direction="vertical" size={10} className="w-full">
           <span className="inline-flex items-center gap-2 text-sm text-white/90">
@@ -101,7 +101,7 @@ const AdminDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {statisticCards.map((item) => (
-          <Card key={item.key} bordered={false} className="shadow-sm h-full">
+          <Card key={item.key} variant="outlined" className="shadow-sm h-full">
             <Space align="center" size={16}>
               <Button
                 shape="circle"
@@ -124,7 +124,7 @@ const AdminDashboard: React.FC = () => {
         ))}
       </div>
 
-      <Card bordered={false} className="shadow-sm">
+      <Card variant="borderless" className="shadow-sm">
         <div className="h-64 rounded-lg bg-gradient-to-br from-blue-50 via-white to-indigo-50 border border-dashed border-indigo-200 flex flex-col items-center justify-center text-center px-4">
           <Title level={4} className="!mb-2">
             Biểu đồ thống kê sẽ hiển thị tại đây

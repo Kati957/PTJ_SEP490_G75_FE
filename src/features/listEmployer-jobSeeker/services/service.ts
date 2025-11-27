@@ -11,8 +11,6 @@ interface EmployerPublicProfileApi {
 
 type EmployerJobPostView = JobPostView & { employerId?: number };
 
-const getPlaceholderLogo = () => "/src/assets/no-logo.png";
-
 const extractProvince = (fullAddress: string): string => {
   if (!fullAddress) return '';
   const parts = fullAddress.split(',');

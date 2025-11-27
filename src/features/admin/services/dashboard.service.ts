@@ -15,7 +15,11 @@ export interface ManagementSummaryResponse {
 
 const adminDashboardService = {
   async getOverview(): Promise<AdminDashboardOverview> {
-    return await baseService.get<AdminDashboardOverview>('/AdminDashboard/overview');
+    // Ưu tiên endpoint overview; nếu chưa có, trả về fallback phía trên
+    const response = await baseService
+      .get<AdminDashboardOverview>('/admin/overview')
+      .catch(() => undefined);
+    return response ?? { totalAccounts: 0, totalPosts: 0, pendingReports: 0 };
   },
 
   async getManagementSummary(endpoint: string): Promise<ManagementSummaryResponse> {

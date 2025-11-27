@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Card,
   Typography,
@@ -81,8 +82,18 @@ type ActionContext =
   | { type: 'employer'; post: AdminEmployerPost }
   | { type: 'jobseeker'; post: AdminJobSeekerPost };
 
+type HighlightRow =
+  | { type: 'employer'; data: AdminEmployerPost }
+  | { type: 'jobseeker'; data: AdminJobSeekerPost };
+
 const AdminJobPostManagementPage: React.FC = () => {
+  const location = useLocation();
+
   const [activeTab, setActiveTab] = useState<'employer' | 'jobseeker'>('employer');
+  const [highlightTarget, setHighlightTarget] = useState<{ type: 'employer' | 'jobseeker'; id: number } | null>(null);
+  const [highlightOpened, setHighlightOpened] = useState(false);
+  const [highlightScrolled, setHighlightScrolled] = useState(false);
+  const [highlightRow, setHighlightRow] = useState<HighlightRow | null>(null);
 
   const [employerPosts, setEmployerPosts] = useState<AdminEmployerPost[]>([]);
   const [employerLoading, setEmployerLoading] = useState(false);
@@ -149,8 +160,6 @@ const AdminJobPostManagementPage: React.FC = () => {
       setReasonSubmitting(false);
     }
   };
-  const formatDateTime = (value?: string | null) =>
-    value ? new Date(value).toLocaleString('vi-VN') : undefined;
   const formatCurrency = (value?: number | null) =>
     value !== null && value !== undefined
       ? `${value.toLocaleString('vi-VN')} VND`
@@ -209,12 +218,13 @@ const AdminJobPostManagementPage: React.FC = () => {
           page,
           pageSize
         });
+        const total = typeof response.total === 'number' ? response.total : response.items.length;
         setEmployerPosts(response.items);
         setEmployerPagination((prev) => ({
           ...prev,
           current: page,
           pageSize,
-          total: response.total
+          total
         }));
       } catch (error) {
         console.error('Failed to fetch employer posts', error);
@@ -238,12 +248,13 @@ const AdminJobPostManagementPage: React.FC = () => {
           page,
           pageSize
         });
+        const total = typeof response.total === 'number' ? response.total : response.items.length;
         setJobSeekerPosts(response.items);
         setJobSeekerPagination((prev) => ({
           ...prev,
           current: page,
           pageSize,
-          total: response.total
+          total
         }));
       } catch (error) {
         console.error('Failed to fetch job seeker posts', error);
@@ -262,6 +273,20 @@ const AdminJobPostManagementPage: React.FC = () => {
   useEffect(() => {
     void fetchJobSeekerPosts();
   }, [fetchJobSeekerPosts]);
+
+  // Đọc tham số URL để tự động chuyển tab & highlight bài bị báo cáo
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const typeParam = params.get('type');
+    const highlightParam = params.get('highlight');
+    const parsedId = highlightParam ? Number(highlightParam) : NaN;
+    if ((typeParam === 'employer' || typeParam === 'jobseeker') && Number.isFinite(parsedId)) {
+      setActiveTab(typeParam);
+      setHighlightTarget({ type: typeParam, id: parsedId });
+      setHighlightOpened(false);
+      setHighlightScrolled(false);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -315,9 +340,37 @@ const AdminJobPostManagementPage: React.FC = () => {
       if (type === 'employer') {
         const detail = await adminJobPostService.getEmployerPostDetail(id);
         setDetailState({ type, data: detail });
+        if (highlightTarget?.type === 'employer' && highlightTarget.id === id) {
+          setHighlightRow({
+            type: 'employer',
+            data: {
+              employerPostId: detail.employerPostId,
+              title: detail.title,
+              employerEmail: detail.employerEmail,
+              employerName: detail.employerName,
+              categoryName: detail.categoryName,
+              status: detail.status,
+              createdAt: detail.createdAt
+            }
+          });
+        }
       } else {
         const detail = await adminJobPostService.getJobSeekerPostDetail(id);
         setDetailState({ type, data: detail });
+        if (highlightTarget?.type === 'jobseeker' && highlightTarget.id === id) {
+          setHighlightRow({
+            type: 'jobseeker',
+            data: {
+              jobSeekerPostId: detail.jobSeekerPostId,
+              title: detail.title,
+              jobSeekerEmail: detail.jobSeekerEmail,
+              fullName: detail.fullName,
+              categoryName: detail.categoryName,
+              status: detail.status,
+              createdAt: detail.createdAt
+            }
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to load post detail', error);
@@ -327,6 +380,39 @@ const AdminJobPostManagementPage: React.FC = () => {
       setDetailLoading(false);
     }
   };
+
+  // Khi có highlight từ trang báo cáo, tự động mở drawer chi tiết một lần
+  useEffect(() => {
+    if (!highlightTarget || highlightOpened) return;
+    if (highlightTarget.type === activeTab) {
+      void openDetail(highlightTarget.type, highlightTarget.id);
+      setHighlightOpened(true);
+    }
+  }, [activeTab, highlightOpened, highlightTarget]);
+
+  // Cuộn tới dòng được highlight nếu đang hiển thị trong bảng hiện tại
+  useEffect(() => {
+    if (!highlightTarget || highlightScrolled) return;
+    const isCurrentTab = activeTab === highlightTarget.type;
+    if (!isCurrentTab) return;
+
+    const targetKey = String(highlightTarget.id);
+    // Ant Table đặt data-row-key ở <tr>
+    const selector = `tr[data-row-key=\"${targetKey}\"]`;
+    const container = document.querySelector('.ant-table-body');
+
+    const scrollToRow = () => {
+      const row = container?.querySelector(selector) as HTMLElement | null;
+      if (row) {
+        row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        setHighlightScrolled(true);
+      }
+    };
+
+    // defer để DOM table render xong
+    const timer = window.setTimeout(scrollToRow, 100);
+    return () => window.clearTimeout(timer);
+  }, [activeTab, employerPosts, jobSeekerPosts, highlightTarget, highlightScrolled]);
 
   const handleToggleEmployerPost = async (post: AdminEmployerPost, reason?: string) => {
     setToggleLoadingId(post.employerPostId);
@@ -367,6 +453,22 @@ const AdminJobPostManagementPage: React.FC = () => {
       setToggleType(null);
     }
   };
+
+  const employerDisplayData = useMemo(() => {
+    if (highlightRow?.type === 'employer') {
+      const filtered = employerPosts.filter((p) => p.employerPostId !== highlightRow.data.employerPostId);
+      return [highlightRow.data, ...filtered];
+    }
+    return employerPosts;
+  }, [employerPosts, highlightRow]);
+
+  const jobSeekerDisplayData = useMemo(() => {
+    if (highlightRow?.type === 'jobseeker') {
+      const filtered = jobSeekerPosts.filter((p) => p.jobSeekerPostId !== highlightRow.data.jobSeekerPostId);
+      return [highlightRow.data, ...filtered];
+    }
+    return jobSeekerPosts;
+  }, [jobSeekerPosts, highlightRow]);
 
   const employerColumns: ColumnsType<AdminEmployerPost> = [
     {
@@ -563,9 +665,15 @@ const AdminJobPostManagementPage: React.FC = () => {
           rowKey="employerPostId"
           loading={employerLoading}
           columns={employerColumns}
-          dataSource={employerPosts}
-          pagination={employerPagination}
+          dataSource={employerDisplayData}
+          pagination={{ ...employerPagination, hideOnSinglePage: false, showSizeChanger: true }}
           scroll={{ x: 1000 }}
+          onRow={(record) => ({
+            style:
+              highlightTarget?.type === 'employer' && record.employerPostId === highlightTarget.id
+                ? { backgroundColor: '#fff7e6', boxShadow: 'inset 4px 0 0 #fa8c16' }
+                : undefined
+          })}
           onChange={handleEmployerTableChange}
         />
       </Card>
@@ -620,9 +728,15 @@ const AdminJobPostManagementPage: React.FC = () => {
           rowKey="jobSeekerPostId"
           loading={jobSeekerLoading}
           columns={jobSeekerColumns}
-          dataSource={jobSeekerPosts}
-          pagination={jobSeekerPagination}
+          dataSource={jobSeekerDisplayData}
+          pagination={{ ...jobSeekerPagination, hideOnSinglePage: false, showSizeChanger: true }}
           scroll={{ x: 1000 }}
+          onRow={(record) => ({
+            style:
+              highlightTarget?.type === 'jobseeker' && record.jobSeekerPostId === highlightTarget.id
+                ? { backgroundColor: '#fff7e6', boxShadow: 'inset 4px 0 0 #fa8c16' }
+                : undefined
+          })}
           onChange={handleJobSeekerTableChange}
         />
       </Card>
@@ -632,7 +746,7 @@ const AdminJobPostManagementPage: React.FC = () => {
   return (
     <>
       <AdminSectionHeader
-        title="Quản lý bài đăng"
+        title="Quản lý bài đăng tuyển dụng "
         description="Theo dõi bài đăng của nhà tuyển dụng và ứng viên, xử lý vi phạm nhanh chóng."
         gradient="from-violet-600 via-purple-500 to-pink-500"
         extra={
@@ -644,6 +758,22 @@ const AdminJobPostManagementPage: React.FC = () => {
           </Button>
         }
       />
+      {highlightTarget && (
+        <Card className="shadow-sm mb-3 border border-amber-200 bg-amber-50" size="small">
+          <Space direction="vertical" size={4}>
+            <Typography.Text strong>
+              Đang hiển thị bài bị báo cáo:{' '}
+              <span className="text-amber-700">
+                {highlightRow?.data.title || `#${highlightTarget.id}`}
+              </span>{' '}
+              {highlightTarget.type === 'employer' ? '(Nhà tuyển dụng)' : '(Ứng viên)'}
+            </Typography.Text>
+            <Typography.Text type="secondary">
+              Hệ thống đã mở sẵn chi tiết và tô sáng dòng tương ứng trong bảng.
+            </Typography.Text>
+          </Space>
+        </Card>
+      )}
 
       <Tabs
         activeKey={activeTab}
@@ -686,13 +816,20 @@ const AdminJobPostManagementPage: React.FC = () => {
               <DetailField label="Chuyên mục" value={detailState.data.categoryName || undefined} />
             </DetailSection>
 
-            <DetailSection title="Trạng thái & thời gian">
-              <DetailField label="Trạng thái" value={detailState.data.status} />
-              <DetailField label="Tạo lúc" value={formatDateTime(detailState.data.createdAt)} />
-            </DetailSection>
-
             {detailState.type === 'employer' ? (
               <>
+                {detailState.data.imageUrls && detailState.data.imageUrls.length > 0 && (
+                  <DetailSection title="Hình ảnh">
+                    <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {detailState.data.imageUrls.map((url: string) => (
+                        <div key={url} className="rounded-xl border border-gray-200 overflow-hidden bg-white">
+                          <img src={url} alt="Ảnh bài đăng" className="w-full h-32 object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </DetailSection>
+                )}
+
                 <DetailSection title="Thông tin công việc">
                   <DetailField
                     label="Lương"
@@ -793,11 +930,6 @@ const AdminJobPostManagementPage: React.FC = () => {
                 </DetailSection>
               </>
             )}
-
-            <DetailSection title="Trạng thái & thời gian">
-              <DetailField label="Trạng thái" value={detailState.data.status} />
-              <DetailField label="Tạo lúc" value={formatDateTime(detailState.data.createdAt)} />
-            </DetailSection>
           </div>
         ) : (
           <p>Không có dữ liệu.</p>

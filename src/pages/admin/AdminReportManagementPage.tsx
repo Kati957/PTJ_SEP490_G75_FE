@@ -26,6 +26,8 @@ import {
 } from '@ant-design/icons';
 import adminReportService from '../../features/admin/services/adminReport.service';
 import adminSystemReportService from '../../features/admin/services/adminSystemReport.service';
+import adminJobPostService from '../../features/admin/services/adminJobPost.service';
+import { useNavigate } from 'react-router-dom';
 import type {
   AdminReport,
   AdminReportDetail,
@@ -34,6 +36,7 @@ import type {
   AdminSystemReport,
   AdminSystemReportDetail
 } from '../../features/admin/types/report';
+import type { AdminEmployerPostDetail, AdminJobSeekerPostDetail } from '../../features/admin/types/jobPost';
 import AdminSectionHeader from './components/AdminSectionHeader';
 
 const { Text } = Typography;
@@ -57,9 +60,13 @@ interface SystemFilters {
 type SectionKey = 'posts' | 'system';
 type PostTabKey = 'pending' | 'solved';
 
+type ReportedPostDetail =
+  | { kind: 'employer'; data: AdminEmployerPostDetail }
+  | { kind: 'jobseeker'; data: AdminJobSeekerPostDetail };
+
 type DetailRecord =
-  | { type: 'pending'; data: AdminReportDetail }
-  | { type: 'solved'; data: AdminReportDetail }
+  | { type: 'pending'; data: AdminReportDetail; postDetail?: ReportedPostDetail }
+  | { type: 'solved'; data: AdminReportDetail; postDetail?: ReportedPostDetail }
   | { type: 'system'; data: AdminSystemReportDetail };
 
 interface ResolveFormValues {
@@ -75,6 +82,7 @@ interface ResolveSystemFormValues extends AdminResolveSystemReportPayload {}
 const AdminReportManagementPage: React.FC = () => {
   const [activeSection, setActiveSection] = useState<SectionKey>('posts');
   const [postTab, setPostTab] = useState<PostTabKey>('pending');
+  const navigate = useNavigate();
 
   const [reportTypes, setReportTypes] = useState<string[]>([]);
   const [pendingReports, setPendingReports] = useState<AdminReport[]>([]);
@@ -287,6 +295,36 @@ const AdminReportManagementPage: React.FC = () => {
     setSystemPagination((prev) => ({ ...prev, current: 1 }));
   };
 
+  const buildManageLink = (type: 'employer' | 'jobseeker', id: number) => {
+    const params = new URLSearchParams({ type, highlight: String(id) });
+    return `/admin/job-posts?${params.toString()}`;
+  };
+
+  const fetchReportedPostDetail = async (
+    detail: AdminReportDetail
+  ): Promise<ReportedPostDetail | undefined> => {
+    try {
+      const postType = detail.postType || (detail.employerPostId ? 'EmployerPost' : detail.jobSeekerPostId ? 'JobSeekerPost' : undefined);
+      const postId =
+        detail.employerPostId ??
+        detail.jobSeekerPostId ??
+        (detail.postId ?? undefined);
+
+      if (postType === 'EmployerPost' && postId) {
+        const data = await adminJobPostService.getEmployerPostDetail(postId);
+        return { kind: 'employer', data };
+      }
+      if (postType === 'JobSeekerPost' && postId) {
+        const data = await adminJobPostService.getJobSeekerPostDetail(postId);
+        return { kind: 'jobseeker', data };
+      }
+    } catch (error) {
+      console.error('Failed to fetch reported post detail', error);
+      message.warning('Không thể tải chi tiết bài đăng bị báo cáo');
+    }
+    return undefined;
+  };
+
   const openDetail = async (id: number, type: DetailRecord['type']) => {
     setDetailOpen(true);
     setDetailLoading(true);
@@ -296,7 +334,8 @@ const AdminReportManagementPage: React.FC = () => {
         setDetailRecord({ type, data: detail });
       } else {
         const detail = await adminReportService.getReportDetail(id);
-        setDetailRecord({ type, data: detail });
+        const postDetail = await fetchReportedPostDetail(detail);
+        setDetailRecord({ type, data: detail, postDetail });
       }
     } catch (error) {
       console.error('Failed to fetch detail', error);
@@ -335,6 +374,25 @@ const AdminReportManagementPage: React.FC = () => {
     systemResolveForm.resetFields();
     systemResolveForm.setFieldsValue({ action: 'MarkSolved' });
     setSystemResolveModalOpen(true);
+  };
+
+  const openReportedPostFromList = async (reportId: number) => {
+      try {
+        const detail = await adminReportService.getReportDetail(reportId);
+        const postDetail = await fetchReportedPostDetail(detail);
+        if (!postDetail) {
+          message.warning('Không tìm thấy bài đăng gắn với report này.');
+        return;
+      }
+      const link =
+        postDetail.kind === 'employer'
+          ? buildManageLink('employer', postDetail.data.employerPostId)
+          : buildManageLink('jobseeker', postDetail.data.jobSeekerPostId);
+      navigate(link);
+    } catch (error) {
+      console.error('Failed to open reported post from list', error);
+      message.error('Không thể mở bài đăng bị báo cáo');
+    }
   };
 
   const handleResolveSystemReport = async (values: ResolveSystemFormValues) => {
@@ -398,6 +456,28 @@ const AdminReportManagementPage: React.FC = () => {
     }
   };
 
+  const formatCurrency = (value?: number | null) =>
+    value === null || value === undefined ? undefined : `${value.toLocaleString('vi-VN')} VND`;
+
+  const formatLocation = (province?: string | null, district?: string | null, ward?: string | null) => {
+    const parts = [ward, district, province].filter((part): part is string => Boolean(part && part.trim()));
+    return parts.length ? parts.join(', ') : undefined;
+  };
+
+  const postStatusTag = (status?: string | null) => {
+    switch (status) {
+      case 'Active':
+        return <Tag color="green">Active</Tag>;
+      case 'Blocked':
+      case 'Deleted':
+        return <Tag color="red">{status}</Tag>;
+      case 'Archived':
+        return <Tag color="orange">Archived</Tag>;
+      default:
+        return status ? <Tag>{status}</Tag> : '---';
+    }
+  };
+
   const formatDateTime = (value?: string | null) =>
     value
       ? new Date(value).toLocaleString('vi-VN', {
@@ -451,7 +531,7 @@ const AdminReportManagementPage: React.FC = () => {
       title: 'Hành động',
       key: 'actions',
       fixed: 'right',
-      width: 200,
+      width: 260,
       render: (_, record) => (
         <Space>
           <Button icon={<EyeOutlined />} size="small" onClick={() => openDetail(record.reportId, 'pending')}>
@@ -459,6 +539,9 @@ const AdminReportManagementPage: React.FC = () => {
           </Button>
           <Button icon={<ToolOutlined />} type="primary" size="small" onClick={() => openResolveModal(record.reportId)}>
             Xu ly
+          </Button>
+          <Button size="small" shape="round" onClick={() => openReportedPostFromList(record.reportId)}>
+            Bai dang
           </Button>
         </Space>
       )
@@ -503,11 +586,16 @@ const AdminReportManagementPage: React.FC = () => {
       title: 'Hành động',
       key: 'actions',
       fixed: 'right',
-      width: 160,
+      width: 260,
       render: (_, record) => (
-        <Button icon={<EyeOutlined />} size="small" onClick={() => openDetail(record.reportId, 'solved')}>
-          Xem
-        </Button>
+        <Space>
+          <Button icon={<EyeOutlined />} size="small" onClick={() => openDetail(record.reportId, 'solved')}>
+            Xem
+          </Button>
+          <Button size="small" shape="round" onClick={() => openReportedPostFromList(record.reportId)}>
+            Bai dang
+          </Button>
+        </Space>
       )
     }
   ];
@@ -576,6 +664,97 @@ const AdminReportManagementPage: React.FC = () => {
     }
   ];
 
+  const renderReportedPostCard = (postDetail: ReportedPostDetail) => {
+    if (postDetail.kind === 'employer') {
+      const post = postDetail.data;
+      const location = formatLocation(post.provinceName, post.districtName, post.wardName);
+      const salary = formatCurrency(post.salary);
+      return (
+        <>
+          <Descriptions column={2} size="small" bordered>
+            <Descriptions.Item label="Loại bài đăng" span={2}>
+              <Tag color="purple">Bài đăng nhà tuyển dụng</Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Mã bài đăng">#{post.employerPostId}</Descriptions.Item>
+            <Descriptions.Item label="Trạng thái">{postStatusTag(post.status)}</Descriptions.Item>
+            <Descriptions.Item label="Tiêu đề" span={2}>
+              {post.title}
+            </Descriptions.Item>
+            <Descriptions.Item label="Nhà tuyển dụng">{post.employerName ?? post.employerEmail}</Descriptions.Item>
+            <Descriptions.Item label="Email">{post.employerEmail}</Descriptions.Item>
+            {post.categoryName && <Descriptions.Item label="Ngành nghề">{post.categoryName}</Descriptions.Item>}
+            <Descriptions.Item label="Ngày tạo">{formatDateTime(post.createdAt)}</Descriptions.Item>
+            {salary && <Descriptions.Item label="Mức lương">{salary}</Descriptions.Item>}
+            {post.workHours && <Descriptions.Item label="Giờ làm việc">{post.workHours}</Descriptions.Item>}
+            {post.phoneContact && <Descriptions.Item label="Liên hệ">{post.phoneContact}</Descriptions.Item>}
+            {location && <Descriptions.Item label="Địa điểm" span={2}>{location}</Descriptions.Item>}
+            {post.description && (
+              <Descriptions.Item label="Mô tả" span={2}>
+                {post.description}
+              </Descriptions.Item>
+            )}
+            {post.requirements && (
+              <Descriptions.Item label="Yêu cầu" span={2}>
+                {post.requirements}
+              </Descriptions.Item>
+            )}
+          </Descriptions>
+          {post.imageUrls && post.imageUrls.length > 0 && (
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
+              {post.imageUrls.map((url: string) => (
+                <div key={url} className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+                  <img src={url} alt="Ảnh bài đăng" className="w-full h-28 object-cover" />
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    const post = postDetail.data;
+    const location = formatLocation(post.provinceName, post.districtName, post.wardName);
+    return (
+      <>
+        <Descriptions column={2} size="small" bordered>
+          <Descriptions.Item label="Loại bài đăng" span={2}>
+            <Tag color="blue">Bài đăng ứng viên</Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label="Mã bài đăng">#{post.jobSeekerPostId}</Descriptions.Item>
+          <Descriptions.Item label="Trạng thái">{postStatusTag(post.status)}</Descriptions.Item>
+          <Descriptions.Item label="Tiêu đề" span={2}>
+            {post.title}
+          </Descriptions.Item>
+          <Descriptions.Item label="Người đăng">{post.fullName ?? post.jobSeekerEmail}</Descriptions.Item>
+          <Descriptions.Item label="Email">{post.jobSeekerEmail}</Descriptions.Item>
+          {post.categoryName && <Descriptions.Item label="Lĩnh vực">{post.categoryName}</Descriptions.Item>}
+          <Descriptions.Item label="Ngày tạo">{formatDateTime(post.createdAt)}</Descriptions.Item>
+          {post.preferredWorkHours && (
+            <Descriptions.Item label="Thời gian mong muốn" span={2}>
+              {post.preferredWorkHours}
+            </Descriptions.Item>
+          )}
+          {post.gender && <Descriptions.Item label="Giới tính">{post.gender}</Descriptions.Item>}
+          {location && <Descriptions.Item label="Địa điểm" span={2}>{location}</Descriptions.Item>}
+          {post.description && (
+            <Descriptions.Item label="Mô tả" span={2}>
+              {post.description}
+            </Descriptions.Item>
+          )}
+        </Descriptions>
+        {post.imageUrls && post.imageUrls.length > 0 && (
+          <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
+            {post.imageUrls.map((url: string) => (
+              <div key={url} className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+                <img src={url} alt="Ảnh bài đăng" className="w-full h-28 object-cover" />
+              </div>
+            ))}
+          </div>
+        )}
+      </>
+    );
+  };
+
   const renderPendingTab = () => (
     <>
       <Card bordered={false} className="shadow-sm mb-4">
@@ -592,7 +771,7 @@ const AdminReportManagementPage: React.FC = () => {
             onChange={(value) => handlePendingFilterChange('reportType', value)}
             style={{ width: 220 }}
           >
-            <Option value="all">Tat ca loai report</Option>
+            <Option value="all">Tất cả loại report</Option>
             {sortedReportTypes.map((type) => (
               <Option key={type} value={type}>
                 {reportTypeLabel(type)}
@@ -723,69 +902,97 @@ const AdminReportManagementPage: React.FC = () => {
 
     if (detailRecord.type === 'system') {
       return (
-        <Descriptions column={1} bordered size="small">
-          <Descriptions.Item label="Tiêu đề">{detailRecord.data.title}</Descriptions.Item>
-          <Descriptions.Item label="Người gửi">{detailRecord.data.userEmail}</Descriptions.Item>
-          {detailRecord.data.fullName && (
-            <Descriptions.Item label="Tên hiển thị">{detailRecord.data.fullName}</Descriptions.Item>
-          )}
-          {detailRecord.data.description && (
-            <Descriptions.Item label="Mô tả">{detailRecord.data.description}</Descriptions.Item>
-          )}
-          <Descriptions.Item label="Trạng thái">{statusTag(detailRecord.data.status)}</Descriptions.Item>
-          <Descriptions.Item label="Ngày tạo">
-            {new Date(detailRecord.data.createdAt).toLocaleString('vi-VN')}
-          </Descriptions.Item>
-          <Descriptions.Item label="Cập nhật">
-            {detailRecord.data.updatedAt
-              ? new Date(detailRecord.data.updatedAt).toLocaleString('vi-VN')
-              : '---'}
-          </Descriptions.Item>
-        </Descriptions>
+        <Card bordered className="shadow-sm">
+          <Descriptions column={1} bordered size="small" title="Thông tin báo cáo hệ thống">
+            <Descriptions.Item label="Tiêu đề">{detailRecord.data.title}</Descriptions.Item>
+            <Descriptions.Item label="Người gửi">{detailRecord.data.userEmail}</Descriptions.Item>
+            {detailRecord.data.fullName && (
+              <Descriptions.Item label="Tên hiển thị">{detailRecord.data.fullName}</Descriptions.Item>
+            )}
+            {detailRecord.data.description && (
+              <Descriptions.Item label="Mô tả">{detailRecord.data.description}</Descriptions.Item>
+            )}
+            <Descriptions.Item label="Trạng thái">{statusTag(detailRecord.data.status)}</Descriptions.Item>
+            <Descriptions.Item label="Ngày tạo">
+              {new Date(detailRecord.data.createdAt).toLocaleString('vi-VN')}
+            </Descriptions.Item>
+            <Descriptions.Item label="Cập nhật">
+              {detailRecord.data.updatedAt
+                ? new Date(detailRecord.data.updatedAt).toLocaleString('vi-VN')
+                : '---'}
+            </Descriptions.Item>
+          </Descriptions>
+        </Card>
       );
     }
 
     return (
-      <Descriptions column={1} bordered size="small">
-        <Descriptions.Item label="Loại report">
-          {reportTypeTag(detailRecord.data.reportType)}
-        </Descriptions.Item>
-        <Descriptions.Item label="Người báo cáo">{detailRecord.data.reporterEmail}</Descriptions.Item>
-        {detailRecord.data.targetUserEmail && (
-          <Descriptions.Item label="Người bị báo cáo">
-            {detailRecord.data.targetUserEmail}
-          </Descriptions.Item>
-        )}
-        {detailRecord.data.targetUserRole && (
-          <Descriptions.Item label="Vai trò người bị báo cáo">
-            {detailRecord.data.targetUserRole}
-          </Descriptions.Item>
-        )}
-        {detailRecord.data.reason && (
-          <Descriptions.Item label="Lý do">{detailRecord.data.reason}</Descriptions.Item>
-        )}
-        <Descriptions.Item label="Trạng thái">{detailRecord.data.status}</Descriptions.Item>
-        <Descriptions.Item label="Thời gian">
-          {new Date(detailRecord.data.createdAt).toLocaleString('vi-VN')}
-        </Descriptions.Item>
-        {detailRecord.data.employerPostTitle && (
-          <Descriptions.Item label="Bài đăng nhà tuyển dụng">
-            {detailRecord.data.employerPostTitle}
-          </Descriptions.Item>
-        )}
-        {detailRecord.data.jobSeekerPostTitle && (
-          <Descriptions.Item label="Bài đăng ứng viên">
-            {detailRecord.data.jobSeekerPostTitle}
-          </Descriptions.Item>
-        )}
-      </Descriptions>
+      <Space direction="vertical" size="middle" className="w-full">
+        <Card bordered className="shadow-sm" title="Thông tin report">
+          <Descriptions column={2} size="small" bordered>
+            <Descriptions.Item label="Loại report" span={2}>
+              {reportTypeTag(detailRecord.data.reportType)}
+            </Descriptions.Item>
+            <Descriptions.Item label="Người báo cáo">{detailRecord.data.reporterEmail}</Descriptions.Item>
+            {detailRecord.data.targetUserEmail && (
+              <Descriptions.Item label="Người bị báo cáo">{detailRecord.data.targetUserEmail}</Descriptions.Item>
+            )}
+            {detailRecord.data.targetUserRole && (
+              <Descriptions.Item label="Vai trò người bị báo cáo">
+                {detailRecord.data.targetUserRole}
+              </Descriptions.Item>
+            )}
+            {detailRecord.data.reason && <Descriptions.Item label="Lý do">{detailRecord.data.reason}</Descriptions.Item>}
+            <Descriptions.Item label="Trạng thái">{detailRecord.data.status}</Descriptions.Item>
+            <Descriptions.Item label="Thời gian">
+              {new Date(detailRecord.data.createdAt).toLocaleString('vi-VN')}
+            </Descriptions.Item>
+            {detailRecord.data.postTitle && (
+              <Descriptions.Item label="Tiêu đề bài đăng" span={2}>
+                {detailRecord.data.postTitle}
+              </Descriptions.Item>
+            )}
+            {detailRecord.data.employerPostTitle && (
+              <Descriptions.Item label="Bài đăng nhà tuyển dụng" span={2}>
+                {detailRecord.data.employerPostTitle}
+              </Descriptions.Item>
+            )}
+            {detailRecord.data.jobSeekerPostTitle && (
+              <Descriptions.Item label="Bài đăng ứng viên" span={2}>
+                {detailRecord.data.jobSeekerPostTitle}
+              </Descriptions.Item>
+            )}
+          </Descriptions>
+        </Card>
+        {detailRecord.postDetail && (() => {
+          const pd = detailRecord.postDetail;
+          const manageLink =
+            pd.kind === 'employer'
+              ? buildManageLink('employer', pd.data.employerPostId)
+              : buildManageLink('jobseeker', pd.data.jobSeekerPostId);
+          return (
+            <Card
+              bordered
+              className="shadow-sm"
+              title="Bài đăng bị báo cáo"
+              extra={
+                <Button type="primary" size="small" onClick={() => navigate(manageLink)}>
+                  Mở trang quản lý
+                </Button>
+              }
+            >
+              {renderReportedPostCard(pd)}
+            </Card>
+          );
+        })()}
+      </Space>
     );
   };
 
   return (
     <>
       <AdminSectionHeader
-        title="Quản lý báo cáo"
+        title="Quản lý báo cáo hệ thống và bài đăng tuyển dụng"
         description="Gồm cả báo cáo bài đăng và báo cáo hệ thống để quản trị viên xử lý."
         gradient="from-rose-600 via-red-500 to-orange-500"
         extra={
@@ -799,7 +1006,7 @@ const AdminReportManagementPage: React.FC = () => {
         activeKey={activeSection}
         onChange={(key) => setActiveSection(key as SectionKey)}
         items={[
-          { key: 'posts', label: 'Báo cáo bài đăng', children: renderPostSection() },
+          { key: 'posts', label: 'Báo cáo bài đăng tìm vệc của người dùng', children: renderPostSection() },
           { key: 'system', label: 'Báo cáo hệ thống', children: renderSystemTab() }
         ]}
       />
@@ -807,7 +1014,7 @@ const AdminReportManagementPage: React.FC = () => {
       <Drawer
         title="Chi tiết report"
         placement="right"
-        width={520}
+        width={760}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         destroyOnClose

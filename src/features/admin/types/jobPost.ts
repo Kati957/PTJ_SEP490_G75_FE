@@ -19,6 +19,7 @@ export interface AdminEmployerPostDetail extends AdminEmployerPost {
   provinceName?: string | null;
   districtName?: string | null;
   wardName?: string | null;
+  imageUrls?: string[];
 }
 
 export interface AdminJobSeekerPost {
@@ -38,6 +39,7 @@ export interface AdminJobSeekerPostDetail extends AdminJobSeekerPost {
   provinceName?: string | null;
   districtName?: string | null;
   wardName?: string | null;
+  imageUrls?: string[];
 }
 
 export interface AdminPostFilters {

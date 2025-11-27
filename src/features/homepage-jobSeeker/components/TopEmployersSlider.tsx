@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Empty, Spin, Tag, Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import type { Employer as ListingEmployer, EmployerRanking } from "../../listEmployer-jobSeeker/types";
-import type { RootState } from "../../../app/store";
 import { getTopEmployersByApply } from "../../listEmployer-jobSeeker/services/service";
 
 type RankedEmployerView = ListingEmployer & { applyCount?: number };

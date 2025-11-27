@@ -5,6 +5,9 @@ export interface AdminReport {
   reportType: string;
   reporterEmail: string;
   targetUserEmail?: string | null;
+  postId?: number | null;
+  postType?: 'EmployerPost' | 'JobSeekerPost' | string | null;
+  postTitle?: string | null;
   reason?: string | null;
   status: string;
   createdAt: string;
@@ -31,6 +34,9 @@ export interface AdminReportDetail {
   reason?: string | null;
   status: string;
   createdAt: string;
+  postId?: number | null;
+  postType?: 'EmployerPost' | 'JobSeekerPost' | string | null;
+  postTitle?: string | null;
   employerPostId?: number | null;
   employerPostTitle?: string | null;
   jobSeekerPostId?: number | null;
