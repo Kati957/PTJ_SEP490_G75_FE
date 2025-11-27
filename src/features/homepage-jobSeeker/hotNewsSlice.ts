@@ -1,0 +1,54 @@
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { NewsItem } from "../listNew-JobSeeker/types";
+import homepageJobSeekerService from "./services";
+
+interface HotNewsState {
+  items: NewsItem[];
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: HotNewsState = {
+  items: [],
+  loading: false,
+  error: null,
+};
+
+export const fetchHotNews = createAsyncThunk<NewsItem[], void, { rejectValue: string }>(
+  "hotNews/fetchHotNews",
+  async (_, { rejectWithValue }) => {
+    try {
+      const items = await homepageJobSeekerService.getHotNews();
+      return items;
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ??
+        error?.message ??
+        "Không thể tải danh sách tin nổi bật";
+      return rejectWithValue(message);
+    }
+  }
+);
+
+const hotNewsSlice = createSlice({
+  name: "hotNews",
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchHotNews.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchHotNews.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchHotNews.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Không thể tải tin nổi bật";
+      });
+  },
+});
+
+export default hotNewsSlice.reducer;

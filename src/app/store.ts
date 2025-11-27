@@ -3,6 +3,7 @@ import { combineReducers } from 'redux';
 
 import authReducer from '../features/auth/slice';
 import homepageReducer from '../features/homepage-jobSeeker/homepageSlice';
+import hotNewsReducer from '../features/homepage-jobSeeker/hotNewsSlice';
 import findJobReducer from '../features/findJob-jobSeeker/slice';
 import jobSeekerPostingReducer from '../features/jobSeekerPosting/slice';
 import savedJobsReducer from '../features/savedJob-jobSeeker/slice';
@@ -25,6 +26,7 @@ import notificationReducer from '../features/notification/slice';
 const rootReducer = combineReducers({
   auth: authReducer,
   homepage: homepageReducer,
+  hotNews: hotNewsReducer,
   findJob: findJobReducer,
   jobSeekerPosting: jobSeekerPostingReducer,
   savedJobs: savedJobsReducer,

@@ -3,9 +3,9 @@ import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../app/store';
 import HeroSection from '../components/HeroSection';
 import FeaturedJobs from '../features/homepage-jobSeeker/components/FeaturedJobs';
-import { fetchFeaturedJobs } from '../features/homepage-jobSeeker/homepageSlice';
-import JobCategoriesSlider from '../features/homepage-jobSeeker/components/JobCategoriesSlider';
+import HotNewsSection from '../features/homepage-jobSeeker/components/HotNewsSection';
 import TopEmployersSlider from '../features/homepage-jobSeeker/components/TopEmployersSlider';
+import { fetchFeaturedJobs } from '../features/homepage-jobSeeker/homepageSlice';
 
 const JobSeekerHomePage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -20,7 +20,7 @@ const JobSeekerHomePage: React.FC = () => {
       <div className="space-y-16 pb-16">
         <HeroSection />
         <FeaturedJobs />
-        <JobCategoriesSlider />
+        <HotNewsSection />
         <TopEmployersSlider />
       </div>
     </div>

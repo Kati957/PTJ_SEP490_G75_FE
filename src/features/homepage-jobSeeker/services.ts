@@ -1,5 +1,6 @@
 import baseService from "../../services/baseService";
 import type { Job } from "../../types/index";
+import type { NewsItem } from "../listNew-JobSeeker/types";
 import { getCompanyLogoSrc, getJobDetailCached } from "../../utils/jobPostHelpers";
 
 interface BackendJob {
@@ -22,6 +23,12 @@ interface ApiResponse {
   success: boolean;
   total: number;
   data: BackendJob[];
+}
+
+interface NewsApiResponse {
+  success: boolean;
+  total: number;
+  data: NewsItem[];
 }
 
 const mapBackendJobToFrontendJob = async (backendJob: BackendJob): Promise<Job> => {
@@ -67,8 +74,36 @@ export const getFeaturedJobs = async (): Promise<Job[]> => {
   }
 };
 
+export const getHotNews = async (): Promise<NewsItem[]> => {
+  try {
+    const response = await baseService.get<NewsApiResponse>("/news", {
+      params: {
+        page: 1,
+        pageSize: 6,
+        sortBy: "Priority",
+        desc: false,
+      },
+    });
+
+    if (!response || !Array.isArray(response.data)) {
+      return [];
+    }
+
+    const featuredFirst = [
+      ...response.data.filter((item) => item.isFeatured),
+      ...response.data.filter((item) => !item.isFeatured),
+    ];
+
+    return featuredFirst.slice(0, 3);
+  } catch (error) {
+    console.error("Failed to load hot news:", error);
+    throw error;
+  }
+};
+
 const homepageJobSeekerService = {
   getFeaturedJobs,
+  getHotNews,
 };
 
 export default homepageJobSeekerService;
