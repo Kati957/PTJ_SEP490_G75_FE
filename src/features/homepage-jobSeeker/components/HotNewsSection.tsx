@@ -111,8 +111,8 @@ const HotNewsSection: React.FC = () => {
     }
 
     return (
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {items.slice(0, 3).map((item) => (
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {items.slice(0, 4).map((item) => (
           <HotNewsCard key={item.newsID} item={item} onClick={handleNavigate} />
         ))}
       </div>
@@ -120,30 +120,35 @@ const HotNewsSection: React.FC = () => {
   };
 
   return (
-    <section className="py-12 px-4 md:px-10">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rose-500">
-              Tin tức
-            </p>
-            <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">
-              Tin tức tuyển dụng nổi bật trong tuần
-            </h2>
-            {error && (
-              <p className="mt-1 text-sm text-rose-500">
-                {error}. Vui lòng thử lại sau ít phút.
+    <section className="px-0 py-4 md:py-6 flex justify-center">
+      <div
+        className="w-full max-w-[120rem] rounded-[2.5rem] bg-white px-5 py-6 md:px-10 md:py-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-slate-100"
+        style={{ width: "min(1400px, calc(100vw - 64px))" }}
+      >
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rose-500">
+                Tin tức
               </p>
-            )}
+              <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">
+                Tin tức tuyển dụng nổi bật trong tuần
+              </h2>
+              {error && (
+                <p className="mt-1 text-sm text-rose-500">
+                  {error}. Vui lòng thử lại sau ít phút.
+                </p>
+              )}
+            </div>
+            <Link
+              to="/news"
+              className="inline-flex items-center gap-1 font-semibold text-sky-600 transition hover:text-sky-700"
+            >
+              Xem tất cả &rarr;
+            </Link>
           </div>
-          <Link
-            to="/news"
-            className="inline-flex items-center gap-2 font-semibold text-sky-600 transition hover:text-sky-700"
-          >
-            Xem tất cả tin tức <ArrowRightOutlined />
-          </Link>
+          {renderContent()}
         </div>
-        {renderContent()}
       </div>
     </section>
   );

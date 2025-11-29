@@ -71,12 +71,12 @@ const normalizeProvinceTokens = (name: string) => {
 };
 
 const salaryFilters = [
-  { value: 'all', label: 'Tat ca' },
-  { value: 'under1', label: 'Duoi 1 trieu' },
-  { value: '1-3', label: '1 - 3 trieu' },
-  { value: '3-5', label: '3 - 5 trieu' },
-  { value: '5plus', label: 'Tu 5 trieu tro len' },
-  { value: 'negotiable', label: 'Thoa thuan' }
+  { value: 'all', label: 'Tất cả' },
+  { value: 'under1', label: 'Dưới 1 triệu' },
+  { value: '1-3', label: '1 - 3 triệu' },
+  { value: '3-5', label: '3 - 5 triệu' },
+  { value: '5plus', label: 'Từ 5 triệu trở lên' },
+  { value: 'negotiable', label: 'Thoả thuận' }
 ];
 
 const FeaturedJobs: React.FC = () => {
@@ -87,15 +87,15 @@ const FeaturedJobs: React.FC = () => {
   const [selectedSalary, setSelectedSalary] = useState<string>('all');
   const [filterType, setFilterType] = useState<'location' | 'salary'>('location');
 
-  const jobsPerPage = 9; // show 9 cards (3 rows x 3 columns) per slide
+  const jobsPerPage = 6;
 
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
         const data = await locationService.getProvinces();
-        setProvinceOptions([{ code: null as any, name: 'Tat ca' }, ...data]);
+        setProvinceOptions([{ code: null as any, name: 'Tất cả' }, ...data]);
       } catch {
-        setProvinceOptions([{ code: null as any, name: 'Tat ca' }]);
+        setProvinceOptions([{ code: null as any, name: 'Tất cả' }]);
       }
     };
     fetchProvinces();
@@ -190,34 +190,49 @@ const FeaturedJobs: React.FC = () => {
   };
 
   return (
-    <section className="px-0">
-      <div className="max-w-[120rem] mx-auto p-6 bg-gray-50 rounded-3xl border border-gray-200 shadow">
+    <section className="px-0 -mt-2 md:-mt-8 flex justify-center">
+      <div
+        className="w-full mx-auto px-4 sm:px-6 lg:px-10 py-4 md:py-5 bg-gray-50 rounded-[2.5rem] border border-gray-200 shadow-lg"
+        style={{ width: 'min(1400px, calc(100vw - 64px))' }}
+      >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 text-slate-900">
-          <div>
+          <div className="space-y-1">
+            <span className="text-sm font-semibold tracking-[0.2em] uppercase text-blue-500">
+              Việc làm
+            </span>
             <h2 className="text-3xl font-bold">Việc làm gần đây</h2>
           </div>
-          <Link to="/viec-lam" className="text-blue-600 hover:text-blue-800 transition font-semibold text-sm">
-            Xem tất cả &gt;
+          <Link
+            to="/viec-lam"
+            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 transition font-semibold text-sm"
+          >
+            Xem tất cả &rarr;
           </Link>
         </div>
 
         <div className="flex items-center gap-2 mb-3 px-2 md:px-0 overflow-x-auto">
-          <div className="inline-flex items-center gap-2 border border-blue-300 rounded-full px-3 py-1 shadow-sm bg-blue-50 whitespace-nowrap">
-            <span className="text-sm text-blue-700 font-semibold">Lọc theo</span>
-            <select
-              className="text-sm bg-transparent focus:outline-none text-blue-700 font-semibold cursor-pointer px-1 py-0.5 rounded"
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as 'location' | 'salary')}
-            >
-              <option value="location">Dịa điểm</option>
-              <option value="salary">Mức lương</option>
-            </select>
+          <div className="flex items-center gap-2 rounded-full border border-blue-200 bg-white px-2 py-1 shadow-sm whitespace-nowrap">
+            {[
+              { value: 'location', label: 'Địa điểm' },
+              { value: 'salary', label: 'Mức lương' }
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setFilterType(option.value as 'location' | 'salary')}
+                className={`px-3 py-1 text-sm rounded-full font-semibold transition ${
+                  filterType === option.value
+                    ? 'bg-blue-600 text-white shadow'
+                    : 'text-blue-700 hover:bg-blue-50'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
-
           <div className="flex items-center gap-2">{renderFilterChips()}</div>
         </div>
 
-        <div className="relative px-0 md:px-2 pt-6">
+        <div className="relative px-0 md:px-2 pt-4">
           <Carousel
             ref={carouselRef}
             {...settings}
@@ -231,9 +246,9 @@ const FeaturedJobs: React.FC = () => {
                 key={pageIndex}
                 className={pageIndex % 2 === 0 ? 'bg-gray-100 rounded-2xl p-2' : 'bg-white rounded-2xl p-2 border border-gray-100'}
               >
-                <Row gutter={[8, 12]} className="pt-1">
+                <Row gutter={[20, 16]} className="pt-1">
                   {page.map((job, jobIndex) => (
-                    <Col key={job.id} xs={24} sm={12} md={12} lg={8} xl={8}>
+                    <Col key={job.id} xs={24} sm={12} md={8} lg={8} xl={8}>
                       <JobCard job={job} tone={(jobIndex + pageIndex * jobsPerPage) % 2 === 0 ? 'white' : 'gray'} />
                     </Col>
                   ))}

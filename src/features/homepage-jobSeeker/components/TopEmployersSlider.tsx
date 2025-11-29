@@ -141,8 +141,11 @@ const TopEmployersSlider: React.FC = () => {
   };
 
   return (
-    <section className="px-4">
-      <div className="mx-auto max-w-[120rem] overflow-hidden rounded-3xl shadow-[0_30px_90px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+    <section className="px-0 py-5 md:py-7 flex justify-center">
+      <div
+        className="w-full overflow-hidden rounded-[2.5rem] shadow-[0_30px_90px_rgba(15,23,42,0.08)] ring-1 ring-slate-100"
+        style={{ width: "min(1400px, calc(100vw - 64px))" }}
+      >
         <div
           className="relative min-h-[140px] bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 text-white"
           style={{
@@ -163,7 +166,7 @@ const TopEmployersSlider: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 md:p-10">
+        <div className="bg-white p-5 md:p-8">
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="uppercase text-xs tracking-[0.35em] text-blue-500">Đối tác</p>
@@ -173,9 +176,13 @@ const TopEmployersSlider: React.FC = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => navigate("/employer")} type="default">
-                Xem tất cả
-              </Button>
+              <button
+                type="button"
+                onClick={() => navigate("/employer")}
+                className="inline-flex items-center gap-1 font-semibold text-blue-600 transition hover:text-blue-800"
+              >
+                Xem tất cả &rarr;
+              </button>
             </div>
           </div>
 

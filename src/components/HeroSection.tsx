@@ -106,7 +106,7 @@ const HeroSection: React.FC = () => {
 
   return (
     <section
-      className="relative pt-28 pb-16 overflow-hidden"
+      className="relative py-14 md:py-16 overflow-hidden"
       style={{
         backgroundImage: `url(${HomeBackground})`,
         backgroundSize: "cover",
@@ -115,7 +115,7 @@ const HeroSection: React.FC = () => {
     >
       <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-white/10 pointer-events-none" />
 
-      <div className="relative max-w-6xl mx-auto px-4 space-y-6">
+      <div className="relative max-w-6xl mx-auto px-4 py-6 space-y-5">
         <div className="flex flex-col md:flex-row gap-4 items-center bg-white rounded-2xl shadow-2xl border border-gray-200 p-6">
           <Input
             size="large"
