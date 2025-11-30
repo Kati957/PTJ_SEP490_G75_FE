@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../features/auth/hooks";
 import { Button, Dropdown, Avatar, message } from "antd";
@@ -9,9 +9,10 @@ import {
   MenuFoldOutlined,
 } from "@ant-design/icons";
 import { ROLES } from "../../constants/roles";
-import { useDispatch } from "react-redux";
 import { logout } from "../../features/auth/slice";
 import { removeAccessToken } from "../../services/baseService";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { fetchEmployerProfile } from "../../features/employer/slice/profileSlice";
 
 const LogoWhite = "/vite.svg";
 
@@ -23,9 +24,28 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
   onToggleSidebar,
 }) => {
   const { user } = useAuth();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const employerProfile = useAppSelector((state) => state.profile.profile);
+  const employerProfileLoading = useAppSelector((state) => state.profile.loading);
+  const shouldLoadEmployerProfile =
+    !!user && (user.roles.includes(ROLES.EMPLOYER) || user.roles.includes(ROLES.ADMIN));
+
+  useEffect(() => {
+    if (shouldLoadEmployerProfile && !employerProfile && !employerProfileLoading) {
+      dispatch(fetchEmployerProfile());
+    }
+  }, [dispatch, employerProfile, employerProfileLoading, shouldLoadEmployerProfile]);
+
+  const fallbackAvatar = (user as any)?.avatarUrl || user?.avatar || undefined;
+  const avatarSrc = employerProfile?.avatarUrl || fallbackAvatar;
+  const displayName =
+    employerProfile?.displayName ||
+    employerProfile?.contactName ||
+    employerProfile?.username ||
+    (user as any)?.fullName ||
+    user?.username;
 
   const handleLogout = () => {
     dispatch(logout());
@@ -86,8 +106,15 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
               onClick={(e) => e.preventDefault()}
               className="flex items-center space-x-2 text-white hover:text-gray-200"
             >
-              <Avatar size="small" icon={<UserOutlined />} className="bg-blue-600" />
-              <span className="font-medium">{user.username}</span>
+              <Avatar
+                size="small"
+                src={avatarSrc}
+                icon={!avatarSrc ? <UserOutlined /> : undefined}
+                className="bg-blue-600"
+              >
+                {!avatarSrc && displayName ? displayName.charAt(0).toUpperCase() : null}
+              </Avatar>
+              <span className="font-medium">{displayName}</span>
               <DownOutlined style={{ fontSize: "10px" }} />
             </a>
           </Dropdown>

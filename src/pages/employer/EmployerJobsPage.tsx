@@ -427,7 +427,7 @@ const EmployerJobsPage: React.FC = () => {
       ),
     },
     {
-      title: " M?c l??ng",
+      title: "Mức lương",
       dataIndex: "salaryDisplay",
       key: "salaryDisplay",
       width: "15%",
