@@ -2,7 +2,11 @@
 import { createJobSeekerPost, getJobById, updateJobSeekerPost, deleteJobSeekerPost, getJobSuggestions } from '../services';
 import type { CreateJobSeekerPostPayload, JobSeekerPost, UpdateJobSeekerPostPayload } from '../types';
 import type { Job } from '../../../types';
-import { getCompanyLogoSrc, getJobDetailCached } from '../../../utils/jobPostHelpers';
+import {
+  formatSalaryText,
+  getCompanyLogoSrc,
+  getJobDetailCached,
+} from '../../../utils/jobPostHelpers';
 
 interface JobSeekerPostingState {
   create: {
@@ -123,24 +127,30 @@ export const fetchPostSuggestions = createAsyncThunk(
       const response = await getJobSuggestions(jobSeekerPostId);
 
       if (response.success && Array.isArray(response.data)) {
-        const mappedJobs: Job[] = await Promise.all(
-          response.data.map(async (item) => {
-            const detail = await getJobDetailCached(item.employerPostId?.toString?.() ?? '');
-            const logoSrc = getCompanyLogoSrc(detail?.companyLogo);
+          const mappedJobs: Job[] = await Promise.all(
+            response.data.map(async (item) => {
+              const detail = await getJobDetailCached(item.employerPostId?.toString?.() ?? '');
+              const logoSrc = getCompanyLogoSrc(detail?.companyLogo);
+              const salaryText = formatSalaryText(
+                detail?.salaryMin,
+                detail?.salaryMax,
+                detail?.salaryType,
+                detail?.salaryDisplay
+              );
 
-            return {
-              id: item.employerPostId.toString(),
-              title: item.title || 'Cong viec goi y',
-              description: item.description || '',
-              company: item.employerName || null,
-              location: item.location || null,
-              salary: 'Thoa thuan',
-              updatedAt: item.createdAt,
-              companyLogo: logoSrc,
-              isHot: item.matchPercent >= 90,
-            };
-          })
-        );
+              return {
+                id: item.employerPostId.toString(),
+                title: item.title || 'Cong viec goi y',
+                description: item.description || '',
+                company: item.employerName || null,
+                location: item.location || null,
+                salary: salaryText,
+                updatedAt: item.createdAt,
+                companyLogo: logoSrc,
+                isHot: item.matchPercent >= 90,
+              };
+            })
+          );
         return mappedJobs;
       }
       return [];
