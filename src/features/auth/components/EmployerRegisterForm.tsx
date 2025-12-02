@@ -7,13 +7,26 @@ import { useNavigate } from 'react-router-dom';
 
 const phoneRegex = /^0\d{9}$/;
 
+type EmployerRegisterFormValues = {
+  companyName: string;
+  companyDescription?: string;
+  contactPerson?: string;
+  contactPhone: string;
+  contactEmail?: string;
+  address?: string;
+  website?: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
 const EmployerRegisterForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: EmployerRegisterFormValues) => {
     setLoading(true);
     try {
       const payload: RegisterEmployerPayload = {
@@ -43,8 +56,13 @@ const EmployerRegisterForm: React.FC = () => {
       <div className="flex h-full w-full flex-col items-center justify-center rounded-3xl border border-blue-100 bg-white/90 p-8 text-center shadow-xl">
         <Alert
           type="success"
+<<<<<<< Updated upstream
           message="Đăng ký nhà tuyển dụng thành công!"
           description="Kiểm tra email để xác minh tài khoản trước khi đăng nhập quản trị."
+=======
+          message="Gửi yêu cầu đăng ký thành công."
+          description="Vui lòng chờ quản trị viên phê duyệt. Sau khi được duyệt, email xác thực sẽ được gửi tới bạn."
+>>>>>>> Stashed changes
           showIcon
           className="mb-6 text-left"
         />
