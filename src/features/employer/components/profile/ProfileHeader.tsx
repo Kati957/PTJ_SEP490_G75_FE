@@ -1,5 +1,5 @@
 ﻿import React, { type ReactNode } from 'react';
-import { Card, Avatar, Typography, Skeleton, Empty, Rate, Space, Divider } from 'antd';
+import { Card, Avatar, Typography, Skeleton, Empty, Space, Divider } from 'antd';
 import {
   MailOutlined,
   PhoneOutlined,
@@ -15,7 +15,6 @@ const { Title, Text, Paragraph } = Typography;
 interface ProfileHeaderProps {
   profile: Profile | null;
   loading: boolean;
-  ratingCount?: number;
   isVerified?: boolean;
   locationLabel?: string;
 }
@@ -23,7 +22,6 @@ interface ProfileHeaderProps {
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   profile,
   loading,
-  ratingCount = 0,
   isVerified,
   locationLabel
 }) => {
@@ -44,12 +42,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   }
 
   const initial = profile.displayName?.charAt(0).toUpperCase() ?? 'E';
-  const averageRating =
-    profile.averageRating ??
-    (profile.ratings && profile.ratings.length > 0
-      ? profile.ratings.reduce((total, rating) => total + Number(rating.ratingValue ?? 0), 0) /
-        profile.ratings.length
-      : undefined);
 
   const locationText = locationLabel || profile.location || profile.address;
 
@@ -110,14 +102,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                           <Text className={`text-sm ${isVerified ? 'text-green-600' : 'text-red-500'}`}>
               {isVerified ? 'Tài khoản đã xác thực' : 'Tài khoản chưa xác thực'}
             </Text>
-            {averageRating !== undefined && (
-              <div className="mt-3 flex flex-col items-center">
-                <Rate allowHalf disabled value={Math.round(averageRating * 2) / 2} />
-                <Text type="secondary" className="mt-1">
-                  {averageRating.toFixed(1)} / 5.0 ({ratingCount} đánh giá)
-                </Text>
-              </div>
-            )}
           </div>
           <Divider />
           <Paragraph className="text-gray-600 text-center">
