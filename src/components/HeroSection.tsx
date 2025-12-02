@@ -158,7 +158,7 @@ const HeroSection: React.FC = () => {
             onClick={handleSearchNavigate}
           >
             <SearchOutlined />
-            <span className="ml-1">Tim kiem</span>
+            <span className="ml-1">Tìm kiếm</span>
           </Button>
         </div>
 

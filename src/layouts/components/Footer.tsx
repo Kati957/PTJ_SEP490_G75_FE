@@ -33,8 +33,6 @@ const columns = [
   }
 ];
 
-const socialIcons = ['facebook-f', 'twitter', 'instagram', 'linkedin-in'];
-
 export const Footer: React.FC = () => {
   return (
     <footer className="bg-[#2d2f33] text-slate-200 mt-12">
@@ -49,7 +47,9 @@ export const Footer: React.FC = () => {
 
           {columns.map((column) => (
             <div key={column.title} className="space-y-3">
-              <h4 className="text-sm font-semibold uppercase text-white tracking-widest">{column.title}</h4>
+              <h4 className="text-sm font-semibold uppercase text-white tracking-widest">
+                {column.title}
+              </h4>
               <ul className="space-y-2 text-sm text-slate-300">
                 {column.links.map((link) => (
                   <li key={link.href}>
@@ -61,21 +61,6 @@ export const Footer: React.FC = () => {
               </ul>
             </div>
           ))}
-
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold uppercase text-white tracking-widest">Theo dõi chúng tôi</h4>
-            <div className="flex items-center gap-3 text-lg">
-              {socialIcons.map((icon) => (
-                <a
-                  key={icon}
-                  href="#!"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-slate-200 transition hover:border-white hover:text-white"
-                >
-                  <i className={`fab fa-${icon}`} aria-hidden="true"></i>
-                </a>
-              ))}
-            </div>
-          </div>
         </div>
 
         <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-slate-400">
