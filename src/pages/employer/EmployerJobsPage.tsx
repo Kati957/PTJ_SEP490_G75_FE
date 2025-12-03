@@ -37,15 +37,21 @@ import {
   UnlockOutlined,
   MoreOutlined,
   ReloadOutlined,
+  HeartOutlined,
+  HeartFilled,
 } from "@ant-design/icons";
 import { useAuth } from "../../features/auth/hooks";
 import jobPostService from "../../features/job/jobPostService";
-import type { JobPostView } from "../../features/job/jobTypes";
+import type { JobPostView, JobSuggestionDto } from "../../features/job/jobTypes";
 import { useCategories } from "../../features/category/hook";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../app/store";
 import { JobPostDetailModal } from "../../features/job/components/employer/JobPostDetailModal";
 import { jobApplicationService } from "../../features/applyJob-employer/jobApplicationService";
+import jobSeekerCvService from "../../features/jobSeekerCv/services";
+import type { JobSeekerCv } from "../../features/jobSeekerCv/types";
+import { jobSeekerPostService } from "../../features/candidate/services";
+import type { SaveCandidateDto } from "../../features/candidate/type";
 import type { ApplicationSummaryDto } from "../../features/applyJob-jobSeeker/type";
 import { formatSalaryText } from "../../utils/jobPostHelpers";
 import { getRepresentativeSalaryValue } from "../../utils/salary";
@@ -70,11 +76,12 @@ const EmployerJobsPage: React.FC = () => {
 
   const [isSuggestionModalVisible, setIsSuggestionModalVisible] =
     useState(false);
-  const [suggestionList, setSuggestionList] = useState<any[]>([]);
+  const [suggestionList, setSuggestionList] = useState<JobSuggestionDto[]>([]);
   const [isSuggestionLoading, setIsSuggestionLoading] = useState(false);
   const [isResettingSuggestions, setIsResettingSuggestions] = useState(false);
   const [currentJobTitle, setCurrentJobTitle] = useState("");
   const [currentJobId, setCurrentJobId] = useState<number | null>(null);
+  const [savingCandidateIds, setSavingCandidateIds] = useState<number[]>([]);
   const [applicationSummary, setApplicationSummary] =
     useState<ApplicationSummaryDto | null>(null);
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
@@ -130,22 +137,64 @@ const EmployerJobsPage: React.FC = () => {
     fetchApplicationSummary();
   }, [user]);
 
+  type SuggestionsResponse = Awaited<
+    ReturnType<typeof jobPostService.getSuggestions>
+  >;
+  type ShortlistResponse = Awaited<
+    ReturnType<typeof jobSeekerPostService.getShortlistedCandidates>
+  >;
+
   const loadSuggestions = useCallback(async (postId: number) => {
     setIsSuggestionLoading(true);
     setSuggestionList([]);
-    try {
-      const res: any = await jobPostService.getSuggestions(postId);
-      if (res && res.success && Array.isArray(res.data)) {
-        setSuggestionList(res.data);
-      } else {
-        setSuggestionList([]);
-      }
-    } catch (error) {
-      console.error("Lỗi tải gợi ý", error);
+
+  const [suggestionsRes, savedRes] = await Promise.allSettled([
+      jobPostService.getSuggestions(postId),
+      postId
+        ? jobSeekerPostService.getShortlistedCandidates(postId)
+        : Promise.resolve({ success: false } as ShortlistResponse),
+  ]);
+
+  let fetchedSuggestions: JobSuggestionDto[] = [];
+  if (
+    suggestionsRes.status === "fulfilled" &&
+    suggestionsRes.value &&
+    suggestionsRes.value.success &&
+    Array.isArray(suggestionsRes.value.data)
+  ) {
+    fetchedSuggestions = suggestionsRes.value.data;
+  }
+
+  let savedSet = new Set<number>();
+  if (
+    savedRes.status === "fulfilled" &&
+    savedRes.value &&
+    savedRes.value.success
+  ) {
+    savedSet = new Set(savedRes.value.data.map((item) => item.jobSeekerId));
+  }
+
+    setSavedCandidateIds(savedSet);
+
+    setSuggestionList(
+      fetchedSuggestions.map((item) => ({
+        ...item,
+        isSaved:
+          savedSet.has(item.seekerUserId ?? item.jobSeekerPostId ?? 0) ||
+          Boolean(item.isSaved),
+      }))
+    );
+
+    if (suggestionsRes.status === "rejected") {
+      console.error("Lỗi tải gợi ý", suggestionsRes.reason);
       message.error("Không thể tải gợi ý AI.");
-    } finally {
-      setIsSuggestionLoading(false);
     }
+
+    if (savedRes.status === "rejected") {
+      console.error("Lỗi tải danh sách đã lưu", savedRes.reason);
+    }
+
+    setIsSuggestionLoading(false);
   }, []);
 
   const handleShowSuggestions = (postId: number, jobTitle: string) => {
@@ -175,9 +224,151 @@ const EmployerJobsPage: React.FC = () => {
     }
   };
 
+  const [selectedSuggestedCandidate, setSelectedSuggestedCandidate] =
+    useState<JobSuggestionDto | null>(null);
+  const [cvModal, setCvModal] = useState<{
+    visible: boolean;
+    loading: boolean;
+    cv: JobSeekerCv | null;
+    error: string | null;
+  }>({
+    visible: false,
+    loading: false,
+    cv: null,
+    error: null,
+  });
+  const [savedCandidateIds, setSavedCandidateIds] = useState<Set<number>>(
+    new Set()
+  );
+
+  const handleViewSuggestedJobSeekerPost = (suggestion: JobSuggestionDto) => {
+    setSelectedSuggestedCandidate(suggestion);
+  };
+
+  const getCvIdFromSuggestion = (suggestion?: JobSuggestionDto | null) => {
+    return suggestion?.selectedCvId ?? suggestion?.cvId ?? null;
+  };
+
+  const getSeekerId = (suggestion: JobSuggestionDto) =>
+    suggestion.seekerUserId ?? suggestion.jobSeekerPostId ?? null;
+
+  const isSuggestionSaved = (suggestion: JobSuggestionDto) => {
+    const seekerId = getSeekerId(suggestion);
+    return seekerId ? savedCandidateIds.has(seekerId) : suggestion.isSaved ?? false;
+  };
+
+  const selectedCvId = getCvIdFromSuggestion(selectedSuggestedCandidate);
+
+  const handleViewCandidateCv = async () => {
+    const cvId = getCvIdFromSuggestion(selectedSuggestedCandidate);
+    if (!cvId) {
+      message.info("Ứng viên này chưa đính kèm CV.");
+      return;
+    }
+    setCvModal({ visible: true, loading: true, cv: null, error: null });
+    try {
+      const cv = await jobSeekerCvService.fetchCvForEmployer(cvId);
+      setCvModal({ visible: true, loading: false, cv, error: null });
+    } catch {
+      setCvModal({
+        visible: true,
+        loading: false,
+        cv: null,
+        error: "Không thể tải CV. Vui lòng thử lại.",
+      });
+    }
+  };
+
+  const getCandidateKey = useCallback(
+    (suggestion: JobSuggestionDto) =>
+      suggestion.jobSeekerPostId ?? suggestion.seekerUserId ?? suggestion.employerPostId,
+    []
+  );
+
+  const handleToggleSaveCandidate = async (suggestion: JobSuggestionDto) => {
+    if (!currentJobId) {
+      message.error("Không xác định bài đăng để lưu ứng viên.");
+      return;
+    }
+
+    if (!user) {
+      message.error("Bạn cần đăng nhập để lưu ứng viên.");
+      return;
+    }
+
+    const jobSeekerId = suggestion.seekerUserId;
+    if (!jobSeekerId) {
+      message.error("Ứng viên không xác định.");
+      return;
+    }
+
+    const candidateKey = getCandidateKey(suggestion);
+    if (savingCandidateIds.includes(candidateKey)) {
+      return;
+    }
+
+    setSavingCandidateIds((prev) => [...prev, candidateKey]);
+
+    const payload: SaveCandidateDto = {
+      employerId: user.id,
+      employerPostId: currentJobId,
+      jobSeekerId,
+    };
+
+    try {
+      if (suggestion.isSaved) {
+        await jobSeekerPostService.unsaveCandidate(payload);
+        message.success("Đã bỏ lưu ứng viên.");
+      } else {
+        await jobSeekerPostService.saveCandidate(payload);
+        message.success("Đã lưu ứng viên.");
+      }
+
+      setSuggestionList((prev) =>
+        prev.map((item) =>
+          getCandidateKey(item) === candidateKey
+            ? { ...item, isSaved: !item.isSaved }
+            : item
+        )
+      );
+
+      setSelectedSuggestedCandidate((prev) =>
+        prev && getCandidateKey(prev) === candidateKey
+          ? { ...prev, isSaved: !prev.isSaved }
+          : prev
+      );
+      setSavedCandidateIds((prev) => {
+        const copy = new Set(prev);
+        if (copy.has(jobSeekerId)) copy.delete(jobSeekerId);
+        else copy.add(jobSeekerId);
+        return copy;
+      });
+    } catch (error: any) {
+      message.error(
+        error?.response?.data?.message ||
+          "Không thể cập nhật trạng thái lưu ứng viên."
+      );
+    } finally {
+      setSavingCandidateIds((prev) =>
+        prev.filter((id) => id !== candidateKey)
+      );
+    }
+  };
+
+  const handleSaveButtonClick = (
+    event: React.MouseEvent<HTMLElement>,
+    suggestion: JobSuggestionDto
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    handleToggleSaveCandidate(suggestion);
+  };
+
+
   const handleCloseSuggestionModal = () => {
     setIsSuggestionModalVisible(false);
     setCurrentJobId(null);
+    setSelectedSuggestedCandidate(null);
   };
 
   const processedJobs = useMemo(() => {
@@ -728,84 +919,275 @@ const EmployerJobsPage: React.FC = () => {
           width={700}
           centered
         >
+          {selectedSuggestedCandidate && (
+            <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-base font-semibold text-blue-700">
+                    {selectedSuggestedCandidate.title}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {selectedSuggestedCandidate.preferredLocation ||
+                      selectedSuggestedCandidate.location ||
+                      "Địa điểm chưa có"}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type={
+                      isSuggestionSaved(selectedSuggestedCandidate)
+                        ? "primary"
+                        : "default"
+                    }
+                    size="small"
+                    icon={
+                      isSuggestionSaved(selectedSuggestedCandidate)
+                        ? <HeartFilled />
+                        : <HeartOutlined />
+                    }
+                    onClick={() => {
+                      handleToggleSaveCandidate(selectedSuggestedCandidate);
+                    }}
+                  >
+                    {isSuggestionSaved(selectedSuggestedCandidate)
+                      ? "Đã lưu"
+                      : "Lưu ứng viên"}
+                  </Button>
+                  {selectedCvId && (
+                    <Button
+                      type="default"
+                      size="small"
+                      icon={<FileTextOutlined />}
+                      onClick={handleViewCandidateCv}
+                    >
+                      Xem CV
+                    </Button>
+                  )}
+                  <Button
+                    type="text"
+                    size="small"
+                    onClick={() => setSelectedSuggestedCandidate(null)}
+                  >
+                    Đóng
+                  </Button>
+                </div>
+              </div>
+              <div className="mt-3 text-sm text-gray-600">
+                {selectedSuggestedCandidate.description ||
+                  "Không có mô tả chi tiết."}
+              </div>
+              <div className="mt-3 text-xs text-gray-500">
+                Độ phù hợp:{" "}
+                <strong>
+                  {Math.round(
+                    (selectedSuggestedCandidate.matchPercent ?? 0)
+                  )}
+                  %
+                </strong>
+              </div>
+            </div>
+          )}
           <List
             loading={isSuggestionLoading}
             itemLayout="vertical"
             dataSource={suggestionList}
-            locale={{ emptyText: "Khong co goi y phu hop" }}
-            renderItem={(item) => (
-              <List.Item
-                key={item.employerPostId}
-                className="hover:bg-gray-50 transition-colors border-b last:border-0 p-4"
-                extra={
-                  <div className="flex flex-col items-center justify-center pl-4 border-l">
-                    <Progress
-                      type="circle"
-                      percent={item.matchPercent}
-                      width={60}
-                      strokeColor={
-                        item.matchPercent >= 80
-                          ? "#52c41a"
-                          : item.matchPercent >= 50
-                          ? "#faad14"
-                          : "#ff4d4f"
-                      }
-                      format={(percent) => (
-                        <span className="text-sm font-bold">{percent}%</span>
-                      )}
-                    />
-                    <span className="text-xs text-gray-500 mt-1">
-                      Độ phù hợp
-                    </span>
-                  </div>
-                }
-              >
-                <List.Item.Meta
-                  avatar={
-                    <Avatar
-                      icon={<UserOutlined />}
-                      style={{ backgroundColor: "#1890ff" }}
-                    />
+            locale={{ emptyText: "Không có gợi ý phù hợp" }}
+            renderItem={(item) => {
+              const locationLabel =
+                item.preferredLocation ||
+                item.location ||
+                "Chưa cập nhật địa điểm";
+
+                  const candidateKey = getCandidateKey(item);
+                  const isSaved = isSuggestionSaved(item);
+
+              return (
+                <List.Item
+                  key={item.jobSeekerPostId ?? item.employerPostId ?? candidateKey}
+                  className="hover:bg-gray-50 transition-colors border-b last:border-0 p-4"
+                  extra={
+                    <div className="flex flex-col items-center justify-center pl-4 border-l">
+                      <Progress
+                        type="circle"
+                        percent={item.matchPercent}
+                        width={60}
+                        strokeColor={
+                          item.matchPercent >= 80
+                            ? "#52c41a"
+                            : item.matchPercent >= 50
+                            ? "#faad14"
+                            : "#ff4d4f"
+                        }
+                        format={(percent) => (
+                          <span className="text-sm font-bold">{percent}%</span>
+                        )}
+                      />
+                      <span className="text-xs text-gray-500 mt-1">
+                        Độ phù hợp
+                      </span>
+                    </div>
                   }
-                  title={
+                  actions={[
+                    <Tooltip
+                      key="save-candidate"
+                      title={item.isSaved ? "Bỏ lưu ứng viên" : "Lưu ứng viên"}
+                    >
+                      <Button
+                        size="small"
+                        type={isSaved ? "primary" : "default"}
+                        icon={isSaved ? <HeartFilled /> : <HeartOutlined />}
+                        onClick={(event) => handleSaveButtonClick(event, item)}
+                        loading={savingCandidateIds.includes(candidateKey)}
+                      >
+                        {item.isSaved ? "Đã lưu" : "Lưu ứng viên"}
+                      </Button>
+                    </Tooltip>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    avatar={
+                      <Avatar
+                        icon={<UserOutlined />}
+                        style={{ backgroundColor: "#1890ff" }}
+                      />
+                    }
+                    title={
                     <a
                       href="#"
                       className="text-base font-semibold text-blue-700 hover:underline"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        handleViewSuggestedJobSeekerPost(item);
+                      }}
                     >
                       {item.title}
                     </a>
-                  }
-                  description={
-                    <div className="space-y-1 mt-1">
-                      <div className="flex items-start gap-2 text-gray-600 text-sm">
-                        <EnvironmentOutlined className="mt-1 shrink-0" />
-                        <span>
-                          {item.location || "Chưa cập nhật địa điểm"}
-                        </span>
+                    }
+                    description={
+                      <div className="space-y-1 mt-1">
+                        <div className="flex items-start gap-2 text-gray-600 text-sm">
+                          <EnvironmentOutlined className="mt-1 shrink-0" />
+                          <span>{locationLabel}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600 text-sm">
+                          <PhoneOutlined />
+                          <span>
+                            Liên hệ:{" "}
+                            <Text strong copyable>
+                              {item.phoneContact || "N/A"}
+                            </Text>
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-2">
+                          Đăng bài: {item.employerName}{" "}
+                          {item.createdAt
+                            ? new Date(item.createdAt).toLocaleDateString(
+                                "vi-VN"
+                              )
+                            : ""}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600 text-sm">
-                        <PhoneOutlined />
-                        <span>
-                          Liên hệ:{" "}
-                          <Text strong copyable>
-                            {item.phoneContact || "N/A"}
-                          </Text>
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-400 mt-2">
-                        Đăng bởi: {item.employerName} •{" "}
-                        {item.createdAt
-                          ? new Date(item.createdAt).toLocaleDateString(
-                              "vi-VN"
-                            )
-                          : ""}
-                      </div>
-                    </div>
-                  }
-                />
-              </List.Item>
-            )}
+                    }
+                  />
+                </List.Item>
+              );
+            }}
           />
+        </Modal>
+
+        <Modal
+          title={cvModal.cv?.cvTitle || "CV ứng viên"}
+          open={cvModal.visible}
+          footer={null}
+          onCancel={() =>
+            setCvModal({ visible: false, loading: false, cv: null, error: null })
+          }
+          width={680}
+        >
+          {cvModal.loading ? (
+            <p>Đang tải CV...</p>
+          ) : cvModal.error ? (
+            <p className="text-red-500">{cvModal.error}</p>
+          ) : cvModal.cv ? (
+            <div className="space-y-4 text-sm">
+              <div className="p-3 rounded-lg border bg-gray-50">
+                <h3 className="font-semibold text-gray-700 mb-1">
+                  Thông tin chung
+                </h3>
+                <p>
+                  <span className="font-semibold">Tiêu đề:</span>{" "}
+                  {cvModal.cv.cvTitle}
+                </p>
+                {cvModal.cv.preferredJobType && (
+                  <p>
+                    <span className="font-semibold">Công việc mong muốn:</span>{" "}
+                    {cvModal.cv.preferredJobType}
+                  </p>
+                )}
+                {cvModal.cv.preferredLocationName && (
+                  <p>
+                    <span className="font-semibold">Khu vực mong muốn:</span>{" "}
+                    {cvModal.cv.preferredLocationName}
+                  </p>
+                )}
+                {cvModal.cv.contactPhone && (
+                  <p>
+                    <span className="font-semibold">Liên hệ:</span>{" "}
+                    {cvModal.cv.contactPhone}
+                  </p>
+                )}
+              </div>
+
+              {(cvModal.cv.skillSummary || cvModal.cv.skills) && (
+                <div className="p-3 rounded-lg border bg-gray-50">
+                  <h3 className="font-semibold text-gray-700 mb-1">
+                    Kỹ năng
+                  </h3>
+                  {cvModal.cv.skillSummary && (
+                    <p className="text-gray-700">{cvModal.cv.skillSummary}</p>
+                  )}
+                  {cvModal.cv.skills && (
+                    <div className="mt-2">
+                      {cvModal.cv.skills.split(",").map((skill, idx) => (
+                        <Tag key={idx} color="blue" className="mb-1">
+                          {skill.trim()}
+                        </Tag>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(cvModal.cv as any).experience && (
+                <div className="p-3 rounded-lg border bg-gray-50">
+                  <h3 className="font-semibold text-gray-700 mb-1">
+                    Kinh nghiệm
+                  </h3>
+                  <p className="whitespace-pre-wrap text-gray-700">
+                    {(cvModal.cv as any).experience}
+                  </p>
+                </div>
+              )}
+
+              {(cvModal.cv as any).education && (
+                <div className="p-3 rounded-lg border bg-gray-50">
+                  <h3 className="font-semibold text-gray-700 mb-1">Học vấn</h3>
+                  <p className="whitespace-pre-wrap text-gray-700">
+                    {(cvModal.cv as any).education}
+                  </p>
+                </div>
+              )}
+
+              <div className="text-xs text-gray-500 text-right">
+                Cập nhật:{" "}
+                {cvModal.cv.updatedAt
+                  ? new Date(cvModal.cv.updatedAt).toLocaleDateString("vi-VN")
+                  : "N/A"}
+              </div>
+            </div>
+          ) : (
+            <p>Chưa có dữ liệu CV.</p>
+          )}
         </Modal>
       </div>
     </div>

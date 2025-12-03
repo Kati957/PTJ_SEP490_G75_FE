@@ -20,8 +20,8 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DeleteOutlined,
-  StarOutlined,
   DownOutlined,
+  StarOutlined,
 } from "@ant-design/icons";
 import type { TableColumnsType } from "antd";
 import { jobApplicationService } from "../jobApplicationService";
@@ -31,8 +31,6 @@ import { useAuth } from "../../auth/hooks";
 import type { JobApplicationResultDto } from "../../applyJob-jobSeeker/type";
 import type { ShortlistedCandidateDto } from "../../candidate/type";
 import type { JobSeekerCv } from "../../jobSeekerCv/types";
-import RatingModal from "../../../components/RatingModal";
-
 const { Title } = Typography;
 const { TextArea } = Input;
 
@@ -109,18 +107,6 @@ const CandidateListPage: React.FC = () => {
     loading: false,
     cv: null,
     error: null,
-  });
-
-  const [ratingModal, setRatingModal] = useState<{
-    visible: boolean;
-    rateeId: number;
-    submissionId: number;
-    rateeName: string;
-  }>({
-    visible: false,
-    rateeId: 0,
-    submissionId: 0,
-    rateeName: "",
   });
 
   // ⭐ NEW: modal hiển thị đầy đủ mô tả / ghi chú
@@ -438,35 +424,6 @@ const CandidateListPage: React.FC = () => {
       },
     },
     {
-      title: "Đánh giá",
-      key: "rating",
-      width: 90,
-      render: (_, record) => {
-        const currentStatus = record.status?.toLowerCase();
-        if (currentStatus !== "accepted" && currentStatus !== "completed") {
-          return null;
-        }
-        return (
-          <Tooltip title="Đánh giá ứng viên">
-            <Button
-              type="text"
-              icon={
-                <StarOutlined style={{ color: "#faad14", fontSize: 18 }} />
-              }
-              onClick={() =>
-                setRatingModal({
-                  visible: true,
-                  rateeId: record.jobSeekerId,
-                  submissionId: record.candidateListId,
-                  rateeName: record.username || "",
-                })
-              }
-            />
-          </Tooltip>
-        );
-      },
-    },
-    {
       title: "CV",
       key: "profile",
       width: 80,
@@ -545,20 +502,6 @@ const CandidateListPage: React.FC = () => {
       width: 110,
       render: (date: string) =>
         date ? new Date(date).toLocaleDateString("vi-VN") : "-",
-    },
-    {
-      title: "CV",
-      key: "profile",
-      width: 80,
-      fixed: "right",
-      render: (_, record) => (
-        <Button
-          type="link"
-          onClick={() => handleViewCv(getCvIdFromRecord(record))}
-        >
-          Xem CV
-        </Button>
-      ),
     },
   ];
 
@@ -762,17 +705,8 @@ const CandidateListPage: React.FC = () => {
         <p style={{ whiteSpace: "pre-wrap" }}>{descriptionModal.content}</p>
       </Modal>
 
-      <RatingModal
-        visible={ratingModal.visible}
-        onCancel={() => setRatingModal({ ...ratingModal, visible: false })}
-        onSuccess={() => setRatingModal({ ...ratingModal, visible: false })}
-        rateeId={ratingModal.rateeId}
-        submissionId={ratingModal.submissionId}
-        rateeName={ratingModal.rateeName}
-      />
-
-    </div>
-  );
+  </div>
+);
 };
 
 export default CandidateListPage;

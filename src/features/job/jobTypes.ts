@@ -80,17 +80,33 @@ export interface EmployerPostImage {
   url: string;
 }
 
-export interface JobAiSuggestion {
-  title?: string;
+export interface JobSuggestionDto {
+  employerPostId: number;
+  title: string;
+  matchPercent: number;
+  phoneContact: string;
+  employerName: string;
+  createdAt: string;
+  location?: string | null;
+  preferredLocation?: string | null;
+  categoryName?: string;
+  requirements?: string;
   seekerName?: string;
-  preferredLocation?: string;
   description?: string;
-  matchPercent?: number;
+  seekerUserId?: number;
+  jobSeekerPostId?: number;
+  age?: number;
+  gender?: string;
+  preferredWorkHours?: string;
+  isSaved?: boolean;
+  rawScore?: number;
+  selectedCvId?: number | null;
+  cvId?: number | null;
 }
 
 export interface JobSuggestionResponse {
   success: boolean;
-  data: JobAiSuggestion[];
+  data: JobSuggestionDto[];
 }
 
 export interface PaginatedJobResponse {
@@ -166,14 +182,3 @@ export interface EmployerApplicationListResponse {
   data: EmployerApplicationDto[];
 }
 
-export interface JobSuggestionDto {
-  employerPostId: number;
-  title: string;
-  location: string;
-  matchPercent: number;
-  phoneContact: string;
-  employerName: string;
-  createdAt: string;
-  categoryName?: string;
-  requirements?: string;
-}

@@ -19,7 +19,11 @@ const { Option } = Select;
 
 const slideHeightClasses = "h-64 md:h-72 lg:h-[300px]";
 
-const SlidePrimary: React.FC = () => (
+type SlidePrimaryProps = {
+  onViewMore: () => void;
+};
+
+const SlidePrimary: React.FC<SlidePrimaryProps> = ({ onViewMore }) => (
   <div
     className={`relative ${slideHeightClasses} flex items-center justify-center overflow-hidden bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-800 text-white`}
   >
@@ -29,35 +33,15 @@ const SlidePrimary: React.FC = () => (
         Part-Time Job Finder
       </h2>
       <p className="mt-2 text-lg md:text-xl text-blue-100">
-        Ket noi viec lam nhanh tren moi nen tang
+        Kết nối việc làm nhanh chóng, dễ dàng
       </p>
       <Button
         type="primary"
         size="large"
         className="mt-6 bg-white text-sky-700 border-none hover:bg-blue-100"
+        onClick={onViewMore}
       >
-        Tim hieu them
-      </Button>
-    </div>
-  </div>
-);
-
-const SlideSecondary: React.FC = () => (
-  <div
-    className={`relative ${slideHeightClasses} flex items-center justify-center overflow-hidden bg-gradient-to-r from-blue-900 via-slate-900 to-sky-900 text-white`}
-  >
-    <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_bottom,_rgba(56,189,248,0.4),_transparent)]" />
-    <div className="text-center z-10 px-6">
-      <h2 className="text-3xl md:text-4xl font-bold">Tim viec sieu toc</h2>
-      <p className="mt-2 text-lg md:text-xl text-blue-100">
-        Hang ngan co hoi moi duoc cap nhat moi ngay
-      </p>
-      <Button
-        type="primary"
-        size="large"
-        className="mt-6 bg-sky-500 border-none hover:bg-sky-400"
-      >
-        Xem ngay
+        Xem thêm
       </Button>
     </div>
   </div>
@@ -102,6 +86,10 @@ const HeroSection: React.FC = () => {
     }
 
     navigate("/viec-lam", { state: nextFilters });
+  };
+
+  const handleViewMoreJobs = () => {
+    navigate("/viec-lam");
   };
 
   return (
@@ -226,10 +214,7 @@ const HeroSection: React.FC = () => {
                 />
               </div>
               <div>
-                <SlidePrimary />
-              </div>
-              <div>
-                <SlideSecondary />
+                <SlidePrimary onViewMore={handleViewMoreJobs} />
               </div>
             </Carousel>
           </div>

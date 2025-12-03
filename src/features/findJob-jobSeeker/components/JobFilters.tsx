@@ -6,7 +6,7 @@ import { salaryTypeOptions } from "../../../utils/salary";
 const { Title, Text } = Typography;
 
 const salaryOptions: { value: JobSearchFilters["salaryRange"]; label: string }[] = [
-  { value: "all", label: "Tất cả?" },
+  { value: "all", label: "Tất cả" },
   { value: "under1", label: "Dưới 1 triệu" },
   { value: "1-3", label: "1 - 3 triệu" },
   { value: "3-5", label: "3 - 5 triệu" },
