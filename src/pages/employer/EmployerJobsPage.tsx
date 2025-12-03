@@ -137,9 +137,6 @@ const EmployerJobsPage: React.FC = () => {
     fetchApplicationSummary();
   }, [user]);
 
-  type SuggestionsResponse = Awaited<
-    ReturnType<typeof jobPostService.getSuggestions>
-  >;
   type ShortlistResponse = Awaited<
     ReturnType<typeof jobSeekerPostService.getShortlistedCandidates>
   >;

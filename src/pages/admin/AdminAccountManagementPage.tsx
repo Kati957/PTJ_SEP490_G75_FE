@@ -699,11 +699,6 @@ const AdminAccountManagementPage: React.FC = () => {
     </Card>
   );
 
-  const regPaginationProps = {
-    ...regPagination,
-    onChange: (page: number, pageSize?: number) => fetchRegistrations(page, pageSize)
-  };
-
   const googleColumns: ColumnsType<GoogleEmployerRegList> = [
     {
       title: 'Tên hiển thị',

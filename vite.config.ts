@@ -10,7 +10,7 @@ const httpsConfig = useHttps
       key: fs.readFileSync(path.resolve(__dirname, 'localhost-key.pem')),
       cert: fs.readFileSync(path.resolve(__dirname, 'localhost.pem')),
     }
-  : false;
+  : undefined;
 
 // https://vitejs.dev/config/
 export default defineConfig({

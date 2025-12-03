@@ -36,7 +36,7 @@ export const formatSalaryText = (
   salaryMax?: number | null,
   salaryType?: SalaryTypeCode | number | null,
   salaryDisplay?: string | null,
-  fallback = 'Th???a thu??-n'
+  fallback = 'Thỏa thuận'
 ): string => {
   if (salaryDisplay && salaryDisplay.trim().length > 0) {
     return salaryDisplay;

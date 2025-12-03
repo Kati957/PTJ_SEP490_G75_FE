@@ -13,7 +13,9 @@ export interface JobSeekerPostDtoOut {
   categoryName?: string;
   seekerName?: string;
   createdAt: string;
+  updatedAt?: string;
   status?: string;
+  profilePicture?: string | null;
   selectedCvId?: number | null;
   cvId?: number | null;
 }

@@ -14,7 +14,7 @@ import {
   SendOutlined,
   FileDoneOutlined,
   LockOutlined,
-  BugOutlined,
+  CustomerServiceOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../features/auth/hooks";
 import { ROLES } from "../../constants/roles";
@@ -184,7 +184,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout, onReport })
         </div>
 
         <div className="flex flex-col gap-2">
-          <Button onClick={onReport} icon={<BugOutlined />} className="w-full">
+          <Button onClick={onReport} icon={<CustomerServiceOutlined />} className="w-full">
             Dịch vụ hỗ trợ hệ thống
           </Button>
           <Button danger onClick={onLogout} icon={<LogoutOutlined />} className="w-full">
@@ -235,7 +235,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
       {
         key: "system-report",
         label: <span onClick={() => setReportModalOpen(true)}>Dịch vụ hỗ trợ hệ thống</span>,
-        icon: <BugOutlined />,
+        icon: <CustomerServiceOutlined />,
       },
       {
         key: "2",
@@ -391,3 +391,4 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 };
 
 export default Header;
+

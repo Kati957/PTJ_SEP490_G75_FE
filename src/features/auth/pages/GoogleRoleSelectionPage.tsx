@@ -157,7 +157,7 @@ const GoogleRoleSelectionPage: React.FC = () => {
             return (
               <Card
                 key={role}
-                variant="bordered"
+                variant="outlined"
                 className="h-full rounded-3xl shadow-2xl border border-white/60 bg-white/90 backdrop-blur hover:-translate-y-1 transition"
                 cover={
                   <div className="px-6 pt-6">

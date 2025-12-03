@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
-  Table,
   Space,
   message,
   Button,
@@ -11,22 +11,25 @@ import {
   Card,
   Typography,
   Tooltip,
+  Pagination,
+  Empty,
+  Avatar,
 } from "antd";
-import type { TableColumnsType, TableProps } from "antd";
 import {
   EnvironmentOutlined,
   ClockCircleOutlined,
   PhoneOutlined,
   ExclamationCircleOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { jobSeekerPostService } from "../services";
 import jobSeekerCvService from "../../jobSeekerCv/services";
 import type { JobSeekerPostDtoOut } from "../type";
 import type { JobSeekerCv } from "../../jobSeekerCv/types";
+import type { JobSeekerProfileDto } from "../../profile-JobSeeker/types";
+import { getPublicJobSeekerProfile } from "../../profile-JobSeeker/services/service";
 import { useCategories } from "../../category/hook";
-import locationService, {
-  type LocationOption,
-} from "../../location/locationService";
+import locationService, { type LocationOption } from "../../location/locationService";
 import reportService from "../../report/reportService";
 
 const trimText = (value?: string | null): string => (value ?? "").trim();
@@ -42,7 +45,7 @@ const normalizeTimeValue = (value?: string | null): string => {
   if (timeMatch) {
     const [, hour, minute] = timeMatch;
     const normalizedHour = hour.padStart(2, "0").slice(-2);
-    const normalizedMinute = minute.padStart(2, "0").slice(0, 2);
+    const normalizedMinute = minute.padStart(2, "0");
     return `${normalizedHour}:${normalizedMinute}`;
   }
   return trimmed;
@@ -53,9 +56,7 @@ const getContactPhone = (post: JobSeekerPostDtoOut): string => {
   if (direct) {
     return direct;
   }
-  const fallback = trimText(
-    (post as { contactPhone?: string | null }).contactPhone
-  );
+  const fallback = trimText((post as { contactPhone?: string | null }).contactPhone);
   return fallback;
 };
 
@@ -67,17 +68,11 @@ const hasWorkHourData = (post: JobSeekerPostDtoOut): boolean => {
   );
 };
 
-const DESCRIPTION_BUTTON_THRESHOLD = 120;
-
 const shouldFetchDetail = (post: JobSeekerPostDtoOut): boolean => {
   const hasContact = Boolean(getContactPhone(post));
   const hasGender = hasValue(post.gender);
   const hasAge = typeof post.age === "number" && post.age > 0;
   return !(hasWorkHourData(post) && hasContact && hasGender && hasAge);
-};
-
-const shouldShowDescriptionButton = (description?: string | null): boolean => {
-  return trimText(description).length > DESCRIPTION_BUTTON_THRESHOLD;
 };
 
 const getCvIdFromPost = (post: JobSeekerPostDtoOut): number | null => {
@@ -94,13 +89,6 @@ const { Option } = Select;
 const JobSeekerPostsPage: React.FC = () => {
   const [posts, setPosts] = useState<JobSeekerPostDtoOut[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [descriptionModal, setDescriptionModal] = useState<{
-    isOpen: boolean;
-    post: JobSeekerPostDtoOut | null;
-  }>({
-    isOpen: false,
-    post: null,
-  });
   const [cvModal, setCvModal] = useState<{
     isOpen: boolean;
     loading: boolean;
@@ -113,13 +101,9 @@ const JobSeekerPostsPage: React.FC = () => {
     error: null,
   });
   const [searchValue, setSearchValue] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
-    null
-  );
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
-  const [selectedProvinceCode, setSelectedProvinceCode] = useState<
-    number | null
-  >(null);
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState<number | null>(null);
   const [provinceOptions, setProvinceOptions] = useState<LocationOption[]>([]);
   const [provinceLoading, setProvinceLoading] = useState(false);
   const [reportModal, setReportModal] = useState<{
@@ -169,9 +153,7 @@ const JobSeekerPostsPage: React.FC = () => {
         const batchResults = await Promise.all(
           batch.map(async (post) => {
             try {
-              const response = await jobSeekerPostService.getJobSeekerPostById(
-                post.jobSeekerPostId
-              );
+              const response = await jobSeekerPostService.getJobSeekerPostById(post.jobSeekerPostId);
               if (response.success && response.data) {
                 return response.data;
               }
@@ -201,13 +183,48 @@ const JobSeekerPostsPage: React.FC = () => {
     []
   );
 
+  const attachProfiles = useCallback(async (rawPosts: JobSeekerPostDtoOut[]) => {
+    const userIds = Array.from(new Set(rawPosts.map((p) => p.userID).filter(Boolean)));
+    if (!userIds.length) return rawPosts;
+
+    const profileMap = new Map<number, JobSeekerProfileDto>();
+
+    await Promise.all(
+      userIds.map(async (userId) => {
+        try {
+          const profile = await getPublicJobSeekerProfile(userId);
+          if (profile) {
+            profileMap.set(userId, profile);
+          }
+        } catch {
+          // ignore failures for individual profiles
+        }
+      })
+    );
+
+    if (!profileMap.size) return rawPosts;
+
+    return rawPosts.map((p) => {
+      const profile = profileMap.get(p.userID);
+      if (!profile) return p;
+      return {
+        ...p,
+        seekerName: p.seekerName || profile.fullName || p.seekerName,
+        phoneContact: p.phoneContact || profile.contactPhone || p.phoneContact,
+        preferredLocation: p.preferredLocation || profile.location || p.preferredLocation,
+        profilePicture: profile.profilePicture ?? p.profilePicture,
+      };
+    });
+  }, []);
+
   const fetchPosts = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await jobSeekerPostService.getAllJobSeekerPosts();
       if (res.success) {
         const enrichedPosts = await hydratePostsWithDetails(res.data);
-        setPosts(enrichedPosts);
+        const withProfiles = await attachProfiles(enrichedPosts);
+        setPosts(withProfiles);
       } else {
         setPosts([]);
       }
@@ -216,7 +233,7 @@ const JobSeekerPostsPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [hydratePostsWithDetails]);
+  }, [attachProfiles, hydratePostsWithDetails]);
 
   useEffect(() => {
     void fetchPosts();
@@ -229,7 +246,7 @@ const JobSeekerPostsPage: React.FC = () => {
         const data = await locationService.getProvinces();
         setProvinceOptions(data);
       } catch {
-        message.error("Không thể tải danh sách tỉnh/thành phố.");
+        message.error("Không thể tải danh sách tỉnh/thành.");
       } finally {
         setProvinceLoading(false);
       }
@@ -243,20 +260,14 @@ const JobSeekerPostsPage: React.FC = () => {
     if (searchValue.trim()) {
       const keyword = searchValue.trim().toLowerCase();
       data = data.filter((post) => {
-        const titleMatch = trimText(post.title)
-          .toLowerCase()
-          .includes(keyword);
-        const nameMatch = trimText(post.seekerName)
-          .toLowerCase()
-          .includes(keyword);
+        const titleMatch = trimText(post.title).toLowerCase().includes(keyword);
+        const nameMatch = trimText(post.seekerName).toLowerCase().includes(keyword);
         return titleMatch || nameMatch;
       });
     }
 
     if (selectedCategoryId) {
-      const selectedCategory = categories.find(
-        (cat) => cat.categoryId === selectedCategoryId
-      );
+      const selectedCategory = categories.find((cat) => cat.categoryId === selectedCategoryId);
       if (selectedCategory) {
         data = data.filter(
           (post) =>
@@ -267,28 +278,17 @@ const JobSeekerPostsPage: React.FC = () => {
     }
 
     if (selectedProvinceCode) {
-      const selectedProvince = provinceOptions.find(
-        (province) => province.code === selectedProvinceCode
-      );
+      const selectedProvince = provinceOptions.find((province) => province.code === selectedProvinceCode);
       if (selectedProvince) {
         const provinceName = selectedProvince.name.toLowerCase();
         data = data.filter((post) =>
-          trimText(post.preferredLocation)
-            .toLowerCase()
-            .includes(provinceName)
+          trimText(post.preferredLocation).toLowerCase().includes(provinceName)
         );
       }
     }
 
     return data;
-  }, [
-    posts,
-    searchValue,
-    selectedCategoryId,
-    categories,
-    selectedProvinceCode,
-    provinceOptions,
-  ]);
+  }, [posts, searchValue, selectedCategoryId, categories, selectedProvinceCode, provinceOptions]);
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value);
@@ -303,15 +303,6 @@ const JobSeekerPostsPage: React.FC = () => {
   const handleProvinceChange = (value: number | undefined) => {
     setSelectedProvinceCode(typeof value === "number" ? value : null);
     setPagination((prev) => ({ ...prev, current: 1 }));
-  };
-
-  const handleTableChange: TableProps<JobSeekerPostDtoOut>["onChange"] = (
-    newPagination
-  ) => {
-    setPagination({
-      current: newPagination.current || 1,
-      pageSize: newPagination.pageSize || 10,
-    });
   };
 
   const handleViewCv = useCallback(
@@ -384,334 +375,200 @@ const JobSeekerPostsPage: React.FC = () => {
         customReportType: "",
       });
     } catch (error: any) {
-      message.error(
-        error?.response?.data?.message ||
-          "Không thể gửi báo cáo. Vui lòng thử lại."
-      );
+      message.error(error?.response?.data?.message || "Không thể gửi báo cáo. Vui lòng thử lại.");
       setReportModal((prev) => ({ ...prev, submitting: false }));
     }
   };
 
-  const columns: TableColumnsType<JobSeekerPostDtoOut> = [
-    {
-      title: "Tên bài đăng",
-      dataIndex: "title",
-      key: "title",
-      width: 220,
-      ellipsis: true,
-      sorter: (a, b) => trimText(a.title).localeCompare(trimText(b.title)),
-      sortDirections: ["ascend", "descend"],
-      render: (text, record) => (
-        <div className="max-w-[200px]">
-          <div className="text-xs text-gray-500 mb-1">
-            <span className="font-medium text-gray-700">
-              {record.seekerName || "Người đăng ẩn"}
-            </span>{" "}
-            • {record.gender ?? "Không rõ"} •{" "}
-            {record.age ? `${record.age} tuổi` : "Tuổi N/A"}
-          </div>
-          <span className="font-semibold text-blue-600 truncate block">
-            {text}
-          </span>
-          <div className="text-xs text-gray-500">
-            Ngày đăng:{" "}
-            {new Date(record.createdAt).toLocaleDateString("vi-VN")}
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Ngành nghề",
-      dataIndex: "categoryName",
-      key: "categoryName",
-      width: 180,
-      ellipsis: true,
-      sorter: (a, b) =>
-        trimText(a.categoryName).localeCompare(trimText(b.categoryName)),
-      sortDirections: ["ascend", "descend"],
-      render: (_, record) => (
-        <span className="font-medium text-gray-800">
-          {record.categoryName || "Chưa chọn"}
-        </span>
-      ),
-    },
-    {
-      title: "Địa điểm",
-      dataIndex: "preferredLocation",
-      key: "preferredLocation",
-      width: 420,
-      render: (loc) => (
-        <Space className="max-w-[400px]">
-          <EnvironmentOutlined />
-          <span
-            className="block"
-            style={{
-              overflow: "hidden",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              wordBreak: "break-word",
-            }}
-          >
-            {loc || "Không rõ địa điểm"}
-          </span>
-        </Space>
-      ),
-    },
-    {
-      title: "Giờ làm mong muốn",
-      dataIndex: "preferredWorkHours",
-      key: "preferredWorkHours",
-      width: 160,
-      align: "center",
-      render: (_, record) => {
-        const hours = formatWorkHours(record);
-        return (
-          <Space>
-            <ClockCircleOutlined /> {hours || "Không rõ"}
-          </Space>
-        );
-      },
-    },
-    {
-      title: "Liên hệ",
-      dataIndex: "phoneContact",
-      key: "phoneContact",
-      width: 150,
-      render: (_, record) => {
-        const phone = getContactPhone(record);
-        return (
-          <Space>
-            <PhoneOutlined />
-            <span className="whitespace-nowrap font-medium">
-              {phone || "N/A"}
-            </span>
-          </Space>
-        );
-      },
-    },
-    {
-      title: "Ngày đăng",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 110,
-      align: "center",
-      sorter: (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      sortDirections: ["descend", "ascend"],
-      render: (createdAt: string) => (
-        <Space>
-          <ClockCircleOutlined />{" "}
-          {createdAt
-            ? new Date(createdAt).toLocaleDateString("vi-VN")
-            : "N/A"}
-        </Space>
-      ),
-    },
-    {
-      title: "Mô tả",
-      key: "description",
-      width: 220,
-      render: (_, record) => {
-        const desc = trimText(record.description);
-        if (!desc) {
-          return <span className="text-gray-500">Chưa có mô tả</span>;
-        }
-
-        const showButton = shouldShowDescriptionButton(record.description);
-
-        return (
-          <div className="max-w-[200px]">
-            <span
-              title={desc}
-              style={{
-                overflow: "hidden",
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                wordBreak: "break-word",
-              }}
-            >
-              {desc}
-            </span>
-            {showButton && (
-              <Button
-                type="link"
-                size="small"
-                className="p-0"
-                onClick={() =>
-                  setDescriptionModal({ isOpen: true, post: record })
-                }
-              >
-                Xem thêm
-              </Button>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: "CV",
-      key: "cv",
-      width: 120,
-      align: "center",
-      render: (_, record) => {
-        const cvId = getCvIdFromPost(record);
-        return (
-          <Space>
-            <Button
-              type="link"
-              size="small"
-              disabled={!cvId}
-              onClick={() => handleViewCv(record)}
-            >
-              Xem CV
-            </Button>
-            <Tooltip title="Báo cáo bài đăng tìm việc">
-              <Button
-                type="text"
-                size="small"
-                shape="circle"
-                icon={
-                  <ExclamationCircleOutlined
-                    style={{ color: "#dc2626", fontSize: 16 }}
-                  />
-                }
-                onClick={() => openReportModal(record)}
-              />
-            </Tooltip>
-          </Space>
-        );
-      },
-    },
-  ];
-
   const totalPosts = filteredPosts.length;
-  const startDisplay =
-    totalPosts === 0 ? 0 : (pagination.current - 1) * pagination.pageSize + 1;
-  const endDisplay = Math.min(
-    pagination.current * pagination.pageSize,
-    totalPosts
-  );
+  const startDisplay = totalPosts === 0 ? 0 : (pagination.current - 1) * pagination.pageSize + 1;
+  const endDisplay = Math.min(pagination.current * pagination.pageSize, totalPosts);
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-r from-sky-600 to-blue-700 text-white shadow-lg border-none rounded-2xl">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 md:p-5">
+      <Card className="bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 text-white shadow-xl border-none rounded-3xl">
+        <div className="flex flex-col gap-3 p-6 md:p-8">
           <div className="space-y-2">
-            <p className="text-sm uppercase tracking-[0.35em] text-white/80">
-              Ứng viên
-            </p>
-            <Typography.Title level={3} className="!text-white !mb-0">
-              Danh sách bài đăng tìm việc của ứng viên
+            <p className="text-sm uppercase tracking-[0.3em] text-white/80">Ứng viên</p>
+            <Typography.Title level={3} className="!text-white !mb-1">
+              Tìm ứng viên nhanh, mức lương minh bạch, lọc theo nhu cầu của bạn.
             </Typography.Title>
-            <p className="text-white/85 max-w-3xl">
-              Khám phá hồ sơ ứng viên, xem nhanh mô tả và CV đính kèm để kết nối nhanh chóng.
+            <p className="text-white/85 max-w-4xl text-sm md:text-base">
+              Lọc theo từ khóa, ngành nghề và địa điểm để kết nối ứng viên phù hợp nhất.
             </p>
-            <div className="flex gap-2 flex-wrap">
-              <span className="px-3 py-1 rounded-md bg-white/15 border border-white/20 text-sm font-semibold">
-                Tổng bài đăng: <strong>{totalPosts}</strong>
+          </div>
+          <div className="bg-white/15 backdrop-blur rounded-2xl p-3 sm:p-4 flex flex-col md:flex-row gap-3 items-center shadow-lg">
+            <Search
+              placeholder="Nhập vị trí, chức danh, kỹ năng..."
+              allowClear
+              enterButton="Tìm kiếm"
+              value={searchValue}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onSearch={handleSearchChange}
+              loading={isLoading}
+              className="w-full md:flex-1"
+              size="large"
+            />
+            <Select
+              placeholder="Ngành nghề"
+              allowClear
+              value={selectedCategoryId ?? undefined}
+              onChange={(value) => handleCategoryChange(value ?? null)}
+              loading={categoryStatus === "loading"}
+              className="w-full md:w-64"
+              size="large"
+            >
+              {categories.map((cat) => (
+                <Option key={cat.categoryId} value={cat.categoryId}>
+                  {cat.name}
+                </Option>
+              ))}
+            </Select>
+            <Select
+              placeholder="Tỉnh/Thành"
+              allowClear
+              showSearch
+              optionFilterProp="children"
+              value={selectedProvinceCode ?? undefined}
+              onChange={(value) => handleProvinceChange(value as number | undefined)}
+              loading={provinceLoading}
+              className="w-full md:w-64"
+              size="large"
+              filterOption={(input, option) =>
+                String(option?.children ?? "").toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {provinceOptions.map((province) => (
+                <Option key={province.code} value={province.code}>
+                  {province.name}
+                </Option>
+              ))}
+            </Select>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-white/90">
+            <span className="px-3 py-1 rounded-full bg-white/15 border border-white/20 font-semibold">
+              Tổng bài đăng: {totalPosts}
+            </span>
+            {totalPosts > 0 && (
+              <span className="px-3 py-1 rounded-full bg-white/15 border border-white/20 font-semibold">
+                Hiển thị {startDisplay} - {endDisplay}
               </span>
-              {totalPosts > 0 && (
-                <span className="px-3 py-1 rounded-md bg-white/15 border border-white/20 text-sm font-semibold">
-                  Hiển thị {startDisplay}-{endDisplay}
-                </span>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </Card>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+      <div className="bg-white p-6 rounded-3xl shadow-[0_15px_60px_rgba(15,23,42,0.08)] border border-slate-100">
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+          <h3 className="text-lg font-semibold text-slate-800">{totalPosts} ứng viên được tìm thấy</h3>
+        </div>
 
-  {/* Ô tìm kiếm */}
-  <Search
-    placeholder="Tìm kiếm bài đăng hoặc tên ứng viên..."
-    allowClear
-    enterButton
-    value={searchValue}
-    onChange={(e) => handleSearchChange(e.target.value)}
-    onSearch={handleSearchChange}
-    loading={isLoading}
-    className="w-full md:w-1/3"
-  />
+        {isLoading ? (
+          <div className="text-center py-10 text-slate-500">Đang tải danh sách...</div>
+        ) : filteredPosts.length === 0 ? (
+          <Empty description="Không tìm thấy ứng viên phù hợp" />
+        ) : (
+          <div className="space-y-4">
+            {filteredPosts
+              .slice((pagination.current - 1) * pagination.pageSize, pagination.current * pagination.pageSize)
+              .map((post) => {
+                const workHours = formatWorkHours(post);
+                const phone = getContactPhone(post);
+                return (
+                  <Card
+                    key={post.jobSeekerPostId}
+                    className="rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition"
+                    styles={{ body: { padding: 16 } }}
+                  >
+                    <div className="flex flex-col md:flex-row md:items-start gap-3">
+                      <Avatar
+                        size={52}
+                        src={post.profilePicture || undefined}
+                        icon={<UserOutlined />}
+                        className="bg-slate-200 text-slate-600"
+                      />
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-start justify-between gap-2 flex-wrap">
+                          <div>
+                            <div className="text-sm text-slate-500 font-semibold">
+                              {post.seekerName || "Ứng viên"}
+                            </div>
+                            <Typography.Title level={5} className="!m-0 text-slate-900">
+                              {post.title}
+                            </Typography.Title>
+                          </div>
+                          <span className="text-xs text-slate-500">
+                            Cập nhật:{" "}
+                            {post.updatedAt
+                              ? new Date(post.updatedAt).toLocaleDateString("vi-VN")
+                              : new Date(post.createdAt).toLocaleDateString("vi-VN")}
+                          </span>
+                        </div>
 
-  {/* Lọc ngành nghề */}
-  <Select
-    placeholder="Ngành nghề"
-    allowClear
-    value={selectedCategoryId ?? undefined}
-    onChange={(value) => handleCategoryChange(value ?? null)}
-    loading={categoryStatus === "loading"}
-    className="w-full md:w-1/4"
-  >
-    {categories.map((cat) => (
-      <Option key={cat.categoryId} value={cat.categoryId}>
-        {cat.name}
-      </Option>
-    ))}
-  </Select>
+                        <div className="flex flex-wrap gap-2">
+                          <Tag icon={<EnvironmentOutlined />} color="default">
+                            {post.preferredLocation || "Địa điểm linh hoạt"}
+                          </Tag>
+                          <Tag icon={<ClockCircleOutlined />} color="blue">
+                            {workHours || "Chưa rõ giờ"}
+                          </Tag>
+                          <Tag color="cyan">{post.categoryName || "Chưa chọn ngành"}</Tag>
+                        </div>
 
-  {/* Lọc theo tỉnh/thành phố */}
-  <Select
-    placeholder="Thành phố"
-    allowClear
-    showSearch
-    optionFilterProp="children"
-    value={selectedProvinceCode ?? undefined}
-    onChange={(value) =>
-      handleProvinceChange(value as number | undefined)
-    }
-    loading={provinceLoading}
-    className="w-full md:w-1/4"
-    filterOption={(input, option) =>
-      String(option?.children ?? "")
-        .toLowerCase()
-        .includes(input.toLowerCase())
-    }
-  >
-    {provinceOptions.map((province) => (
-      <Option key={province.code} value={province.code}>
-        {province.name}
-      </Option>
-    ))}
-  </Select>
-</div>
+                        <div className="flex items-center gap-3 flex-wrap text-sm text-slate-600">
+                          <Space>
+                            <PhoneOutlined /> {phone || "Chưa có số liên hệ"}
+                          </Space>
+                          {post.age ? <Tag color="geekblue">{post.age} tuổi</Tag> : null}
+                          {post.gender ? <Tag color="purple">{post.gender}</Tag> : null}
+                        </div>
 
-        <Table
-          rowKey="jobSeekerPostId"
-          columns={columns}
-          dataSource={filteredPosts}
-          loading={isLoading}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: filteredPosts.length,
-            showSizeChanger: true,
-          }}
-          onChange={handleTableChange}
-        />
-
-        {/* Modal mô tả bài đăng */}
-        <Modal
-          title={descriptionModal.post?.title || "Mô tả chi tiết"}
-          open={descriptionModal.isOpen}
-          footer={null}
-          onCancel={() =>
-            setDescriptionModal({ isOpen: false, post: null })
-          }
-          width={600}
-        >
-          <div className="space-y-2">
-            <div className="text-sm text-gray-500">
-              {descriptionModal.post?.seekerName}
-            </div>
-            <p className="whitespace-pre-wrap">
-              {descriptionModal.post?.description || "Chưa có mô tả chi tiết."}
-            </p>
+                        <div className="flex items-center gap-2 flex-wrap md:justify-end">
+                          <Button
+                            type="primary"
+                            ghost
+                            size="middle"
+                            onClick={() => handleViewCv(post)}
+                            disabled={!getCvIdFromPost(post)}
+                          >
+                            Xem CV
+                          </Button>
+                          <Link to={`/nha-tuyen-dung/tim-kiem/ung-vien/${post.jobSeekerPostId}`}>
+                            <Button type="primary" size="middle">
+                              Xem chi tiết
+                            </Button>
+                          </Link>
+                          <Tooltip title="Báo cáo bài đăng tìm việc">
+                            <Button
+                              type="text"
+                              size="middle"
+                              icon={<ExclamationCircleOutlined style={{ color: "#dc2626" }} />}
+                              onClick={() => openReportModal(post)}
+                            >
+                              Báo cáo
+                            </Button>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
           </div>
-        </Modal>
+        )}
+
+        {filteredPosts.length > pagination.pageSize && (
+          <div className="mt-6 flex justify-center">
+            <Pagination
+              current={pagination.current}
+              pageSize={pagination.pageSize}
+              total={filteredPosts.length}
+              showSizeChanger
+              showTotal={(total, range) => `${range[0]}-${range[1]} / ${total}`}
+              onChange={(page, pageSize) => setPagination({ current: page, pageSize })}
+            />
+          </div>
+        )}
 
         {/* Modal CV */}
         <Modal
@@ -734,20 +591,14 @@ const JobSeekerPostsPage: React.FC = () => {
             <p className="text-red-500">{cvModal.error}</p>
           ) : cvModal.cv ? (
             <div className="space-y-4 text-sm">
-              {/* Thông tin chung */}
               <div className="p-3 rounded-lg border bg-gray-50">
-                <h3 className="font-semibold text-gray-700 mb-1">
-                  Thông tin chung
-                </h3>
+                <h3 className="font-semibold text-gray-700 mb-1">Thông tin chung</h3>
                 <p>
-                  <span className="font-semibold">Tiêu đề:</span>{" "}
-                  {cvModal.cv.cvTitle}
+                  <span className="font-semibold">Tiêu đề:</span> {cvModal.cv.cvTitle}
                 </p>
                 {cvModal.cv.preferredJobType && (
                   <p>
-                    <span className="font-semibold">
-                      Công việc mong muốn:
-                    </span>{" "}
+                    <span className="font-semibold">Công việc mong muốn:</span>{" "}
                     {cvModal.cv.preferredJobType}
                   </p>
                 )}
@@ -759,22 +610,16 @@ const JobSeekerPostsPage: React.FC = () => {
                 )}
                 {cvModal.cv.contactPhone && (
                   <p>
-                    <span className="font-semibold">Liên hệ:</span>{" "}
-                    {cvModal.cv.contactPhone}
+                    <span className="font-semibold">Liên hệ:</span> {cvModal.cv.contactPhone}
                   </p>
                 )}
               </div>
 
-              {/* Kỹ năng */}
               {(cvModal.cv.skillSummary || cvModal.cv.skills) && (
                 <div className="p-3 rounded-lg border bg-gray-50">
-                  <h3 className="font-semibold text-gray-700 mb-1">
-                    Kỹ năng
-                  </h3>
+                  <h3 className="font-semibold text-gray-700 mb-1">Kỹ năng</h3>
                   {cvModal.cv.skillSummary && (
-                    <p className="text-gray-700">
-                      {cvModal.cv.skillSummary}
-                    </p>
+                    <p className="text-gray-700">{cvModal.cv.skillSummary}</p>
                   )}
                   {cvModal.cv.skills && (
                     <div className="mt-2">
@@ -788,24 +633,18 @@ const JobSeekerPostsPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Kinh nghiệm (nếu có trong type) */}
               {(cvModal.cv as any).experience && (
                 <div className="p-3 rounded-lg border bg-gray-50">
-                  <h3 className="font-semibold text-gray-700 mb-1">
-                    Kinh nghiệm
-                  </h3>
+                  <h3 className="font-semibold text-gray-700 mb-1">Kinh nghiệm</h3>
                   <p className="whitespace-pre-wrap text-gray-700">
                     {(cvModal.cv as any).experience}
                   </p>
                 </div>
               )}
 
-              {/* Học vấn (nếu có) */}
               {(cvModal.cv as any).education && (
                 <div className="p-3 rounded-lg border bg-gray-50">
-                  <h3 className="font-semibold text-gray-700 mb-1">
-                    Học vấn
-                  </h3>
+                  <h3 className="font-semibold text-gray-700 mb-1">Học vấn</h3>
                   <p className="whitespace-pre-wrap text-gray-700">
                     {(cvModal.cv as any).education}
                   </p>
@@ -813,8 +652,7 @@ const JobSeekerPostsPage: React.FC = () => {
               )}
 
               <div className="text-xs text-gray-500 text-right">
-                Cập nhật:{" "}
-                {new Date(cvModal.cv.updatedAt).toLocaleDateString("vi-VN")}
+                Cập nhật: {new Date(cvModal.cv.updatedAt).toLocaleDateString("vi-VN")}
               </div>
             </div>
           ) : (
@@ -846,17 +684,15 @@ const JobSeekerPostsPage: React.FC = () => {
           confirmLoading={reportModal.submitting}
         >
           <p className="text-sm text-gray-600 mb-3">
-            Vui lòng mô tả lý do bạn muốn báo cáo bài đăng tìm việc này. Thông
-            tin sẽ được gửi tới quản trị viên.
+            Vui lòng mô tả lý do bạn muốn báo cáo bài đăng tìm việc này. Thông tin sẽ được gửi tới
+            quản trị viên.
           </p>
           <div className="mb-3">
             <Select
               placeholder="Chọn loại báo cáo"
               className="w-full"
               value={reportModal.reportType || undefined}
-              onChange={(value) =>
-                setReportModal((prev) => ({ ...prev, reportType: value }))
-              }
+              onChange={(value) => setReportModal((prev) => ({ ...prev, reportType: value }))}
               options={[
                 { label: "Tin giả / lừa đảo", value: "Fraud" },
                 { label: "Nội dung không phù hợp", value: "Inappropriate" },
@@ -883,9 +719,7 @@ const JobSeekerPostsPage: React.FC = () => {
             rows={4}
             value={reportModal.reason}
             placeholder="Ví dụ: Bài đăng có nội dung không phù hợp..."
-            onChange={(e) =>
-              setReportModal((prev) => ({ ...prev, reason: e.target.value }))
-            }
+            onChange={(e) => setReportModal((prev) => ({ ...prev, reason: e.target.value }))}
           />
         </Modal>
       </div>

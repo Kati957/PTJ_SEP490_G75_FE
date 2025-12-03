@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Card, Tabs, Avatar, Tag, Skeleton } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import ProfileDetails from "../components/ProfileDetails";

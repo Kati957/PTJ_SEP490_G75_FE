@@ -28,6 +28,7 @@ import ManagePostingsPage from "../features/jobSeekerPosting/pages/ManagePosting
 import CreatePostingPage from "../features/jobSeekerPosting/pages/CreatePostingPage";
 import EditJobPage from "../features/job/pages/EditJobPage";
 import JobSeekerPostPage from "../features/candidate/pages/JobSeekerPostPage";
+import JobSeekerPostDetailPage from "../features/candidate/pages/JobSeekerPostDetailPage";
 // import SavedTalentPage from "../features/candidate/pages/SavedTalentPage";
 import SavedJobsPage from "../features/savedJob-jobSeeker/pages/SavedJobsPage";
 import AppliedJobsPage from "../features/applyJob-jobSeeker/pages/AppliedJobsPage";
@@ -112,6 +113,10 @@ export const AppRoutes: React.FC = () => {
           <Route
             path="/nha-tuyen-dung/tim-kiem"
             element={<JobSeekerPostPage />}
+          />
+          <Route
+            path="/nha-tuyen-dung/tim-kiem/ung-vien/:id"
+            element={<JobSeekerPostDetailPage />}
           />
           <Route
             path="/nha-tuyen-dung/bang-tin"
