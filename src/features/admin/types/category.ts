@@ -7,7 +7,7 @@ export interface AdminCategory {
   createdAt?: string | null;
 }
 
-export interface AdminCategoryDetail extends AdminCategory {}
+export type AdminCategoryDetail = AdminCategory;
 
 export interface AdminCreateCategoryPayload {
   name: string;
@@ -16,7 +16,7 @@ export interface AdminCreateCategoryPayload {
   isActive?: boolean;
 }
 
-export interface AdminUpdateCategoryPayload extends AdminCreateCategoryPayload {}
+export type AdminUpdateCategoryPayload = AdminCreateCategoryPayload;
 
 export interface AdminCategoryFilters {
   type?: string;

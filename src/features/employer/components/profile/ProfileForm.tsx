@@ -226,7 +226,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       setAvatarFile(null);
       setPreviewUrl(undefined);
       message.success('Đã xóa ảnh đại diện');
-    } catch (error) {
+    } catch {
       message.error('Không thể xóa ảnh');
     }
   };
@@ -235,7 +235,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     try {
       await onSubmit({ ...values, imageFile: avatarFile });
       message.success('Cập nhật hồ sơ thành công');
-    } catch (error) {
+    } catch {
       message.error('Cập nhật hồ sơ thất bại');
     }
   };

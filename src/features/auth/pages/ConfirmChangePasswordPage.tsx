@@ -6,6 +6,8 @@ import { confirmChangePassword } from '../services';
 
 const { Title, Paragraph } = Typography;
 
+type ConfirmFormValues = { newPassword: string; confirmPassword: string };
+
 const ConfirmChangePasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
@@ -14,7 +16,7 @@ const ConfirmChangePasswordPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const handleSubmit = async (values: { newPassword: string; confirmPassword: string }) => {
+  const handleSubmit = async (values: ConfirmFormValues) => {
     if (!token) {
       message.error('Thiếu token xác nhận.');
       return;
@@ -31,8 +33,9 @@ const ConfirmChangePasswordPage: React.FC = () => {
       });
       message.success('Đổi mật khẩu thành công. Vui lòng đăng nhập lại.');
       navigate('/login');
-    } catch (error: any) {
-      const messageText = error?.response?.data?.message || 'Không thể đổi mật khẩu.';
+    } catch (error: unknown) {
+      const errObj = error as { response?: { data?: { message?: string } }; message?: string };
+      const messageText = errObj?.response?.data?.message || errObj?.message || 'Không thể đổi mật khẩu.';
       setServerError(messageText);
       message.error(messageText);
     } finally {

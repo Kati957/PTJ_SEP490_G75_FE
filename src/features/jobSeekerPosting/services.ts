@@ -1,3 +1,4 @@
+import type { AxiosRequestHeaders } from 'axios';
 import axios from 'axios';
 import baseService from '../../services/baseService';
 import type { CreateJobSeekerPostPayload, Province, JobSeekerPost, GetJobByIdResponse, UpdateJobSeekerPostPayload, JobSuggestionResponse } from './types';
@@ -42,7 +43,7 @@ const buildJobSeekerPostFormData = (payload: CreateJobSeekerPostPayload): FormDa
 export const createJobSeekerPost = (payload: CreateJobSeekerPostPayload) => {
   const formData = buildJobSeekerPostFormData(payload);
   return baseService.post('/JobSeekerPost/create', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: { 'Content-Type': 'multipart/form-data' } as AxiosRequestHeaders,
   });
 };
 
@@ -53,7 +54,7 @@ export const createJobSeekerPost = (payload: CreateJobSeekerPostPayload) => {
 export const updateJobSeekerPost = (payload: UpdateJobSeekerPostPayload) => {
   const formData = buildJobSeekerPostFormData(payload);
   return baseService.put(`/JobSeekerPost/${payload.jobSeekerPostId}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: { 'Content-Type': 'multipart/form-data' } as AxiosRequestHeaders,
   });
 };
 

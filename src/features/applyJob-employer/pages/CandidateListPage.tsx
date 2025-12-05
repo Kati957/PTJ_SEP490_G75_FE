@@ -35,6 +35,7 @@ const { Title } = Typography;
 const { TextArea } = Input;
 
 type StatusAction = "Accepted" | "Rejected" | "Interviewing";
+type CvWithDetails = JobSeekerCv & { experience?: string | null; education?: string | null };
 
 const STATUS_LABELS: Record<
   StatusAction,
@@ -100,7 +101,7 @@ const CandidateListPage: React.FC = () => {
   const [cvModal, setCvModal] = useState<{
     visible: boolean;
     loading: boolean;
-    cv: JobSeekerCv | null;
+    cv: CvWithDetails | null;
     error: string | null;
   }>({
     visible: false,
@@ -121,17 +122,55 @@ const CandidateListPage: React.FC = () => {
   });
 
   const savedIdSet = new Set(savedList.map((s) => s.jobSeekerId));
+  const fetchAll = useCallback(async (postId: number) => {
+    setIsLoading(true);
+    try {
+      const [applicationsRes, savedRes] = await Promise.all([
+        jobApplicationService.getApplicationsByPost(postId),
+        jobSeekerPostService.getShortlistedCandidates(postId),
+      ]);
+
+      if (applicationsRes.success) {
+        setApplications(applicationsRes.data);
+        const titleFromApplicants = applicationsRes.data?.[0]?.postTitle ?? '';
+        setPostTitle((prev) => prev || titleFromApplicants);
+      } else {
+        message.error('T?i danh s?ch ?ng vi?n th?t b?i.');
+      }
+
+      if (savedRes.success) {
+        setSavedList(savedRes.data);
+        const fallbackTitle = savedRes.data?.[0]?.postTitle ?? '';
+        setPostTitle((prev) => prev || fallbackTitle);
+      }
+    } catch (err) {
+      const responseMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      const fallback = err instanceof Error ? err.message : 'L?i khi t?i d? li?u.';
+      message.error(responseMessage || fallback);
+    }
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!employerPostId) {
+      message.error('Kh?ng t?m th?y ID b?i ??ng.');
+      setIsLoading(false);
+      return;
+    }
+    const postId = parseInt(employerPostId, 10);
+    fetchAll(postId);
+  }, [employerPostId, fetchAll]);
 
   const getCvIdFromRecord = (
     record: Partial<JobApplicationResultDto & ShortlistedCandidateDto>
   ): number | null => {
-    return record.cvId ?? record.selectedCvId ?? (record as any)?.cvid ?? null;
+    return record.cvId ?? record.selectedCvId ?? record.cvid ?? null;
   };
 
   const formatDateOnly = (value?: string | null) => {
-    if (!value) return "Chưa cập nhật";
+    if (!value) return 'Ch?a c?p nh?t';
     try {
-      return new Date(value).toLocaleDateString("vi-VN");
+      return new Date(value).toLocaleDateString('vi-VN');
     } catch {
       return value;
     }
@@ -139,7 +178,7 @@ const CandidateListPage: React.FC = () => {
 
   const handleViewCv = useCallback(async (cvId?: number | null) => {
     if (!cvId) {
-      message.info("Ứng viên này chưa đính kèm CV.");
+      message.info('?ng vi?n n?y ch?a ??nh k?m CV.');
       return;
     }
     setCvModal({ visible: true, loading: true, cv: null, error: null });
@@ -151,54 +190,14 @@ const CandidateListPage: React.FC = () => {
         visible: true,
         loading: false,
         cv: null,
-        error: "Không thể tải CV. Vui lòng thử lại sau.",
+        error: 'Kh?ng th? t?i CV. Vui l?ng th? l?i sau.',
       });
     }
   }, []);
 
-  useEffect(() => {
-    if (!employerPostId) {
-      message.error("Không tìm thấy ID bài đăng.");
-      setIsLoading(false);
-      return;
-    }
-    const postId = parseInt(employerPostId, 10);
-    fetchAll(postId);
-  }, [employerPostId]);
-
-  const fetchAll = async (postId: number) => {
-    setIsLoading(true);
-    try {
-      const [applicationsRes, savedRes] = await Promise.all([
-        jobApplicationService.getApplicationsByPost(postId),
-        jobSeekerPostService.getShortlistedCandidates(postId),
-      ]);
-
-      if (applicationsRes.success) {
-        setApplications(applicationsRes.data);
-        const titleFromApplicants =
-          (applicationsRes.data[0] as any)?.postTitle || "";
-        setPostTitle(titleFromApplicants);
-      } else {
-        message.error("Tải danh sách ứng viên thất bại.");
-      }
-
-      if (savedRes.success) {
-        setSavedList(savedRes.data);
-        const fallbackTitle = (savedRes.data[0] as any)?.postTitle || "";
-        if (!postTitle && fallbackTitle) {
-          setPostTitle(fallbackTitle);
-        }
-      }
-    } catch (err: any) {
-      message.error(err?.response?.data?.message || "Lỗi khi tải dữ liệu.");
-    }
-    setIsLoading(false);
-  };
-
   const handleToggleSave = async (record: JobApplicationResultDto) => {
     if (!user || !employerPostId) {
-      message.warning("Vui lòng đăng nhập để thao tác.");
+      message.warning('Vui l?ng ??ng nh?p ?? thao t?c.');
       return;
     }
     const postId = parseInt(employerPostId, 10);
@@ -212,15 +211,13 @@ const CandidateListPage: React.FC = () => {
       if (isSaved) {
         const res = await jobSeekerPostService.unsaveCandidate(dto);
         if (res?.success || res) {
-          message.success("Đã bỏ lưu ứng viên.");
-          setSavedList((prev) =>
-            prev.filter((s) => s.jobSeekerId !== record.jobSeekerId)
-          );
+          message.success('?? b? l?u ?ng vi?n.');
+          setSavedList((prev) => prev.filter((s) => s.jobSeekerId !== record.jobSeekerId));
         }
       } else {
         const res = await jobSeekerPostService.saveCandidate(dto);
         if (res?.success || res) {
-          message.success("Đã lưu hồ sơ ứng viên.");
+          message.success('?? l?u h? s? ?ng vi?n.');
           setSavedList((prev) => [
             ...prev,
             {
@@ -233,11 +230,10 @@ const CandidateListPage: React.FC = () => {
           ]);
         }
       }
-    } catch (err) {
-      message.error("Thao tác thất bại.");
+    } catch {
+      message.error('Thao t?c th?t b?i.');
     }
   };
-
   const openStatusModal = (
     record: JobApplicationResultDto,
     status: StatusAction
@@ -268,7 +264,7 @@ const CandidateListPage: React.FC = () => {
       } else {
         message.error(res.message || "Cập nhật trạng thái thất bại.");
       }
-    } catch (err) {
+    } catch {
       message.error("Lỗi hệ thống.");
     }
   };
@@ -667,20 +663,20 @@ const CandidateListPage: React.FC = () => {
               </div>
             )}
 
-            {(cvModal.cv as any).experience && (
+            {cvModal.cv.experience && (
               <div className="p-3 rounded-lg border bg-gray-50">
                 <h3 className="font-semibold text-gray-700 mb-1">Kinh nghiệm</h3>
                 <p className="whitespace-pre-wrap text-gray-700">
-                  {(cvModal.cv as any).experience}
+                  {cvModal.cv.experience}
                 </p>
               </div>
             )}
 
-            {(cvModal.cv as any).education && (
+            {cvModal.cv.education && (
               <div className="p-3 rounded-lg border bg-gray-50">
                 <h3 className="font-semibold text-gray-700 mb-1">Học vấn</h3>
                 <p className="whitespace-pre-wrap text-gray-700">
-                  {(cvModal.cv as any).education}
+                  {cvModal.cv.education}
                 </p>
               </div>
             )}

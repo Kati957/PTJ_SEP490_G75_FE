@@ -20,11 +20,12 @@ import dayjs from 'dayjs';
 import { useNewsDetail } from '../hooks';
 // Import Hooks từ feature ListView để lấy danh sách tin Hot
 import { useNewsList } from '../../listNew-JobSeeker/hooks';
+import type { NewsItem } from '../../listNew-JobSeeker/types';
 
 const { Title, Paragraph } = Typography;
 
 // Component hiển thị thẻ tin gợi ý
-const HotNewsItem: React.FC<{ item: any; onClick: (id: number) => void }> = ({ item, onClick }) => (
+const HotNewsItem: React.FC<{ item: NewsItem; onClick: (id: number) => void }> = ({ item, onClick }) => (
   <div 
     className="group cursor-pointer mb-4 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-100"
     onClick={() => onClick(item.newsID)}

@@ -48,6 +48,9 @@ import EmployerDetailPage from "../features/employerDetail-jobseeker/pages/Emplo
 import NewsListPage from "../features/listNew-JobSeeker/pages/NewsListPage";
 import NewsDetailPage from "../features/newsDetail-JobSeeker/pages/NewsDetailPage";
 import FollowedEmployersPage from "../features/follow/pages/FollowedEmployersPage";
+import EmployerUpgradePage from "../pages/employer/EmployerUpgradePage";
+import PaymentSuccessPage from "../pages/payment/PaymentSuccessPage";
+import PaymentCancelledPage from "../pages/payment/PaymentCancelledPage";
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -73,6 +76,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="verify-success" element={<VerifySuccessPage />} />
         <Route path="verify-failed" element={<VerifyFailedPage />} />
         <Route path="/nha-tuyen-dung/chi-tiet/:id" element={<EmployerDetailPage />} />
+        <Route path="payment/success" element={<PaymentSuccessPage />} />
+        <Route path="payment/cancel" element={<PaymentCancelledPage />} />
 
 
         {/* Job Seeker Protected Routes */}
@@ -133,6 +138,10 @@ export const AppRoutes: React.FC = () => {
           <Route
             path="nha-tuyen-dung/doi-mat-khau"
             element={<ChangePasswordPage />}
+          />
+          <Route
+            path="/nha-tuyen-dung/nang-cap"
+            element={<EmployerUpgradePage />}
           />
           <Route
             path="/nha-tuyen-dung/ung-vien/:employerPostId"

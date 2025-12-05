@@ -1,13 +1,15 @@
-import { createSlice, type PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import type { RootState } from '../../app/store';
-import type { JobPostData, EmployerPostDto, JobPostResponse } from './jobTypes';
-import jobPostService from './jobPostService';
+import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { message } from 'antd';
+import type { RootState } from '../../app/store';
+import jobPostService from './jobPostService';
+import type { EmployerPostDto, JobPostData, JobPostResponse } from './jobTypes';
 
 interface EmployerJobPostingState {
   form: JobPostData;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
 }
+
+type JobPostReject = { message: string; data?: JobPostResponse['data']; success?: boolean };
 
 const initialState: EmployerJobPostingState = {
   form: {
@@ -37,13 +39,9 @@ const initialState: EmployerJobPostingState = {
   status: 'idle',
 };
 
-export const createEmployerJobPost = createAsyncThunk<
-  JobPostResponse,
-  EmployerPostDto,
-  { rejectValue: any }
->(
+export const createEmployerJobPost = createAsyncThunk<JobPostResponse, EmployerPostDto, { rejectValue: JobPostReject }>(
   'employerJobPosting/createJobPost',
-  async (dto: EmployerPostDto, { rejectWithValue }) => {
+  async (dto, { rejectWithValue }) => {
     try {
       const res = await jobPostService.createJobPost(dto);
 
@@ -65,40 +63,46 @@ export const createEmployerJobPost = createAsyncThunk<
       };
       message.success(fallbackResponse.message);
       return fallbackResponse;
-    } catch (err: any) {
-      const responseData = err.response?.data;
+    } catch (err) {
+      const response = (err as { response?: { data?: JobPostResponse; status?: number } }).response;
+      const responseData = response?.data;
+      const statusCode = response?.status;
 
       if (responseData?.success) {
-        message.success(responseData.message || 'Dang viec thanh cong!');
+        message.success(responseData.message || 'Đăng việc thành công!');
         return responseData;
       }
 
-      const isServerError = err.response?.status && err.response.status >= 500;
-      if (isServerError) {
+      if (typeof statusCode === 'number' && statusCode >= 500) {
         const optimisticResponse: JobPostResponse = {
           success: true,
-          message: 'Dang viec thanh cong!',
+          message: 'Đăng việc thành công!',
           data: responseData?.data ?? null,
         };
         message.success(optimisticResponse.message);
         return optimisticResponse;
       }
 
-      const errorMessage = responseData?.message || 'Loi may chu.';
+      const errorMessage = responseData?.message || 'Lỗi máy chủ.';
       message.error(errorMessage);
       return rejectWithValue(responseData ?? { message: errorMessage });
     }
   }
 );
 
-
 const employerJobPostingSlice = createSlice({
   name: 'employerJobPosting',
   initialState,
   reducers: {
-    updateJobField: (state, action: PayloadAction<{ field: keyof JobPostData; value: any }>) => {
+    updateJobField: (
+      state,
+      action: PayloadAction<{ field: keyof JobPostData; value: JobPostData[keyof JobPostData] }>
+    ) => {
       const { field, value } = action.payload;
-      (state.form as any)[field] = value;
+      state.form = {
+        ...state.form,
+        [field]: value,
+      };
     },
     resetJobForm: (state) => {
       state.form = { ...initialState.form, images: [], imagePreviews: [] };

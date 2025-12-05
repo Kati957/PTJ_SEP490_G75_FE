@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Button,
@@ -46,6 +46,7 @@ import type { JobPostView, JobSuggestionDto } from "../../features/job/jobTypes"
 import { useCategories } from "../../features/category/hook";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../app/store";
+import type { Category } from "../../features/category/type";
 import { JobPostDetailModal } from "../../features/job/components/employer/JobPostDetailModal";
 import { jobApplicationService } from "../../features/applyJob-employer/jobApplicationService";
 import jobSeekerCvService from "../../features/jobSeekerCv/services";
@@ -55,10 +56,14 @@ import type { SaveCandidateDto } from "../../features/candidate/type";
 import type { ApplicationSummaryDto } from "../../features/applyJob-jobSeeker/type";
 import { formatSalaryText } from "../../utils/jobPostHelpers";
 import { getRepresentativeSalaryValue } from "../../utils/salary";
+import type { SorterResult } from "antd/es/table/interface";
 
 const { Option } = Select;
 const { Search } = Input;
 const { Text } = Typography;
+
+const getApiMessage = (error: unknown) =>
+  (error as { response?: { data?: { message?: string } } }).response?.data?.message;
 
 const EmployerJobsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -100,7 +105,7 @@ const EmployerJobsPage: React.FC = () => {
     order: "desc",
   });
 
-  const fetchJobs = async () => {
+    const fetchJobs = useCallback(async () => {
     if (!user) return;
 
     setIsLoading(true);
@@ -109,15 +114,16 @@ const EmployerJobsPage: React.FC = () => {
       if (res.success) {
         setAllJobs(res.data);
       } else {
-        message.error("Không thể tải danh sách công việc.");
+        message.error("Kh?ng th? t?i danh s?ch c?ng vi?c.");
       }
-    } catch (err: any) {
-      message.error(err.response?.data?.message || "Lỗi khi tải dữ liệu.");
+    } catch (err) {
+      const apiMessage = getApiMessage(err);
+      message.error(apiMessage || "L?i khi t?i d? li?u.");
     }
     setIsLoading(false);
-  };
+  }, [user]);
 
-  const fetchApplicationSummary = async () => {
+  const fetchApplicationSummary = useCallback(async () => {
     if (!user) return;
     setIsSummaryLoading(true);
     try {
@@ -125,19 +131,19 @@ const EmployerJobsPage: React.FC = () => {
       if (res.success && res.data) {
         setApplicationSummary(res.data);
       }
-    } catch (error) {
-      message.error("Không thể tải thống kê ứng viên.");
+    } catch {
+      message.error("Kh?ng th? t?i th?ng k? ?ng vi?n.");
     } finally {
       setIsSummaryLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchJobs();
-    fetchApplicationSummary();
   }, [user]);
 
-  type ShortlistResponse = Awaited<
+  useEffect(() => {
+    void fetchJobs();
+    void fetchApplicationSummary();
+  }, [fetchJobs, fetchApplicationSummary]);
+
+type ShortlistResponse = Awaited<
     ReturnType<typeof jobSeekerPostService.getShortlistedCandidates>
   >;
 
@@ -205,16 +211,19 @@ const EmployerJobsPage: React.FC = () => {
     if (!currentJobId) return;
     setIsResettingSuggestions(true);
     try {
-      const res: any = await jobPostService.refreshAiSuggestions(currentJobId);
+      const res = (await jobPostService.refreshAiSuggestions(currentJobId)) as {
+        success?: boolean;
+        message?: string;
+      };
       if (res?.success) {
         message.success("Đã làm mới gợi ý AI.");
       } else {
         message.info(res?.message || "Đã gửi yêu cầu làm mới gợi ý AI.");
       }
       await loadSuggestions(currentJobId);
-    } catch (error: any) {
+    } catch (error) {
       message.error(
-        error?.response?.data?.message || "Không thể gửi yêu cầu làm mới gợi ý AI."
+        getApiMessage(error) || "Không thể gửi yêu cầu làm mới gợi ý AI."
       );
     } finally {
       setIsResettingSuggestions(false);
@@ -234,6 +243,10 @@ const EmployerJobsPage: React.FC = () => {
     cv: null,
     error: null,
   });
+
+  const cvExtraFields = (cvModal.cv as (JobSeekerCv & { experience?: string; education?: string }) | null);
+  const cvExperience = cvExtraFields?.experience;
+  const cvEducation = cvExtraFields?.education;
   const [savedCandidateIds, setSavedCandidateIds] = useState<Set<number>>(
     new Set()
   );
@@ -340,10 +353,9 @@ const EmployerJobsPage: React.FC = () => {
         else copy.add(jobSeekerId);
         return copy;
       });
-    } catch (error: any) {
+    } catch (error) {
       message.error(
-        error?.response?.data?.message ||
-          "Không thể cập nhật trạng thái lưu ứng viên."
+        getApiMessage(error) || "Không thể cập nhật trạng thái lưu ứng viên."
       );
     } finally {
       setSavingCandidateIds((prev) =>
@@ -380,7 +392,7 @@ const EmployerJobsPage: React.FC = () => {
     if (selectedCategory) {
       filteredData = filteredData.filter((job) => {
         const jobCategoryId =
-          job.categoryId ?? (job as any).categoryID ?? null;
+          job.categoryId ?? (job as { categoryID?: number | null }).categoryID ?? null;
         return jobCategoryId === selectedCategory;
       });
     }
@@ -413,8 +425,7 @@ const EmployerJobsPage: React.FC = () => {
     allJobs,
     searchTerm,
     selectedCategory,
-    sortInfo,
-    categories,
+    sortInfo
   ]);
 
   const paginatedJobs = useMemo(() => {
@@ -453,9 +464,9 @@ const EmployerJobsPage: React.FC = () => {
           job.employerPostId === postId ? { ...job, status: nextStatus } : job
         )
       );
-    } catch (err: any) {
+    } catch (err) {
       message.error(
-        err?.response?.data?.message ||
+        getApiMessage(err) ||
           "Cập nhật trạng thái tin tuyển dụng thất bại."
       );
     } finally {
@@ -479,8 +490,8 @@ const EmployerJobsPage: React.FC = () => {
           } else {
             message.error(res.message);
           }
-        } catch (err: any) {
-          message.error(err.response?.data?.message || "Xóa thất bại.");
+        } catch (err) {
+      message.error(getApiMessage(err) || "Xóa thất bại.");
         }
       },
     });
@@ -504,17 +515,18 @@ const EmployerJobsPage: React.FC = () => {
   const handleTableChange: TableProps<JobPostView>["onChange"] = (
     newPagination,
     _filters,
-    sorter: any
+    sorter: SorterResult<JobPostView> | SorterResult<JobPostView>[]
   ) => {
+    const normalizedSorter = Array.isArray(sorter) ? sorter[0] : sorter;
     setPagination({
       current: newPagination.current || 1,
       pageSize: newPagination.pageSize || 10,
     });
 
     setSortInfo({
-      field: sorter.field || "createdAt",
-      order: sorter.order
-        ? sorter.order === "ascend"
+      field: (normalizedSorter?.field as string) || "createdAt",
+      order: normalizedSorter?.order
+        ? normalizedSorter.order === "ascend"
           ? "asc"
           : "desc"
         : "desc",
@@ -542,35 +554,35 @@ const EmployerJobsPage: React.FC = () => {
         const normalized = (status || "").toLowerCase();
         if (normalized === "draft") {
           return (
-            <Tag color="default" style={{ fontSize: 12, padding: "2px 8px" }}>
-              Bản nháp
+             <Tag color="default" style={{ fontSize: 12, padding: "2px 8px" }}>
+               Bản nháp
             </Tag>
           );
         }
         if (normalized === "active") {
           return (
-            <Tag color="green" style={{ fontSize: 12, padding: "2px 8px" }}>
-              Đang đăng
+             <Tag color="green" style={{ fontSize: 12, padding: "2px 8px" }}>
+               Đang đăng
             </Tag>
           );
         }
         if (normalized === "archived") {
           return (
-            <Tag color="orange" style={{ fontSize: 12, padding: "2px 8px" }}>
-              Đã khóa
+             <Tag color="orange" style={{ fontSize: 12, padding: "2px 8px" }}>
+               Đã khóa
             </Tag>
           );
         }
         if (normalized === "expired") {
           return (
             <Tag color="red" style={{ fontSize: 12, padding: "2px 8px" }}>
-              Hết hạn
+              H?t h?n
             </Tag>
           );
         }
         return (
-          <Tag style={{ fontSize: 12, padding: "2px 8px" }}>
-            {status || "Khác"}
+             <Tag style={{ fontSize: 12, padding: "2px 8px" }}>
+             {status || "Khác"}
           </Tag>
         );
       },
@@ -655,7 +667,7 @@ const EmployerJobsPage: React.FC = () => {
               Gợi ý
             </Button>
           </Tooltip>
-          <Tooltip title="Ứng viên & Đã lưu">
+          <Tooltip title="Ứng viên & đã lưu">
             <Button
               icon={<UsergroupAddOutlined />}
               size="small"
@@ -738,7 +750,7 @@ const EmployerJobsPage: React.FC = () => {
                 }}
                 loading={statusActionLoadingId === record.employerPostId}
               >
-              Khác
+                 Khác
               </Button>
             </Dropdown>
           </Tooltip>
@@ -811,7 +823,7 @@ const EmployerJobsPage: React.FC = () => {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-5">
-        {/* HÀNG FILTER DÀN ĐỀU 24 CỘT */}
+        {/* HÀNG FILTER DÀN ĐẦU 24 CỘT */}
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12} lg={10}>
             <Search
@@ -832,7 +844,7 @@ const EmployerJobsPage: React.FC = () => {
               style={{ width: "100%" }}
               loading={categoryStatus === "loading"}
             >
-              {categories.map((cat: any) => (
+              {categories.map((cat: Category) => (
                 <Option key={cat.categoryId} value={cat.categoryId}>
                   {cat.name}
                 </Option>
@@ -895,7 +907,7 @@ const EmployerJobsPage: React.FC = () => {
 
             >
 
-              Làm mới 
+              Làm mới
 
             </Button>,
 
@@ -1076,7 +1088,7 @@ const EmployerJobsPage: React.FC = () => {
                           </span>
                         </div>
                         <div className="text-xs text-gray-400 mt-2">
-                          Đăng bài: {item.employerName}{" "}
+                          Đăng bởi: {item.employerName}{" "}
                           {item.createdAt
                             ? new Date(item.createdAt).toLocaleDateString(
                                 "vi-VN"
@@ -1155,28 +1167,28 @@ const EmployerJobsPage: React.FC = () => {
                 </div>
               )}
 
-              {(cvModal.cv as any).experience && (
+              {cvExperience && (
                 <div className="p-3 rounded-lg border bg-gray-50">
                   <h3 className="font-semibold text-gray-700 mb-1">
                     Kinh nghiệm
                   </h3>
                   <p className="whitespace-pre-wrap text-gray-700">
-                    {(cvModal.cv as any).experience}
+                    {cvExperience}
                   </p>
                 </div>
               )}
 
-              {(cvModal.cv as any).education && (
+              {cvEducation && (
                 <div className="p-3 rounded-lg border bg-gray-50">
                   <h3 className="font-semibold text-gray-700 mb-1">Học vấn</h3>
                   <p className="whitespace-pre-wrap text-gray-700">
-                    {(cvModal.cv as any).education}
+                    {cvEducation}
                   </p>
                 </div>
               )}
 
               <div className="text-xs text-gray-500 text-right">
-                Cập nhật:{" "}
+                C?p nh?t:{" "}
                 {cvModal.cv.updatedAt
                   ? new Date(cvModal.cv.updatedAt).toLocaleDateString("vi-VN")
                   : "N/A"}

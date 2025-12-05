@@ -14,14 +14,16 @@ import type {
   ConfirmChangePasswordPayload,
 } from './types';
 
+type LoginPayload = { email: string; password: string };
+
 /**
  * Gọi API đăng nhập chung cho tất cả vai trò.
  */
-export const login = (credentials: any): Promise<LoginResponse> => {
+export const login = (credentials: LoginPayload): Promise<LoginResponse> => {
   const requestBody = {
-    usernameOrEmail: credentials.email, 
+    usernameOrEmail: credentials.email,
     password: credentials.password,
-    deviceInfo: 'WebApp' 
+    deviceInfo: 'WebApp',
   };
   return baseService.post('/Auth/login', requestBody);
 };
@@ -63,7 +65,7 @@ export const confirmChangePassword = (payload: ConfirmChangePasswordPayload) => 
  */
 export const me = async (): Promise<User> => {
   const response = await baseService.get<MeApiResponse>('/Auth/me');
-  
+
   const user: User = {
     id: parseInt(response.id, 10),
     username: response.username,

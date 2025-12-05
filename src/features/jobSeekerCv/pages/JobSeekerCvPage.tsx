@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   Button,
@@ -29,6 +29,10 @@ import locationService, {
 } from "../../location/locationService";
 
 const { Title, Text, Paragraph } = Typography;
+type CvFormValues = JobSeekerCvPayload;
+const getErrorMessage = (error: unknown, fallback: string) =>
+  (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+  (error instanceof Error ? error.message : fallback);
 
 const JobSeekerCvPage: React.FC = () => {
   const [form] = Form.useForm();
@@ -52,8 +56,8 @@ const JobSeekerCvPage: React.FC = () => {
       setLoading(true);
       const data = await jobSeekerCvService.fetchMyCvs();
       setCvs(data);
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || "Không thể tải CV.");
+    } catch (error: unknown) {
+      message.error(getErrorMessage(error, "Kh?ng th? t?i CV."));
     } finally {
       setLoading(false);
     }
@@ -124,7 +128,7 @@ const JobSeekerCvPage: React.FC = () => {
     setIsFormVisible(false);
   };
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: CvFormValues) => {
     const payload: JobSeekerCvPayload = {
       cvTitle: values.cvTitle,
       skillSummary: values.skillSummary || null,
@@ -148,8 +152,8 @@ const JobSeekerCvPage: React.FC = () => {
 
       await fetchCvs();
       handleCancelForm();
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || "Không thể lưu CV.");
+    } catch (error: unknown) {
+      message.error(getErrorMessage(error, "Kh?ng th? l?u CV."));
     } finally {
       setSubmitting(false);
     }
@@ -185,14 +189,14 @@ const JobSeekerCvPage: React.FC = () => {
       if (editingCv?.cvid === cvId) {
         handleCancelForm();
       }
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || "Không thể xóa CV.");
+    } catch (error: unknown) {
+      message.error(getErrorMessage(error, "Kh?ng th? x?a CV."));
     }
   };
 
   const formTitle = editingCv ? "Chỉnh sửa CV" : "Tạo CV mới";
 
-  const cvList = useMemo(() => {
+  const cvList = (() => {
     if (cvs.length === 0) {
       return (
         <Empty
@@ -275,7 +279,7 @@ const JobSeekerCvPage: React.FC = () => {
         )}
       />
     );
-  }, [cvs, loading]);
+  })();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -339,11 +343,11 @@ const JobSeekerCvPage: React.FC = () => {
                 <Input placeholder="VD: Lập trình viên .NET 3 năm kinh nghiệm" />
               </Form.Item>
 
-              <Form.Item name="skillSummary" label="Tóm tắt kỹ năng nổi bật">
+              <Form.Item name="skillSummary" label="Kinh nghiệm làm việc">
                 <Input.TextArea rows={3} placeholder="Nội dung tóm tắt..." />
               </Form.Item>
 
-              <Form.Item name="skills" label="Kỹ năng">
+              <Form.Item name="skills" label="Kỹ năng chuyên môn">
                 <Input.TextArea placeholder="VD: .NET, SQL Server, REST API..." />
               </Form.Item>
 

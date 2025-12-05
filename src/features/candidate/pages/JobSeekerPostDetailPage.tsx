@@ -30,6 +30,7 @@ import { getPublicJobSeekerProfile } from "../../profile-JobSeeker/services/serv
 import reportService from "../../report/reportService";
 
 const { Title, Paragraph, Text } = Typography;
+type CvDetail = JobSeekerCv & { experience?: string | null; education?: string | null };
 
 const formatDate = (date?: string | Date | null) => {
   if (!date) return "N/A";
@@ -44,7 +45,7 @@ const JobSeekerPostDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [cvModal, setCvModal] = useState<{
     loading: boolean;
-    cv: JobSeekerCv | null;
+    cv: CvDetail | null;
     error: string | null;
     open: boolean;
   }>({ loading: false, cv: null, error: null, open: false });
@@ -75,8 +76,9 @@ const JobSeekerPostDetailPage: React.FC = () => {
         throw new Error("Không tìm thấy bài đăng.");
       }
       setPost(res.data);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Không thể tải bài đăng.");
+    } catch (err) {
+      const responseMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(responseMessage || (err instanceof Error ? err.message : "Kh?ng th? t?i b?i ??ng."));
     } finally {
       setLoading(false);
     }
@@ -115,10 +117,9 @@ const JobSeekerPostDetailPage: React.FC = () => {
 
   const handleViewCv = async () => {
     if (!post?.cvId) {
-      message.info("Bài đăng này chưa đính kèm CV.");
+      message.info("B?i ??ng n?y ch?a ??nh k?m CV.");
       return;
     }
-    // Toggle khi đã tải CV
     if (cvModal.cv && !cvModal.loading) {
       setCvModal((prev) => ({ ...prev, open: !prev.open }));
       return;
@@ -127,11 +128,12 @@ const JobSeekerPostDetailPage: React.FC = () => {
     try {
       const cv = await jobSeekerCvService.fetchCvForEmployer(post.cvId);
       setCvModal({ loading: false, cv, error: null, open: true });
-    } catch (err: any) {
+    } catch (err) {
+      const responseMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setCvModal({
         loading: false,
         cv: null,
-        error: err?.response?.data?.message || "Không thể tải CV.",
+        error: responseMessage || (err instanceof Error ? err.message : "Kh?ng th? t?i CV."),
         open: true,
       });
     }
@@ -162,8 +164,9 @@ const JobSeekerPostDetailPage: React.FC = () => {
       });
       message.success("Đã gửi báo cáo.");
       setReportModal({ open: false, submitting: false, reportType: "", reason: "" });
-    } catch (err: any) {
-      message.error(err?.response?.data?.message || "Không thể gửi báo cáo.");
+    } catch (err) {
+      const responseMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      message.error(responseMessage || (err instanceof Error ? err.message : "Kh?ng th? g?i b?o c?o."));
       setReportModal((prev) => ({ ...prev, submitting: false }));
     }
   };
@@ -371,20 +374,20 @@ const JobSeekerPostDetailPage: React.FC = () => {
                     </div>
                   )}
 
-                  {(cvModal.cv as any).experience && (
+                  {cvModal.cv.experience && (
                     <div className="p-3 rounded-lg border bg-gray-50">
                       <h3 className="font-semibold text-gray-700 mb-1">Kinh nghiệm</h3>
                       <p className="whitespace-pre-wrap text-gray-700">
-                        {(cvModal.cv as any).experience}
+                        {cvModal.cv.experience}
                       </p>
                     </div>
                   )}
 
-                  {(cvModal.cv as any).education && (
+                  {cvModal.cv.education && (
                     <div className="p-3 rounded-lg border bg-gray-50">
                       <h3 className="font-semibold text-gray-700 mb-1">Học vấn</h3>
                       <p className="whitespace-pre-wrap text-gray-700">
-                        {(cvModal.cv as any).education}
+                        {cvModal.cv.education}
                       </p>
                     </div>
                   )}

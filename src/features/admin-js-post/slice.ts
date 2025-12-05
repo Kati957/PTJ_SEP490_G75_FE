@@ -9,6 +9,8 @@ import type {
 import type { RootState } from "../../app/store";
 import { message } from "antd";
 
+type ApiError = { response?: { data?: { message?: string } }; message?: string };
+
 const initialState: AdminJobsState = {
   posts: [],
   totalRecords: 0,
@@ -25,9 +27,10 @@ export const fetchAdminEmployerPosts = createAsyncThunk<
   try {
     const data = await adminService.getJobSeekerPosts(params);
     return data;
-  } catch (err: any) {
-    message.error(err.response?.data?.message || "Không thể tải danh sách.");
-    return rejectWithValue(err.message);
+  } catch (err: unknown) {
+    const error = err as ApiError;
+    message.error(error?.response?.data?.message || "Không thể tải danh sách.");
+    return rejectWithValue(error?.message || "Request failed");
   }
 });
 
@@ -43,9 +46,10 @@ export const toggleEmployerPostBlock = createAsyncThunk<
 
     message.success("Cập nhật trạng thái thành công.");
     return updatedPost;
-  } catch (err: any) {
-    message.error(err.response?.data?.message || "Cập nhật thất bại.");
-    return rejectWithValue(err.message);
+  } catch (err: unknown) {
+    const error = err as ApiError;
+    message.error(error?.response?.data?.message || "Cập nhật thất bại.");
+    return rejectWithValue(error?.message || "Request failed");
   }
 });
 

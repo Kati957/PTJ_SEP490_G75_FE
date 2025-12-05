@@ -22,6 +22,7 @@ import { useEmployerDetail } from "../hooks";
 import JobCard from "../../../features/homepage-jobSeeker/components/JobCard";
 import ratingService from "../../../services/ratingService";
 import type { Rating } from "../../../types/profile";
+import type { Job } from "../../../types";
 
 const { Title, Paragraph } = Typography;
 const pageSize = 6;
@@ -166,7 +167,7 @@ const EmployerDetailPage: React.FC = () => {
 
                 {paginatedJobs.length > 0 ? (
                   <div className="mt-4 flex flex-col gap-4">
-                    {paginatedJobs.map((job: any) => (
+                    {paginatedJobs.map((job: Job) => (
                       <div
                         key={job.id}
                         className="rounded-xl border border-slate-100 transition-shadow hover:shadow-md"

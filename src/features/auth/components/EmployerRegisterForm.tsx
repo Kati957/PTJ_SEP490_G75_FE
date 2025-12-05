@@ -42,9 +42,13 @@ const EmployerRegisterForm: React.FC = () => {
       };
       await registerEmployer(payload);
       setSuccess(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const apiMessage =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
       message.error(
-        error.response?.data?.message || 'Không thể đăng ký nhà tuyển dụng, vui lòng thử lại.'
+        apiMessage || 'Không thể đăng ký nhà tuyển dụng, vui lòng thử lại.'
       );
     } finally {
       setLoading(false);

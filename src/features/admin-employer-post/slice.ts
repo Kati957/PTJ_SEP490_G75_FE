@@ -9,6 +9,8 @@ import { message } from "antd";
 import { adminService } from "./service";
 import type { RootState } from "../../app/store";
 
+type ApiError = { response?: { data?: { message?: string } }; message?: string };
+
 const initialState: AdminEmployerJobsState = {
   posts: [],
   totalRecords: 0,
@@ -27,9 +29,10 @@ export const fetchAdminEmployerPosts = createAsyncThunk<
   try {
     const res = await adminService.getEmployerPosts(params);
     return res;
-  } catch (err: any) {
-    message.error(err.response?.data?.message || "Không thể tải danh sách.");
-    return rejectWithValue(err.message);
+  } catch (err: unknown) {
+    const error = err as ApiError;
+    message.error(error?.response?.data?.message || "Không thể tải danh sách.");
+    return rejectWithValue(error?.message || "Request failed");
   }
 });
 
@@ -41,9 +44,10 @@ export const fetchAdminEmployerPostDetail = createAsyncThunk<
   try {
     const res = await adminService.getEmployerPostDetail(id);
     return res;
-  } catch (err: any) {
-    message.error(err.response?.data?.message || "Không thể tải chi tiết.");
-    return rejectWithValue(err.message);
+  } catch (err: unknown) {
+    const error = err as ApiError;
+    message.error(error?.response?.data?.message || "Không thể tải chi tiết.");
+    return rejectWithValue(error?.message || "Request failed");
   }
 });
 
@@ -57,9 +61,10 @@ export const toggleBlockAndRefresh = createAsyncThunk<
     const updated = await adminService.getEmployerPostDetail(id);
     message.success("Cập nhật trạng thái thành công.");
     return updated;
-  } catch (err: any) {
-    message.error(err.response?.data?.message || "Cập nhật thất bại.");
-    return rejectWithValue(err.message);
+  } catch (err: unknown) {
+    const error = err as ApiError;
+    message.error(error?.response?.data?.message || "Cập nhật thất bại.");
+    return rejectWithValue(error?.message || "Request failed");
   }
 });
 
@@ -118,11 +123,8 @@ const adminEmployerSlice = createSlice({
 });
 
 export const { clearSelectedPost } = adminEmployerSlice.actions;
-export const selectAdminEmployerPosts = (state: RootState) =>
-  state.adminEmployer.posts;
-export const selectAdminEmployerStatus = (state: RootState) =>
-  state.adminEmployer.status;
-export const selectAdminEmployerSelectedPost = (state: RootState) =>
-  state.adminEmployer.selectedPost;
+export const selectAdminEmployerPosts = (state: RootState) => state.adminEmployer.posts;
+export const selectAdminEmployerStatus = (state: RootState) => state.adminEmployer.status;
+export const selectAdminEmployerSelectedPost = (state: RootState) => state.adminEmployer.selectedPost;
 
 export default adminEmployerSlice.reducer;

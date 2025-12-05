@@ -2,11 +2,11 @@ import baseService from '../../services/baseService';
 import type { ApplyJobPayload, AppliedJobsResponse } from './type';
 
 const applyJob = (payload: ApplyJobPayload) => {
-  return baseService.post<any>('/JobApplication/apply', payload);
+  return baseService.post<unknown>('/JobApplication/apply', payload);
 };
 
 const withdrawApplication = (jobSeekerId: number, employerPostId: number) => {
-  return baseService.put<any>(`/JobApplication/withdraw?jobSeekerId=${jobSeekerId}&employerPostId=${employerPostId}`);
+  return baseService.put<unknown>(`/JobApplication/withdraw?jobSeekerId=${jobSeekerId}&employerPostId=${employerPostId}`);
 };
 
 const getAppliedJobsBySeeker = (jobSeekerId: number) => {

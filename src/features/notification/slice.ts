@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk,type PayloadAction } from "@reduxjs/toolkit";
-import type { Notification, NotificationState } from "./types";
+import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { notificationService } from "./service";
+import type { Notification, NotificationState } from "./types";
 
 const initialState: NotificationState = {
   notifications: [],
@@ -10,26 +10,31 @@ const initialState: NotificationState = {
   connectionStatus: "disconnected",
 };
 
-export const fetchNotifications = createAsyncThunk(
-  "notification/fetchNotifications",
-  async (isRead: boolean | undefined, { rejectWithValue }) => {
-    try {
-      const data = await notificationService.getUserNotifications(isRead);
-      return data;
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
+export const fetchNotifications = createAsyncThunk<
+  Notification[],
+  boolean | undefined,
+  { rejectValue: string }
+>("notification/fetchNotifications", async (isRead, { rejectWithValue }) => {
+  try {
+    const data = await notificationService.getUserNotifications(isRead);
+    return data;
+  } catch (error) {
+    const message =
+      (error as { message?: string }).message || "Không thể tải thông báo";
+    return rejectWithValue(message);
   }
-);
+});
 
-export const markNotificationAsRead = createAsyncThunk(
+export const markNotificationAsRead = createAsyncThunk<number, number, { rejectValue: string }>(
   "notification/markAsRead",
-  async (id: number, { rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
       await notificationService.markAsRead(id);
       return id;
-    } catch (error: any) {
-      return rejectWithValue(error.message);
+    } catch (error) {
+      const message =
+        (error as { message?: string }).message || "Không thể cập nhật thông báo";
+      return rejectWithValue(message);
     }
   }
 );
@@ -42,10 +47,7 @@ const notificationSlice = createSlice({
       state.notifications.unshift(action.payload);
       state.unreadCount += 1;
     },
-    setConnectionStatus: (
-      state,
-      action: PayloadAction<"connected" | "disconnected" | "connecting">
-    ) => {
+    setConnectionStatus: (state, action: PayloadAction<"connected" | "disconnected" | "connecting">) => {
       state.connectionStatus = action.payload;
     },
   },
@@ -62,12 +64,10 @@ const notificationSlice = createSlice({
       })
       .addCase(fetchNotifications.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload ?? "Không thể tải thông báo";
       })
       .addCase(markNotificationAsRead.fulfilled, (state, action) => {
-        const notification = state.notifications.find(
-          (n) => n.notificationId === action.payload
-        );
+        const notification = state.notifications.find((n) => n.notificationId === action.payload);
         if (notification && !notification.isRead) {
           notification.isRead = true;
           state.unreadCount = Math.max(0, state.unreadCount - 1);

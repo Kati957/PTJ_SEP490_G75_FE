@@ -7,27 +7,27 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 // Custom Arrow Components
-const NextArrow = (props: any) => {
-  const { className, style, onClick } = props;
-  return (
-    <div
-      className={`${className} !z-10 !w-10 !h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm shadow-lg transition-all cursor-pointer`}
-      style={{ ...style, display: "flex", right: "-15px" }}
-      onClick={onClick}
-    ></div>
-  );
-};
+interface ArrowProps {
+  className?: string;
+  style?: React.CSSProperties;
+  onClick?: () => void;
+}
 
-const PrevArrow = (props: any) => {
-  const { className, style, onClick } = props;
-  return (
-    <div
-      className={`${className} !z-10 !w-10 !h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm shadow-lg transition-all cursor-pointer`}
-      style={{ ...style, display: "flex", left: "-15px" }}
-      onClick={onClick}
-    ></div>
-  );
-};
+const NextArrow = ({ className, style, onClick }: ArrowProps) => (
+  <div
+    className={`${className} !z-10 !w-10 !h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm shadow-lg transition-all cursor-pointer`}
+    style={{ ...style, display: "flex", right: "-15px" }}
+    onClick={onClick}
+  ></div>
+);
+
+const PrevArrow = ({ className, style, onClick }: ArrowProps) => (
+  <div
+    className={`${className} !z-10 !w-10 !h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm shadow-lg transition-all cursor-pointer`}
+    style={{ ...style, display: "flex", left: "-15px" }}
+    onClick={onClick}
+  ></div>
+);
 
 const JobCategoriesSlider: React.FC = () => {
   const { jobCategories } = useSelector((state: RootState) => state.homepage);

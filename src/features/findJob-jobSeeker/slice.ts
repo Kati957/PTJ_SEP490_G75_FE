@@ -55,6 +55,7 @@ export const fetchFindJobData = (): AppThunk => async (dispatch) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     dispatch(fetchDataSuccess({ majors: jobMajors, popular: popularLocations, byAlphabet: locationsByAlphabet }));
   } catch (error) {
-    dispatch(fetchDataFailure((error as any).message));
+    const message = error instanceof Error ? error.message : 'Không thể tải dữ liệu';
+    dispatch(fetchDataFailure(message));
   }
 };

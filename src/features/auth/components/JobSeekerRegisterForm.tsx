@@ -5,13 +5,20 @@ import { registerJobSeeker } from '../services';
 import type { RegisterJobSeekerPayload } from '../types';
 import { useNavigate } from 'react-router-dom';
 
+type JobSeekerRegisterFormValues = {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
 const JobSeekerRegisterForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: JobSeekerRegisterFormValues) => {
     setLoading(true);
     try {
       const payload: RegisterJobSeekerPayload = {
@@ -21,9 +28,10 @@ const JobSeekerRegisterForm: React.FC = () => {
       };
       await registerJobSeeker(payload);
       setSuccess(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errObj = error as { response?: { data?: { message?: string } }; message?: string };
       message.error(
-        error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.'
+        errObj?.response?.data?.message || 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.'
       );
     } finally {
       setLoading(false);

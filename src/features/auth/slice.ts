@@ -1,4 +1,3 @@
-
 import { createSlice, type PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import type { User } from './types';
 import { me } from './services';
@@ -22,7 +21,7 @@ export const fetchMe = createAsyncThunk('auth/fetchMe', async (_, { rejectWithVa
   try {
     const user = await me();
     return user;
-  } catch (error) {
+  } catch {
     return rejectWithValue('Failed to fetch user');
   }
 });
@@ -46,8 +45,8 @@ const authSlice = createSlice({
       removeAccessToken();
     },
     initializationComplete(state) {
-        state.status = 'succeeded';
-    }
+      state.status = 'succeeded';
+    },
   },
   extraReducers: (builder) => {
     builder

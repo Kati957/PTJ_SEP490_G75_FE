@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { getNewsDetail } from './services';
-import type { NewsDetailState, NewsDetailItem } from './types';
+import type { NewsDetailItem, NewsDetailState } from './types';
 
 const initialState: NewsDetailState = {
   data: null,
@@ -8,14 +8,17 @@ const initialState: NewsDetailState = {
   error: null,
 };
 
-export const fetchNewsDetail = createAsyncThunk(
+export const fetchNewsDetail = createAsyncThunk<NewsDetailItem, number, { rejectValue: string }>(
   'newsDetail/fetchDetail',
-  async (id: number, { rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
       const response = await getNewsDetail(id);
       return response;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Không thể tải chi tiết tin tức');
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        'Không thể tải chi tiết tin tức';
+      return rejectWithValue(message);
     }
   }
 );
@@ -40,9 +43,9 @@ const newsDetailSlice = createSlice({
         state.loading = false;
         state.data = action.payload;
       })
-      .addCase(fetchNewsDetail.rejected, (state, action: PayloadAction<any>) => {
+      .addCase(fetchNewsDetail.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload ?? 'Không thể tải chi tiết tin tức';
       });
   },
 });

@@ -143,6 +143,10 @@ const LocationEditField: React.FC<LocationEditFieldProps> = ({
       });
       setIsEditing(false);
     } catch (error) {
+      const errMsg =
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        "Không thể lưu địa chỉ.";
+      message.error(errMsg);
     } finally {
       setLoading(false);
     }

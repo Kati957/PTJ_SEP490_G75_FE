@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { getAllJobSeekerPosts } from './services';
 import type { JobSeekerPost } from '../jobSeekerPosting/types';
 
@@ -14,14 +14,17 @@ const initialState: JobSeekerPostListState = {
   error: null,
 };
 
-export const fetchAllJobSeekerPosts = createAsyncThunk(
+export const fetchAllJobSeekerPosts = createAsyncThunk<JobSeekerPost[], void, { rejectValue: string }>(
   'jobSeekerPostList/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
       const posts = await getAllJobSeekerPosts();
       return posts;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Không thể tải danh sách bài đăng');
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        'Không thể tải danh sách bài đăng';
+      return rejectWithValue(message);
     }
   }
 );
@@ -40,12 +43,11 @@ const jobSeekerPostListSlice = createSlice({
         state.loading = false;
         state.posts = action.payload;
       })
-      .addCase(fetchAllJobSeekerPosts.rejected, (state, action: PayloadAction<any>) => {
+      .addCase(fetchAllJobSeekerPosts.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload ?? 'Không thể tải danh sách bài đăng';
       });
   },
 });
 
 export default jobSeekerPostListSlice.reducer;
-

@@ -5,7 +5,7 @@ import { fetchNewsDetail, resetNewsDetail } from './slice';
 
 export const useNewsDetail = (id: number) => {
   const dispatch = useDispatch<AppDispatch>();
-  const detailState = useSelector((state: RootState) => (state as any).newsDetail);
+  const detailState = useSelector((state: RootState) => state.newsDetail);
 
   const { data, loading, error } = detailState || { data: null, loading: false, error: null };
 

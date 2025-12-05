@@ -17,8 +17,9 @@ const ChangePasswordPage: React.FC = () => {
       await requestChangePassword(values);
       message.success('Đã gửi email xác nhận đổi mật khẩu.');
       setSuccess(true);
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || 'Không thể gửi yêu cầu đổi mật khẩu.');
+    } catch (error: unknown) {
+      const errObj = error as { response?: { data?: { message?: string } }; message?: string };
+      message.error(errObj?.response?.data?.message || 'Không thể gửi yêu cầu đổi mật khẩu.');
     } finally {
       setLoading(false);
     }

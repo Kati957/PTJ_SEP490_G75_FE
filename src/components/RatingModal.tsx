@@ -41,10 +41,19 @@ const RatingModal: React.FC<RatingModalProps> = ({
       onSuccess();
       setRatingValue(0);
       setComment("");
-    } catch (error: any) {
-      message.error(
-        error?.response?.data?.message || "Có lỗi xảy ra khi đánh giá."
-      );
+    } catch (error: unknown) {
+      let errorMsg = "Có lỗi xảy ra khi đánh giá.";
+
+      if (error && typeof error === "object" && "response" in error) {
+        const maybeResponse = (error as { response?: { data?: { message?: string } } }).response;
+        if (maybeResponse?.data?.message) {
+          errorMsg = maybeResponse.data.message;
+        }
+      } else if (error instanceof Error && error.message) {
+        errorMsg = error.message;
+      }
+
+      message.error(errorMsg);
     } finally {
       setSubmitting(false);
     }

@@ -14,8 +14,9 @@ export const fetchCategories = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       return await categoryService.getAll();
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Lấy danh mục thất bại";
+      return rejectWithValue(message);
     }
   }
 );
@@ -25,8 +26,9 @@ export const fetchCategoryById = createAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       return await categoryService.getById(id);
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Lấy danh mục thất bại";
+      return rejectWithValue(message);
     }
   }
 );

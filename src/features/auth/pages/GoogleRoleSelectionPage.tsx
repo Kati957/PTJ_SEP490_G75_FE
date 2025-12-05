@@ -29,27 +29,29 @@ type RoleDetail = {
 
 const ROLE_DETAILS: Record<string, RoleDetail> = {
   JobSeeker: {
-    title: '\u1ee8ng vi\xean t\xecm vi\u1ec7c',
+    title: 'Ứng viên tìm việc',
     description:
-      'T\u1ea1o CV, l\u01b0u tin v\xe0 \u1ee9ng tuy\u1ec3n nhanh ch\xf3ng \u0111\u1ec3 kh\xf4ng b\u1ecf l\u1ee1 c\u01a1 h\u1ed9i t\u1ed1t nh\u1ea5t d\xe0nh cho b\u1ea1n.',
+      'Tạo CV, lưu tin và ứng tuyển nhanh chóng để không bỏ lỡ cơ hội tốt nhất dành cho bạn.',
     highlight:
-      'Ph\xf9 h\u1ee3p khi b\u1ea1n mu\u1ed1n t\xecm ki\u1ebfm c\xf4ng vi\u1ec7c ch\u1ea5t l\u01b0\u1ee3ng v\u1edbi tr\u1ea3i nghi\u1ec7m \u1ee9ng tuy\u1ec3n m\u01b0\u1ee3t m\xe0.',
+      'Phù hợp khi bạn muốn tìm kiếm công việc chất lượng với trải nghiệm ứng tuyển mượt mà.',
     redirect: '/',
-    buttonLabel: 'T\xf4i l\xe0 \u1ee9ng vi\xean t\xecm vi\u1ec7c',
+    buttonLabel: 'Tôi là ứng viên tìm việc',
     image: jobSeekerBanner,
     accent: 'bg-emerald-200 text-emerald-800',
   },
   Employer: {
-    title: 'Nh\xe0 tuy\u1ec3n d\u1ee5ng',
+    title: 'Nhà tuyển dụng',
     description:
-      '\u0110\u0103ng tin, qu\u1ea3n l\xfd \u1ee9ng vi\xean v\xe0 x\xe2y d\u1ef1ng th\u01b0\u01a1ng hi\u1ec7u tuy\u1ec3n d\u1ee5ng chuy\xean nghi\u1ec7p ch\u1ec9 trong m\u1ed9t n\u01a1i.',
-    highlight: 'T\u1ed1i \u01b0u quy tr\xecnh tuy\u1ec3n d\u1ee5ng c\u1ee7a doanh nghi\u1ec7p v\u1edbi n\u1ec1n t\u1ea3ng hi\u1ec7n \u0111\u1ea1i.',
+      'Đăng tin, quản lý ứng viên và xây dựng thương hiệu tuyển dụng chuyên nghiệp chỉ trong một nơi.',
+    highlight: 'Tối ưu quy trình tuyển dụng của doanh nghiệp với nền tảng hiện đại.',
     redirect: '/nha-tuyen-dung/dashboard',
-    buttonLabel: 'T\xf4i l\xe0 nh\xe0 tuy\u1ec3n d\u1ee5ng',
+    buttonLabel: 'Tôi là nhà tuyển dụng',
     image: employerBanner,
     accent: 'bg-cyan-200 text-cyan-800',
   },
 };
+
+type ApiError = { response?: { data?: { message?: string } }; message?: string };
 
 const GoogleRoleSelectionPage: React.FC = () => {
   const location = useLocation();
@@ -66,7 +68,7 @@ const GoogleRoleSelectionPage: React.FC = () => {
 
   useEffect(() => {
     if (!onboardingData) {
-      message.error('Phi\xean \u0111\u0103ng nh\u1eadp Google \u0111\xe3 h\u1ebft h\u1ea1n, vui l\xf2ng \u0111\u0103ng nh\u1eadp l\u1ea1i.');
+      message.error('Phiên đăng nhập Google đã hết hạn, vui lòng đăng nhập lại.');
       navigate('/login', { replace: true });
     }
   }, [onboardingData, navigate]);
@@ -105,14 +107,17 @@ const GoogleRoleSelectionPage: React.FC = () => {
       setAccessToken(accessToken);
       dispatch(loginSuccess({ user: normalizedUser, token: accessToken }));
       clearGoogleOnboardingData();
-      message.success('\u0110\u0103ng k\xfd Google th\xe0nh c\xf4ng!');
+      message.success('Đăng ký Google thành công!');
 
       const destination =
         ROLE_DETAILS[role]?.redirect || (role === 'Employer' ? '/nha-tuyen-dung/dashboard' : '/');
       navigate(destination, { replace: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errObj = error as ApiError;
       const errorMessage =
-        error.response?.data?.message || 'Kh\xf4ng th\u1ec3 ho\xe0n t\u1ea5t \u0111\u0103ng k\xfd Google. Vui l\xf2ng th\u1eed l\u1ea1i.';
+        errObj?.response?.data?.message ||
+        errObj?.message ||
+        'Không thể hoàn tất đăng ký Google. Vui lòng thử lại.';
       message.error(errorMessage);
     } finally {
       setProcessingRole(null);
@@ -136,9 +141,9 @@ const GoogleRoleSelectionPage: React.FC = () => {
     >
       <div className="w-full max-w-5xl bg-white/90 border border-white/40 rounded-3xl shadow-[0_25px_70px_rgba(15,23,42,0.25)] backdrop-blur-xl p-6 md:p-10">
         <div className="text-center mb-10 text-emerald-900">
-          <Paragraph className="text-emerald-600 font-semibold uppercase tracking-[0.3em] mb-2">Ch&#224;o b&#7841;n &#128075;</Paragraph>
-          <Title level={2} className="!mb-3 text-slate-900">D&#224;nh v&#224;i gi&#226;y x&#225;c nh&#7853;n th&#244;ng tin nh&#233;!</Title>
-          <Paragraph className="text-base text-gray-600 max-w-2xl mx-auto">&#272;&#7875; t&#7889;i &#432;u tr&#7843;i nghi&#7879;m v&#224; cung c&#7845;p n&#7897;i dung ph&#249; h&#7907;p nh&#7845;t, vui l&#242;ng ch&#7885;n nh&#243;m vai tr&#242; g&#7847;n nh&#7845;t v&#7899;i nhu c&#7847;u c&#7911;a b&#7841;n tr&#234;n n&#7873;n t&#7843;ng.</Paragraph>
+          <Paragraph className="text-emerald-600 font-semibold uppercase tracking-[0.3em] mb-2">Chào bạn 👋</Paragraph>
+          <Title level={2} className="!mb-3 text-slate-900">Dành vài giây xác nhận thông tin nhé!</Title>
+          <Paragraph className="text-base text-gray-600 max-w-2xl mx-auto">Để tối ưu trải nghiệm và cung cấp nội dung phù hợp nhất, vui lòng chọn nhóm vai trò gần nhất với nhu cầu của bạn trên nền tảng.</Paragraph>
           <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-white/80 shadow mt-5">
             <Avatar size={40} src={onboardingData.picture}>
               {onboardingData.name?.[0] ?? onboardingData.email[0]}

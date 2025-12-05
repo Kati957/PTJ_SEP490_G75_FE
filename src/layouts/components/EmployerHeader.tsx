@@ -15,6 +15,7 @@ import { removeAccessToken } from "../../services/baseService";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { fetchEmployerProfile, clearProfile as clearEmployerProfile } from "../../features/employer/slice/profileSlice";
 import SystemReportModal from "../../features/report/components/SystemReportModal";
+import type { User } from "../../features/auth/types";
 
 const LogoWhite = "/vite.svg";
 
@@ -54,14 +55,23 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
     shouldLoadEmployerProfile,
   ]);
 
-  const fallbackAvatar = (user as any)?.avatarUrl || user?.avatar || undefined;
+  type UserWithOptionalFields = User & { avatarUrl?: string | null; fullName?: string | null };
+  const typedUser: UserWithOptionalFields | undefined = user
+    ? {
+        ...user,
+        avatarUrl: user.avatarUrl ?? null,
+        fullName: user.fullName ?? user.username ?? null,
+      }
+    : undefined;
+
+  const fallbackAvatar = typedUser?.avatarUrl ?? typedUser?.avatar ?? undefined;
   const avatarSrc = employerProfile?.avatarUrl || fallbackAvatar;
   const displayName =
     employerProfile?.displayName ||
     employerProfile?.contactName ||
     employerProfile?.username ||
-    (user as any)?.fullName ||
-    user?.username;
+    typedUser?.fullName ||
+    typedUser?.username;
 
   const handleLogout = () => {
     dispatch(logout());

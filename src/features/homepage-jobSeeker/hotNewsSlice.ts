@@ -20,11 +20,10 @@ export const fetchHotNews = createAsyncThunk<NewsItem[], void, { rejectValue: st
     try {
       const items = await homepageJobSeekerService.getHotNews();
       return items;
-    } catch (error: any) {
+    } catch (error) {
       const message =
-        error?.response?.data?.message ??
-        error?.message ??
-        "Không thể tải danh sách tin nổi bật";
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        (error instanceof Error ? error.message : "KhA'ng th ¯Ÿ t §œi danh sA­ch tin n ¯i b §-t");
       return rejectWithValue(message);
     }
   }
@@ -46,7 +45,7 @@ const hotNewsSlice = createSlice({
       })
       .addCase(fetchHotNews.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload ?? "Không thể tải tin nổi bật";
+        state.error = action.payload ?? "KhA'ng th ¯Ÿ t §œi tin n ¯i b §-t";
       });
   },
 });

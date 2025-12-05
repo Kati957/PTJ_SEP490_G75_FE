@@ -12,6 +12,7 @@ import {
   WarningOutlined,
   AppstoreOutlined,
   PieChartOutlined,
+  CrownOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../features/auth/hooks";
 import { ROLES } from "../../constants/roles";
@@ -44,20 +45,20 @@ const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     getItem("Công việc", "sub-cong-viec", <FileTextOutlined />, [
       getItem(
         <NavLink to="/nha-tuyen-dung/cong-viec" className="text-sm font-semibold text-gray-800">
-          Quản lí bài đăng tuyển dụng
+          Quản lý bài đăng
         </NavLink>,
         "/nha-tuyen-dung/cong-viec"
       ),
       getItem(
         <NavLink to="/nha-tuyen-dung/dang-tin" className="text-sm font-semibold text-gray-800">
-          Đăng bài tuyển dụng công việc
+          Đăng bài tuyển dụng
         </NavLink>,
         "/nha-tuyen-dung/dang-tin"
       ),
     ]),
     getItem(
       <NavLink to="/nha-tuyen-dung/tim-kiem" className="text-sm font-semibold text-gray-800">
-        Danh sách bài đăng tìm việc
+        Tìm kiếm ứng viên
       </NavLink>,
       "/nha-tuyen-dung/tim-kiem",
       <SearchOutlined />
@@ -68,6 +69,13 @@ const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       </NavLink>,
       "/nha-tuyen-dung/bang-tin",
       <ReadOutlined />
+    ),
+    getItem(
+      <NavLink to="/nha-tuyen-dung/nang-cap" className="text-sm font-semibold text-gray-800">
+        Nâng cấp tài khoản
+      </NavLink>,
+      "/nha-tuyen-dung/nang-cap",
+      <CrownOutlined />
     ),
   ];
 
@@ -124,7 +132,6 @@ const EmployerSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           className="h-full border-r-0 employer-menu"
         />
       </div>
-
     </aside>
   );
 };

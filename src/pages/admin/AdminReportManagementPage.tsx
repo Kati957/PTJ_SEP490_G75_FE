@@ -44,6 +44,9 @@ import { formatSalaryText } from '../../utils/jobPostHelpers';
 const { Text } = Typography;
 const { Option } = Select;
 
+const getApiMessage = (error: unknown) =>
+  (error as { response?: { data?: { message?: string } } }).response?.data?.message;
+
 interface PendingFilters {
   reportType: string;
   keyword: string;
@@ -76,7 +79,7 @@ interface ResolveFormValues {
   reason?: string;
 }
 
-interface ResolveSystemFormValues extends AdminResolveSystemReportPayload {}
+type ResolveSystemFormValues = AdminResolveSystemReportPayload;
 
 type ResolveAction = ResolveFormValues['actionTaken'];
 
@@ -158,7 +161,7 @@ const AdminReportManagementPage: React.FC = () => {
     [pendingFilters]
   );
 
-  const solvedFilterParams = useMemo(
+const solvedFilterParams = useMemo(
     () => ({
       reportType: solvedFilters.reportType !== 'all' ? solvedFilters.reportType : undefined,
       adminEmail: solvedFilters.adminEmail.trim() || undefined
@@ -166,7 +169,14 @@ const AdminReportManagementPage: React.FC = () => {
     [solvedFilters]
   );
 
-  const systemFilterParams = useMemo(
+const pendingPage = pendingPagination.current ?? 1;
+const pendingPageSize = pendingPagination.pageSize ?? 10;
+const solvedPage = solvedPagination.current ?? 1;
+const solvedPageSize = solvedPagination.pageSize ?? 10;
+const systemPage = systemPagination.current ?? 1;
+const systemPageSize = systemPagination.pageSize ?? 10;
+
+const systemFilterParams = useMemo(
     () => ({
       status: systemFilters.status !== 'all' ? systemFilters.status : undefined,
       keyword: systemFilters.keyword.trim() || undefined
@@ -176,7 +186,7 @@ const AdminReportManagementPage: React.FC = () => {
   const sortedReportTypes = useMemo(() => [...reportTypes].sort(), [reportTypes]);
 
   const fetchPendingReports = useCallback(
-    async (page = pendingPagination.current ?? 1, pageSize = pendingPagination.pageSize ?? 10) => {
+    async (page: number, pageSize: number) => {
       setPendingLoading(true);
       try {
         const response = await adminReportService.getPendingReports({
@@ -186,12 +196,12 @@ const AdminReportManagementPage: React.FC = () => {
         });
         setPendingReports(response.items);
         addReportTypes(response.items.map((item) => item.reportType));
-        setPendingPagination((prev) => ({
-          ...prev,
-          current: page,
-          pageSize,
-          total: response.total
-        }));
+        setPendingPagination((prev) => {
+          const next = { ...prev, current: page, pageSize, total: response.total };
+          const unchanged =
+            prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
+          return unchanged ? prev : next;
+        });
       } catch (error) {
         console.error('Failed to fetch pending reports', error);
         message.error('Không thể tải danh sách report chờ xử lý');
@@ -199,11 +209,11 @@ const AdminReportManagementPage: React.FC = () => {
         setPendingLoading(false);
       }
     },
-    [addReportTypes, pendingFilterParams, pendingPagination.current, pendingPagination.pageSize]
+    [addReportTypes, pendingFilterParams]
   );
 
   const fetchSolvedReports = useCallback(
-    async (page = solvedPagination.current ?? 1, pageSize = solvedPagination.pageSize ?? 10) => {
+    async (page: number, pageSize: number) => {
       setSolvedLoading(true);
       try {
         const response = await adminReportService.getSolvedReports({
@@ -213,12 +223,12 @@ const AdminReportManagementPage: React.FC = () => {
         });
         setSolvedReports(response.items);
         addReportTypes(response.items.map((item) => item.reportType).filter((v): v is string => Boolean(v)));
-        setSolvedPagination((prev) => ({
-          ...prev,
-          current: page,
-          pageSize,
-          total: response.total
-        }));
+        setSolvedPagination((prev) => {
+          const next = { ...prev, current: page, pageSize, total: response.total };
+          const unchanged =
+            prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
+          return unchanged ? prev : next;
+        });
       } catch (error) {
         console.error('Failed to fetch solved reports', error);
         message.error('Không thể tải danh sách report đã xử lý');
@@ -226,11 +236,11 @@ const AdminReportManagementPage: React.FC = () => {
         setSolvedLoading(false);
       }
     },
-    [addReportTypes, solvedFilterParams, solvedPagination.current, solvedPagination.pageSize]
+    [addReportTypes, solvedFilterParams]
   );
 
   const fetchSystemReports = useCallback(
-    async (page = systemPagination.current ?? 1, pageSize = systemPagination.pageSize ?? 10) => {
+    async (page: number, pageSize: number) => {
       setSystemLoading(true);
       try {
         const response = await adminSystemReportService.getSystemReports({
@@ -239,12 +249,12 @@ const AdminReportManagementPage: React.FC = () => {
           pageSize
         });
         setSystemReports(response.items);
-        setSystemPagination((prev) => ({
-          ...prev,
-          current: page,
-          pageSize,
-          total: response.total
-        }));
+        setSystemPagination((prev) => {
+          const next = { ...prev, current: page, pageSize, total: response.total };
+          const unchanged =
+            prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
+          return unchanged ? prev : next;
+        });
       } catch (error) {
         console.error('Failed to fetch system reports', error);
         message.error('Không thể tải danh sách báo cáo hệ thống');
@@ -252,34 +262,31 @@ const AdminReportManagementPage: React.FC = () => {
         setSystemLoading(false);
       }
     },
-    [systemFilterParams, systemPagination.current, systemPagination.pageSize]
+    [systemFilterParams]
   );
 
   useEffect(() => {
-    void fetchPendingReports();
-  }, [fetchPendingReports]);
+    void fetchPendingReports(pendingPage, pendingPageSize);
+  }, [fetchPendingReports, pendingPage, pendingPageSize]);
 
   useEffect(() => {
-    void fetchSolvedReports();
-  }, [fetchSolvedReports]);
+    void fetchSolvedReports(solvedPage, solvedPageSize);
+  }, [fetchSolvedReports, solvedPage, solvedPageSize]);
 
   useEffect(() => {
-    void fetchSystemReports();
-  }, [fetchSystemReports]);
+    void fetchSystemReports(systemPage, systemPageSize);
+  }, [fetchSystemReports, systemPage, systemPageSize]);
 
   const handlePendingTableChange = (pagination: TablePaginationConfig) => {
     setPendingPagination(pagination);
-    void fetchPendingReports(pagination.current, pagination.pageSize);
   };
 
   const handleSolvedTableChange = (pagination: TablePaginationConfig) => {
     setSolvedPagination(pagination);
-    void fetchSolvedReports(pagination.current, pagination.pageSize);
   };
 
   const handleSystemTableChange = (pagination: TablePaginationConfig) => {
     setSystemPagination(pagination);
-    void fetchSystemReports(pagination.current, pagination.pageSize);
   };
 
   const handlePendingFilterChange = (key: keyof PendingFilters, value: string) => {
@@ -376,10 +383,13 @@ const AdminReportManagementPage: React.FC = () => {
       message.success('Đã xử lý report thành công');
       setResolveModalOpen(false);
       setResolvingReport(null);
-      await Promise.all([fetchPendingReports(), fetchSolvedReports()]);
+      await Promise.all([
+        fetchPendingReports(pendingPage, pendingPageSize),
+        fetchSolvedReports(solvedPage, solvedPageSize)
+      ]);
     } catch (error) {
       console.error('Failed to resolve report', error);
-      const apiMessage: string | undefined = (error as any)?.response?.data?.message;
+      const apiMessage: string | undefined = getApiMessage(error);
       message.error(apiMessage ?? 'Không thể xử lý report');
     } finally {
       setResolveSubmitting(false);
@@ -412,14 +422,14 @@ const AdminReportManagementPage: React.FC = () => {
     }
   };
 
-  const handleResolveSystemReport = async (values: ResolveSystemFormValues) => {
+  const handleResolveSystemReport = async () => {
     if (resolvingSystemId === null) return;
     setSystemResolveSubmitting(true);
     try {
-      await adminSystemReportService.resolveSystemReport(resolvingSystemId, values);
+      await adminSystemReportService.resolveSystemReport(resolvingSystemId);
       message.success('Đã cập nhật báo cáo hệ thống');
       setSystemResolveModalOpen(false);
-      await fetchSystemReports();
+      await fetchSystemReports(systemPage, systemPageSize);
     } catch (error) {
       console.error('Failed to resolve system report', error);
       message.error('Không thể cập nhật báo cáo hệ thống');
@@ -953,13 +963,13 @@ const AdminReportManagementPage: React.FC = () => {
 
   const handleReload = () => {
     if (activeSection === 'system') {
-      void fetchSystemReports();
+      void fetchSystemReports(systemPagination.current ?? 1, systemPagination.pageSize ?? 10);
       return;
     }
     if (postTab === 'pending') {
-      void fetchPendingReports();
+      void fetchPendingReports(pendingPagination.current ?? 1, pendingPagination.pageSize ?? 10);
     } else {
-      void fetchSolvedReports();
+      void fetchSolvedReports(solvedPagination.current ?? 1, solvedPagination.pageSize ?? 10);
     }
   };
 

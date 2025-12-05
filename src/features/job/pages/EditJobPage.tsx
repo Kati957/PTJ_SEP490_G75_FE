@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from 'antd';
+import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../auth/hooks';
 import { JobPostingForm } from '../components/employer/JobPostingForm';
 import JobPostingPreview from '../components/employer/JobPostingPreview';
-import { useParams, useNavigate } from 'react-router-dom';
 import jobPostService from '../jobPostService';
 import type { JobPostData, JobPostView } from '../jobTypes';
-import { transformToEmployerPostDto } from './PostJobPage';
+import { transformToEmployerPostDto } from '../utils';
 
 const transformDtoToFormData = (dto: JobPostView): JobPostData => {
   const normalizedImages =
@@ -72,7 +72,7 @@ const EditJobPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const jobId = parseInt(id || '0');
+  const jobId = parseInt(id || '0', 10);
 
   const [jobData, setJobData] = useState<JobPostData>(emptyState);
   const [status, setStatus] = useState<'idle' | 'loading' | 'submitting'>('loading');
@@ -88,15 +88,18 @@ const EditJobPage: React.FC = () => {
       setStatus('loading');
       try {
         const res = await jobPostService.getJobById(jobId);
-        if (res.success) {
+        if (res.success && res.data) {
           setJobData(transformDtoToFormData(res.data));
           setStatus('idle');
         } else {
           toast.error(res.message || 'Không tìm thấy bài đăng.');
           setStatus('idle');
         }
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || 'Lỗi khi tải dữ liệu.');
+      } catch (err) {
+        const errorMessage =
+          (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+          'Lỗi khi tải dữ liệu.';
+        toast.error(errorMessage);
         setStatus('idle');
       }
     };
@@ -104,8 +107,8 @@ const EditJobPage: React.FC = () => {
     fetchData();
   }, [jobId, user, navigate]);
 
-  const handleDataChange = (field: keyof JobPostData, value: any) => {
-    setJobData(prevData => ({
+  const handleDataChange = <K extends keyof JobPostData>(field: K, value: JobPostData[K]) => {
+    setJobData((prevData) => ({
       ...prevData,
       [field]: value,
     }));
@@ -115,8 +118,7 @@ const EditJobPage: React.FC = () => {
     if (!user || !user.id || !jobId) return;
 
     setStatus('submitting');
-    const userIdAsNumber = user.id;
-    const dto = transformToEmployerPostDto(jobData, userIdAsNumber);
+    const dto = transformToEmployerPostDto(jobData, user.id);
 
     try {
       const res = await jobPostService.updateJobPost(jobId, dto);
@@ -126,8 +128,11 @@ const EditJobPage: React.FC = () => {
       } else {
         toast.error(res.message);
       }
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Lỗi khi cập nhật.');
+    } catch (err) {
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        'Lỗi khi cập nhật.';
+      toast.error(errorMessage);
     }
     setStatus('idle');
   };
@@ -135,27 +140,19 @@ const EditJobPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">Chỉnh sửa công việc</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <main className="md:col-span-3 space-y-6">
-          <JobPostingForm 
-            data={jobData} 
-            onDataChange={handleDataChange} 
-          />
+          <JobPostingForm data={jobData} onDataChange={handleDataChange} />
           <div className="flex justify-end p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-            <Button 
-              type="primary" 
-              size="large"
-              onClick={handleSubmit}
-              loading={status === 'submitting'}
-            >
+            <Button type="primary" size="large" onClick={handleSubmit} loading={status === 'submitting'}>
               Cập nhật công việc
             </Button>
           </div>
         </main>
-        
+
         <aside className="md:col-span-2">
-            <JobPostingPreview data={jobData} />
+          <JobPostingPreview data={jobData} />
         </aside>
       </div>
     </div>

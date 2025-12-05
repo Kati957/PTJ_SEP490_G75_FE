@@ -27,12 +27,15 @@ import jobSeekerCvService from "../../jobSeekerCv/services";
 import type { JobSeekerPostDtoOut } from "../type";
 import type { JobSeekerCv } from "../../jobSeekerCv/types";
 import type { JobSeekerProfileDto } from "../../profile-JobSeeker/types";
+
 import { getPublicJobSeekerProfile } from "../../profile-JobSeeker/services/service";
 import { useCategories } from "../../category/hook";
 import locationService, { type LocationOption } from "../../location/locationService";
 import reportService from "../../report/reportService";
 
 const trimText = (value?: string | null): string => (value ?? "").trim();
+
+type CvWithDetails = JobSeekerCv & { experience?: string | null; education?: string | null };
 
 const hasValue = (value?: string | null): boolean => trimText(value).length > 0;
 
@@ -92,7 +95,7 @@ const JobSeekerPostsPage: React.FC = () => {
   const [cvModal, setCvModal] = useState<{
     isOpen: boolean;
     loading: boolean;
-    cv: JobSeekerCv | null;
+    cv: CvWithDetails | null;
     error: string | null;
   }>({
     isOpen: false,
@@ -374,8 +377,9 @@ const JobSeekerPostsPage: React.FC = () => {
         reportType: "",
         customReportType: "",
       });
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || "Không thể gửi báo cáo. Vui lòng thử lại.");
+    } catch (error) {
+      const responseMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      message.error(responseMessage || (error instanceof Error ? error.message : "Không thể gửi báo cáo. Vui lòng thử lại."));
       setReportModal((prev) => ({ ...prev, submitting: false }));
     }
   };
@@ -633,20 +637,20 @@ const JobSeekerPostsPage: React.FC = () => {
                 </div>
               )}
 
-              {(cvModal.cv as any).experience && (
+              {cvModal.cv.experience && (
                 <div className="p-3 rounded-lg border bg-gray-50">
                   <h3 className="font-semibold text-gray-700 mb-1">Kinh nghiệm</h3>
                   <p className="whitespace-pre-wrap text-gray-700">
-                    {(cvModal.cv as any).experience}
+                    {cvModal.cv.experience}
                   </p>
                 </div>
               )}
 
-              {(cvModal.cv as any).education && (
+              {cvModal.cv.education && (
                 <div className="p-3 rounded-lg border bg-gray-50">
                   <h3 className="font-semibold text-gray-700 mb-1">Học vấn</h3>
                   <p className="whitespace-pre-wrap text-gray-700">
-                    {(cvModal.cv as any).education}
+                    {cvModal.cv.education}
                   </p>
                 </div>
               )}

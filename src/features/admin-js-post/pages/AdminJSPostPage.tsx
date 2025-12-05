@@ -56,7 +56,7 @@ const AdminJSPostPage: React.FC = () => {
   try {
     const postDetail = await adminService.getJobSeekerPostDetail(id);
     setSelectedPost(postDetail);
-  } catch (err) {
+  } catch {
     message.error("Không thể tải chi tiết.");
     setIsModalOpen(false);
   } finally {

@@ -1,3 +1,4 @@
+import type { AxiosRequestHeaders } from 'axios';
 import baseService from '../../services/baseService';
 import type {
   ApplicationActionResponse,
@@ -56,7 +57,7 @@ const buildEmployerPostFormData = (data: EmployerPostDto): FormData => {
 export const createJobPost = async (data: EmployerPostDto): Promise<JobPostResponse> => {
   const formData = buildEmployerPostFormData(data);
   return await baseService.post<JobPostResponse>('/EmployerPost/create', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: { 'Content-Type': 'multipart/form-data' } as AxiosRequestHeaders,
   });
 };
 
@@ -71,7 +72,7 @@ export const getJobById = async (id: number): Promise<JobPostResponse> => {
 export const updateJobPost = async (id: number, data: EmployerPostDto): Promise<UpdateJobResponse> => {
   const formData = buildEmployerPostFormData(data);
   return await baseService.put<UpdateJobResponse>(`/EmployerPost/${id}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: { 'Content-Type': 'multipart/form-data' } as AxiosRequestHeaders,
   });
 };
 

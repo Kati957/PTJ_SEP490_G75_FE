@@ -351,10 +351,11 @@ const JobDetailPage: React.FC = () => {
       });
       message.success("Đã gửi báo cáo tới quản trị viên.");
       setReportModal({ visible: false, submitting: false, reason: "", reportType: "", customReportType: "" });
-    } catch (error: any) {
+    } catch (error) {
+      const responseMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
       message.error(
-        error?.response?.data?.message ||
-          "Không thể gửi báo cáo. Vui lòng thử lại."
+        responseMessage ||
+          (error instanceof Error ? error.message : "Không thể gửi báo cáo. Vui lòng thử lại.")
       );
       setReportModal((prev) => ({ ...prev, submitting: false }));
     }
@@ -703,10 +704,11 @@ const JobDetailPage: React.FC = () => {
                         setIsFollowing(true);
                         message.success("Đã theo dõi nhà tuyển dụng.");
                       }
-                    } catch (followError: any) {
+                    } catch (followError) {
+                      const responseMessage = (followError as { response?: { data?: { message?: string } } })?.response?.data?.message;
                       message.error(
-                        followError.response?.data?.message ||
-                          "Không thể cập nhật theo dõi."
+                        responseMessage ||
+                          (followError instanceof Error ? followError.message : "KhA'ng th??? c??-p nh??-t theo dA?i.")
                       );
                     } finally {
                       setFollowLoading(false);

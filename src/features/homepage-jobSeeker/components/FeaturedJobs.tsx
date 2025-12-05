@@ -5,24 +5,31 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import type { RootState } from '../../../app/store';
+import type { Job } from '../../../types';
 import JobCard from './JobCard';
 import locationService, { type LocationOption } from '../../location/locationService';
 
-const PrevArrow = ({ onClick }: { onClick: () => void }) => (
+interface ArrowProps {
+  className?: string;
+  style?: React.CSSProperties;
+  onClick?: () => void;
+}
+
+const PrevArrow = ({ onClick, className, style }: ArrowProps) => (
   <div
     onClick={onClick}
-    className="custom-arrow !w-12 !h-12 !rounded-full !bg-white/90 !shadow-lg !flex !items-center !justify-center !z-10 cursor-pointer hover:!bg-white"
-    style={{ position: 'absolute', left: '0px', top: '50%', transform: 'translate(-50%, -50%)' }}
+    className={`${className ?? ""} custom-arrow !w-12 !h-12 !rounded-full !bg-white/90 !shadow-lg !flex !items-center !justify-center !z-10 cursor-pointer hover:!bg-white`}
+    style={{ ...style, position: 'absolute', left: '0px', top: '50%', transform: 'translate(-50%, -50%)' }}
   >
     <LeftOutlined className="!text-xl !text-slate-700" />
   </div>
 );
 
-const NextArrow = ({ onClick }: { onClick: () => void }) => (
+const NextArrow = ({ onClick, className, style }: ArrowProps) => (
   <div
     onClick={onClick}
-    className="custom-arrow !w-12 !h-12 !rounded-full !bg-white/90 !shadow-lg !flex !items-center !justify-center !z-10 cursor-pointer hover:!bg-white"
-    style={{ position: 'absolute', right: '0px', top: '50%', transform: 'translate(50%, -50%)' }}
+    className={`${className ?? ""} custom-arrow !w-12 !h-12 !rounded-full !bg-white/90 !shadow-lg !flex !items-center !justify-center !z-10 cursor-pointer hover:!bg-white`}
+    style={{ ...style, position: 'absolute', right: '0px', top: '50%', transform: 'translate(50%, -50%)' }}
   >
     <RightOutlined className="!text-xl !text-slate-700" />
   </div>
@@ -79,11 +86,13 @@ const salaryFilters = [
   { value: 'negotiable', label: 'Thoả thuận' }
 ];
 
+type ProvinceOption = LocationOption & { code: number };
+
 const FeaturedJobs: React.FC = () => {
   const jobs = useSelector((state: RootState) => state.homepage.featuredJobs);
   const carouselRef = useRef<CarouselRef>(null);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null);
-  const [provinceOptions, setProvinceOptions] = useState<LocationOption[]>([]);
+  const [provinceOptions, setProvinceOptions] = useState<ProvinceOption[]>([]);
   const [selectedSalary, setSelectedSalary] = useState<string>('all');
   const [filterType, setFilterType] = useState<'location' | 'salary'>('location');
 
@@ -93,23 +102,25 @@ const FeaturedJobs: React.FC = () => {
     const fetchProvinces = async () => {
       try {
         const data = await locationService.getProvinces();
-        setProvinceOptions([{ code: null as any, name: 'Tất cả' }, ...data]);
+        const allOption: ProvinceOption = { code: 0, name: 'Tất cả' };
+        setProvinceOptions([allOption, ...data]);
       } catch {
-        setProvinceOptions([{ code: null as any, name: 'Tất cả' }]);
+        const allOption: ProvinceOption = { code: 0, name: 'Tất cả' };
+        setProvinceOptions([allOption]);
       }
     };
     fetchProvinces();
   }, []);
 
   const filteredJobs = useMemo(() => {
-    return jobs.filter((job) => {
-      const normalizedLocRaw = normalizeText((job as any).location);
+    return jobs.filter((job: Job) => {
+      const normalizedLocRaw = normalizeText(job.location ?? undefined);
       const normalizedLoc = stripProvincePrefix(normalizedLocRaw);
       const normalizedLocCompact = normalizedLoc.replace(/[^a-z0-9]/g, '');
       const selectedProvinceName = provinceOptions.find((p) => p.code === selectedProvinceId)?.name || '';
       const provinceTokens = normalizeProvinceTokens(selectedProvinceName);
 
-      const jobProvinceId = (job as any).provinceId;
+      const jobProvinceId = (job as Job & { provinceId?: number | null }).provinceId;
       const matchProvinceId =
         selectedProvinceId !== null &&
         jobProvinceId !== undefined &&
@@ -125,7 +136,7 @@ const FeaturedJobs: React.FC = () => {
 
       if (selectedSalary === 'all') return true;
 
-      const salaryValue = parseSalaryValue((job as any).salary);
+      const salaryValue = parseSalaryValue(job.salary ?? undefined);
       if (selectedSalary === 'negotiable') return salaryValue === null;
       if (salaryValue === null) return false;
 

@@ -13,24 +13,54 @@ const FollowedEmployersPage: React.FC = () => {
   const [items, setItems] = useState<EmployerFollowDto[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const toNumber = (value: unknown): number | undefined => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : undefined;
+  };
+
+  const toStringSafe = (value: unknown, fallback = ""): string => {
+    if (typeof value === "string") return value;
+    if (value === null || value === undefined) return fallback;
+    return String(value);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (!userId) return;
       setLoading(true);
       try {
         const data = await followService.getFollowedEmployers(userId);
-        const mappedItems: EmployerFollowDto[] = (data || []).map((item: any) => ({
-          employerId: item.employerId ?? item.EmployerID ?? item.employerID ?? item.id,
-          employerName: item.employerName ?? item.EmployerName ?? "Nhà tuyển dụng",
-          followDate: item.followDate ?? item.FollowDate ?? item.followedAt ?? item.followedDate,
-          logoUrl:
-            item.logoUrl ??
-            item.logo ??
-            item.employerLogoUrl ??
-            item.avatarUrl ??
-            item.logoUrlSmall ??
-            item.logo_path,
-        }));
+        const rawList: Record<string, unknown>[] = Array.isArray(data)
+          ? (data as unknown as Record<string, unknown>[])
+          : [];
+        const mappedItems: EmployerFollowDto[] = rawList.map((item) => {
+          const employerId =
+            toNumber(item.employerId) ??
+            toNumber((item as Record<string, unknown>).EmployerID) ??
+            toNumber((item as Record<string, unknown>).employerID) ??
+            toNumber(item.id) ??
+            0;
+
+          return {
+            employerId,
+            employerName:
+              toStringSafe(item.employerName) ||
+              toStringSafe((item as Record<string, unknown>).EmployerName, "Nhà tuyển dụng"),
+            followDate:
+              toStringSafe(item.followDate) ||
+              toStringSafe((item as Record<string, unknown>).FollowDate) ||
+              toStringSafe((item as Record<string, unknown>).followedAt) ||
+              toStringSafe((item as Record<string, unknown>).followedDate),
+            logoUrl:
+              toStringSafe(item.logoUrl) ||
+              toStringSafe((item as Record<string, unknown>).logo) ||
+              toStringSafe((item as Record<string, unknown>).employerLogoUrl) ||
+              toStringSafe((item as Record<string, unknown>).avatarUrl) ||
+              toStringSafe((item as Record<string, unknown>).logoUrlSmall) ||
+              toStringSafe((item as Record<string, unknown>).logo_path, ""),
+          };
+        });
+
         const enrichedItems = await Promise.all(
           mappedItems.map(async (item) => {
             if (item.logoUrl || !item.employerId) {
@@ -50,7 +80,7 @@ const FollowedEmployersPage: React.FC = () => {
           })
         );
         setItems(enrichedItems);
-      } catch (err: any) {
+      } catch {
         message.error("Không thể tải danh sách theo dõi.");
       } finally {
         setLoading(false);

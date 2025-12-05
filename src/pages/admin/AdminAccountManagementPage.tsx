@@ -36,6 +36,15 @@ import AdminSectionHeader from './components/AdminSectionHeader';
 const { Option } = Select;
 const { TextArea } = Input;
 
+const getApiMessage = (error: unknown): string | undefined => {
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object' && 'response' in error) {
+    const err = error as { response?: { data?: { message?: string } } };
+    return err.response?.data?.message;
+  }
+  return undefined;
+};
+
 type DetailFieldProps = {
   label: string;
   value?: React.ReactNode;
@@ -46,7 +55,7 @@ const DetailFieldBox: React.FC<DetailFieldProps> = ({ label, value, span = 1 }) 
   <div className={`flex flex-col gap-1 ${span === 2 ? 'md:col-span-2' : ''}`}>
     <span className="text-sm font-semibold text-gray-600">{label}</span>
     <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 min-h-[42px] flex items-center">
-      {value ?? <span className="text-gray-400 italic">Chưa cập nhật</span>}
+      {value ?? <span className="text-gray-400 italic">Chưa có dữ liệu</span>}
     </div>
   </div>
 );
@@ -136,7 +145,7 @@ const AdminAccountManagementPage: React.FC = () => {
       page: pagination.current,
       pageSize: pagination.pageSize
     };
-  }, [filters, pagination.current, pagination.pageSize]);
+  }, [filters, pagination]);
 
   const normalizedRegFilters = useMemo(() => {
     return {
@@ -145,10 +154,10 @@ const AdminAccountManagementPage: React.FC = () => {
       page: regPagination.current,
       pageSize: regPagination.pageSize
     };
-  }, [regFilters, regPagination.current, regPagination.pageSize]);
+  }, [regFilters, regPagination]);
 
   const fetchUsers = useCallback(
-    async (page = pagination.current ?? 1, pageSize = pagination.pageSize ?? 10) => {
+    async (page: number, pageSize: number) => {
       setLoading(true);
       try {
         const response = await adminUserService.getUsers({
@@ -157,12 +166,12 @@ const AdminAccountManagementPage: React.FC = () => {
           pageSize
         });
         setUsers(response.items);
-        setPagination((prev) => ({
-          ...prev,
-          current: page,
-          pageSize,
-          total: response.total
-        }));
+        setPagination((prev) => {
+          const next = { ...prev, current: page, pageSize, total: response.total };
+          const unchanged =
+            prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
+          return unchanged ? prev : next;
+        });
       } catch (error) {
         console.error('Failed to load admin users', error);
         message.error('Không thể tải danh sách tài khoản');
@@ -170,16 +179,20 @@ const AdminAccountManagementPage: React.FC = () => {
         setLoading(false);
       }
     },
-    [normalizedFilters, pagination.current, pagination.pageSize]
+    [normalizedFilters]
   );
 
+  const currentPage = pagination.current ?? 1;
+  const currentPageSize = pagination.pageSize ?? 10;
+
   useEffect(() => {
-    void fetchUsers();
-  }, [fetchUsers]);
+    void fetchUsers(currentPage, currentPageSize);
+  }, [fetchUsers, currentPage, currentPageSize]);
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     setPagination((prev) => ({ ...prev, current: 1 }));
+    void fetchUsers(1, currentPageSize);
   };
 
   const handleRegFilterChange = (key: keyof RegFilterState, value: string) => {
@@ -188,7 +201,7 @@ const AdminAccountManagementPage: React.FC = () => {
   };
 
   const fetchRegistrations = useCallback(
-    async (page = regPagination.current ?? 1, pageSize = regPagination.pageSize ?? 10) => {
+    async (page: number, pageSize: number) => {
       setRegLoading(true);
       try {
         const response = await adminEmployerRegistrationService.getRequests({
@@ -197,12 +210,12 @@ const AdminAccountManagementPage: React.FC = () => {
           pageSize
         });
         setRegRequests(response.items);
-        setRegPagination((prev) => ({
-          ...prev,
-          current: page,
-          pageSize,
-          total: response.total
-        }));
+        setRegPagination((prev) => {
+          const next = { ...prev, current: page, pageSize, total: response.total };
+          const unchanged =
+            prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
+          return unchanged ? prev : next;
+        });
       } catch (error) {
         console.error('Failed to load employer registrations', error);
         message.error('Không thể tải danh sách hồ sơ nhà tuyển dụng chờ duyệt');
@@ -210,8 +223,9 @@ const AdminAccountManagementPage: React.FC = () => {
         setRegLoading(false);
       }
     },
-    [normalizedRegFilters, regPagination.current, regPagination.pageSize]
+    [normalizedRegFilters]
   );
+
 
   const handleTableChange = (newPagination: TablePaginationConfig) => {
     setPagination((prev) => ({
@@ -219,6 +233,9 @@ const AdminAccountManagementPage: React.FC = () => {
       current: newPagination.current,
       pageSize: newPagination.pageSize
     }));
+    if (newPagination.current && newPagination.pageSize) {
+      void fetchUsers(newPagination.current, newPagination.pageSize);
+    }
   };
 
   const handleRegTableChange = (newPagination: TablePaginationConfig) => {
@@ -227,13 +244,22 @@ const AdminAccountManagementPage: React.FC = () => {
       current: newPagination.current,
       pageSize: newPagination.pageSize
     }));
+    if (newPagination.current && newPagination.pageSize) {
+      void fetchRegistrations(newPagination.current, newPagination.pageSize);
+    }
   };
 
   useEffect(() => {
     if (activeTab === 'registrations' && regRequests.length === 0) {
-      void fetchRegistrations();
+      void fetchRegistrations(regPagination.current ?? 1, regPagination.pageSize ?? 10);
     }
   }, [activeTab, fetchRegistrations, regRequests.length]);
+
+  useEffect(() => {
+    if (activeTab === 'accounts') {
+      void fetchUsers(currentPage, currentPageSize);
+    }
+  }, [activeTab, fetchUsers, currentPage, currentPageSize]);
 
   const fetchGoogleRegistrations = useCallback(async () => {
     setGoogleLoading(true);
@@ -260,7 +286,7 @@ const AdminAccountManagementPage: React.FC = () => {
     try {
       const detail = await adminUserService.getUserDetail(userId);
       setSelectedUser(detail);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to fetch user detail', error);
       message.error('Không thể tải chi tiết tài khoản');
       setDetailOpen(false);
@@ -280,9 +306,9 @@ const AdminAccountManagementPage: React.FC = () => {
       message.success(
         `Đã ${user.isActive ? 'vô hiệu hóa' : 'kích hoạt'} tài khoản ${user.username}`
       );
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to toggle user active', error);
-      const apiMessage: string | undefined = error?.response?.data?.message;
+      const apiMessage = getApiMessage(error);
       if (apiMessage?.includes('AccountSuspended')) {
         message.warning(
           'Đã khóa tài khoản nhưng server thiếu template AccountSuspended. Trạng thái đã được cập nhật.'
@@ -292,7 +318,7 @@ const AdminAccountManagementPage: React.FC = () => {
         return;
       }
     } finally {
-      await fetchUsers();
+      await fetchUsers(currentPage, currentPageSize);
       if (selectedUser?.userId === user.userId) {
         const detail = await adminUserService.getUserDetail(user.userId);
         setSelectedUser(detail);
@@ -306,10 +332,10 @@ const AdminAccountManagementPage: React.FC = () => {
     try {
       await adminEmployerRegistrationService.approve(request.requestId);
       message.success(`Đã phê duyệt hồ sơ. Email xác thực đã được gửi tới ${request.email}.`);
-      await Promise.all([fetchRegistrations(), fetchUsers()]);
-    } catch (error: any) {
+      await Promise.all([fetchRegistrations(regPagination.current ?? 1, regPagination.pageSize ?? 10), fetchUsers(currentPage, currentPageSize)]);
+    } catch (error) {
       console.error('Failed to approve employer registration', error);
-      const apiMessage: string | undefined = error?.response?.data?.message;
+      const apiMessage = getApiMessage(error);
       message.error(apiMessage ?? 'Không phê duyệt hồ sơ');
     } finally {
       setRegActionLoadingId(null);
@@ -341,10 +367,10 @@ const AdminAccountManagementPage: React.FC = () => {
         try {
           await adminEmployerRegistrationService.reject(request.requestId, reason.trim());
           message.success('Đã từ chối hồ sơ.');
-          await fetchRegistrations();
-        } catch (error: any) {
+          await fetchRegistrations(regPagination.current ?? 1, regPagination.pageSize ?? 10);
+        } catch (error) {
           console.error('Failed to reject employer registration', error);
-          const apiMessage: string | undefined = error?.response?.data?.message;
+          const apiMessage = getApiMessage(error);
           message.error(apiMessage ?? 'Không từ chối được hồ sơ');
           return Promise.reject();
         } finally {
@@ -360,10 +386,10 @@ const AdminAccountManagementPage: React.FC = () => {
     try {
       await adminEmployerRegistrationService.approveGoogle(item.id);
       message.success('Đã duyệt hồ sơ Google NTD.');
-      await Promise.all([fetchGoogleRegistrations(), fetchUsers()]);
-    } catch (error: any) {
+      await Promise.all([fetchGoogleRegistrations(), fetchUsers(currentPage, currentPageSize)]);
+    } catch (error) {
       console.error('Failed to approve Google employer registration', error);
-      const apiMessage: string | undefined = error?.response?.data?.message;
+      const apiMessage = getApiMessage(error);
       message.error(apiMessage ?? 'Không thể duyệt hồ sơ Google.');
     } finally {
       setGoogleActionLoadingId(null);
@@ -396,9 +422,9 @@ const AdminAccountManagementPage: React.FC = () => {
           await adminEmployerRegistrationService.rejectGoogle(item.id, reason.trim());
           message.success('Đã từ chối hồ sơ Google.');
           await fetchGoogleRegistrations();
-        } catch (error: any) {
+        } catch (error) {
           console.error('Failed to reject Google employer registration', error);
-          const apiMessage: string | undefined = error?.response?.data?.message;
+          const apiMessage = getApiMessage(error);
           message.error(apiMessage ?? 'Không thể từ chối hồ sơ Google.');
           return Promise.reject();
         } finally {
@@ -509,7 +535,7 @@ const AdminAccountManagementPage: React.FC = () => {
 
   const regColumns: ColumnsType<AdminEmployerRegListItem> = [
     {
-      title: 'Ten nha tuyen dung',
+      title: 'Tên nhà tuyển dụng',
       dataIndex: 'companyName',
       key: 'companyName',
       render: (value: string, record) => (
@@ -520,29 +546,31 @@ const AdminAccountManagementPage: React.FC = () => {
       )
     },
     {
-      title: 'Tai khoan',
+      title: 'Tài khoản',
       dataIndex: 'username',
       key: 'username',
       render: (value: string) => <span className="text-gray-700">{value}</span>
     },
     {
-      title: 'SDT lien he',
+      title: 'SĐT liên hệ',
       dataIndex: 'contactPhone',
       key: 'contactPhone'
     },
     {
-      title: 'Trang thai',
+      title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       render: (value: AdminEmployerRegStatus) => {
         const color =
           value === 'Pending' ? 'orange' : value === 'Approved' ? 'green' : 'red';
-        return <Tag color={color}>{value}</Tag>;
+        const label =
+          value === 'Pending' ? 'Chờ duyệt' : value === 'Approved' ? 'Đã duyệt' : 'Đã từ chối';
+        return <Tag color={color}>{label}</Tag>;
       },
       width: 140
     },
     {
-      title: 'Gui luc',
+      title: 'Gửi lúc',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (value: string) =>
@@ -556,7 +584,7 @@ const AdminAccountManagementPage: React.FC = () => {
       width: 190
     },
     {
-      title: 'Hanh dong',
+      title: 'Hành động',
       key: 'regActions',
       width: 200,
       render: (_, record) => (
@@ -568,7 +596,7 @@ const AdminAccountManagementPage: React.FC = () => {
             loading={regActionLoadingId === record.requestId}
             onClick={() => handleApproveRegistration(record)}
           >
-            Phe duyet
+            Phê duyệt
           </Button>
           <Button
             size="small"
@@ -577,7 +605,7 @@ const AdminAccountManagementPage: React.FC = () => {
             loading={regActionLoadingId === record.requestId}
             onClick={() => handleRejectRegistration(record)}
           >
-            Tu choi
+            Từ chối
           </Button>
         </Space>
       )
@@ -587,9 +615,9 @@ const AdminAccountManagementPage: React.FC = () => {
   const accountTabContent = (
     <>
       <Card
-        bordered={false}
+        variant="borderless"
         className="shadow-sm mb-4 border-0 bg-white/90 backdrop-blur-lg"
-        bodyStyle={{ padding: 20 }}
+        styles={{ body: { padding: 20 } }}
       >
         <Space direction="vertical" size="middle" className="w-full">
           <Input
@@ -633,7 +661,7 @@ const AdminAccountManagementPage: React.FC = () => {
         </Space>
       </Card>
 
-      <Card bordered={false} className="shadow-sm">
+      <Card variant="borderless" className="shadow-sm">
         <Table
           rowKey="userId"
           loading={loading}
@@ -649,9 +677,9 @@ const AdminAccountManagementPage: React.FC = () => {
 
   const registrationTabContent = (
     <Card
-      bordered={false}
+      variant="borderless"
       className="shadow-sm border-0 bg-white/90 backdrop-blur-lg"
-      bodyStyle={{ padding: 20 }}
+      styles={{ body: { padding: 20 } }}
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -681,7 +709,7 @@ const AdminAccountManagementPage: React.FC = () => {
               <Option value="Approved">Đã duyệt</Option>
               <Option value="Rejected">Đã từ chối</Option>
             </Select>
-            <Button icon={<ReloadOutlined />} onClick={() => fetchRegistrations()} loading={regLoading}>
+            <Button icon={<ReloadOutlined />} onClick={() => fetchRegistrations(regPagination.current ?? 1, regPagination.pageSize ?? 10)} loading={regLoading}>
               Làm mới
             </Button>
           </Space>
@@ -718,7 +746,7 @@ const AdminAccountManagementPage: React.FC = () => {
       width: 140,
       render: (value: string) => (
         <Tag color={value === 'Pending' ? 'orange' : value === 'Approved' ? 'green' : 'red'}>
-          {value}
+          {value === 'Pending' ? 'Chờ duyệt' : value === 'Approved' ? 'Đã duyệt' : 'Đã từ chối'}
         </Tag>
       )
     },
@@ -767,9 +795,9 @@ const AdminAccountManagementPage: React.FC = () => {
 
   const googleTabContent = (
     <Card
-      bordered={false}
+      variant="borderless"
       className="shadow-sm border-0 bg-white/90 backdrop-blur-lg"
-      bodyStyle={{ padding: 20 }}
+      styles={{ body: { padding: 20 } }}
     >
       <Table
         rowKey="id"
@@ -802,24 +830,37 @@ const AdminAccountManagementPage: React.FC = () => {
   return (
     <>
       <AdminSectionHeader
-        title="Quan ly tai khoan"
-        description="Giam sat trang thai hoat dong, xac thuc va thong tin nguoi dung tren he thong."
+        title="Quản lý tài khoản"
+        description="Giám sát trạng thái hoạt động, xác thực và thông tin người dùng trên hệ thống."
         gradient="from-sky-600 via-blue-500 to-indigo-500"
         extra={
           <Button
             icon={<ReloadOutlined />}
-            onClick={() => (activeTab === 'accounts' ? fetchUsers() : fetchRegistrations())}
-            loading={activeTab === 'accounts' ? loading : regLoading}
-            ghost
+            onClick={() => {
+              if (activeTab === 'accounts') {
+                void fetchUsers(currentPage, currentPageSize);
+              } else if (activeTab === 'registrations') {
+                void fetchRegistrations(regPagination.current ?? 1, regPagination.pageSize ?? 10);
+              } else {
+                void fetchGoogleRegistrations();
+              }
+            }}
+            loading={
+              activeTab === 'accounts'
+                ? loading
+                : activeTab === 'registrations'
+                ? regLoading
+                : googleLoading
+            }
           >
-            Tai lai
+            Tải lại
           </Button>
         }
       />
 
       <Tabs
         activeKey={activeTab}
-        onChange={(key) => setActiveTab(key as 'accounts' | 'registrations')}
+        onChange={(key) => setActiveTab(key as 'accounts' | 'registrations' | 'google')}
         items={tabItems}
       />
 

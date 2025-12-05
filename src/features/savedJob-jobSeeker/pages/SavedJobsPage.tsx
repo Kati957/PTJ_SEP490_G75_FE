@@ -37,7 +37,7 @@ const SavedJobsPage: React.FC = () => {
         message.success('Xóa công việc đã lưu thành công!');
         // Optionally, re-fetch the list if the slice doesn't handle removal automatically
         // fetchJobs();
-      } catch (err) {
+      } catch {
         message.error('Xóa công việc thất bại. Vui lòng thử lại.');
       }
     }

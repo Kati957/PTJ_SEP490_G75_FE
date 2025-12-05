@@ -30,7 +30,7 @@ const ShortlistedCandidatesPage: React.FC = () => {
       if (res.success) {
         setCandidates(res.data);
       }
-    } catch (error) {
+    } catch {
       message.error("Lỗi khi tải danh sách đã lưu.");
     } finally {
       setLoading(false);
@@ -49,7 +49,7 @@ const ShortlistedCandidatesPage: React.FC = () => {
       message.success("Đã xóa khỏi danh sách lưu.");
       // Load lại danh sách sau khi xóa
       fetchShortlisted(parseInt(employerPostId));
-    } catch (error) {
+    } catch {
       message.error("Không thể xóa.");
     }
   };

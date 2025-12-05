@@ -18,9 +18,9 @@ export const AdminSectionHeader: React.FC<AdminSectionHeaderProps> = ({
 }) => {
   return (
     <Card
-      bordered={false}
+      variant="borderless"
       className={`shadow-md mb-4 border-0 text-white bg-gradient-to-r ${gradient}`}
-      bodyStyle={{ padding: '24px' }}
+      styles={{ body: { padding: '24px' } }}
     >
       <Space className="w-full flex justify-between" align="start">
         <Space direction="vertical" size={4} className="text-white">

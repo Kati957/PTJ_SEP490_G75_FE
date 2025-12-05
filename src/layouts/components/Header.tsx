@@ -29,6 +29,10 @@ import { clearJobSeekerProfile } from "../../features/profile-JobSeeker/slice/pr
 import { clearProfile as clearEmployerProfile } from "../../features/employer/slice/profileSlice";
 import SystemReportModal from "../../features/report/components/SystemReportModal";
 
+type MainNavChild = { icon: React.ReactNode; text: string; path: string };
+type MainNavLink = { icon: React.ReactNode; text: string; path?: string; children?: MainNavChild[] };
+
+
 const LogoWhite = LogoImage;
 const LogoColor = LogoImage;
 
@@ -52,7 +56,7 @@ const jobSeekerNavLinks = [
 ];
 
 
-const mainNavLinks = [
+const mainNavLinks: MainNavLink[] = [
   { icon: <SearchOutlined />, text: "Danh sách việc làm", path: "/viec-lam" },
   { icon: <BankOutlined />, text: "Danh sách nhà tuyển dụng", path: "/employer" },
   { icon: <BookOutlined />, text: "Tin tức", path: "/news" },
@@ -100,11 +104,11 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout, onReport })
       <div className="px-5 py-5 bg-gradient-to-r from-blue-500 via-sky-500 to-indigo-500 text-white flex items-center gap-4">
         <Avatar
           size={48}
-          src={(user as any)?.avatarUrl || user.avatar || undefined}
+          src={user.avatarUrl ?? user.avatar ?? undefined}
           icon={<UserOutlined />}
           className="border border-white/60"
         >
-          {(!((user as any)?.avatarUrl || user.avatar) && user.username)
+          {(!(user.avatarUrl || user.avatar) && user.username)
             ? user.username.charAt(0).toUpperCase()
             : null}
         </Avatar>
@@ -213,9 +217,9 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
   const displayName =
     user && isJobSeeker ? jobSeekerProfile?.fullName || user.username : user?.username;
-  const baseAvatar = (user as any)?.avatarUrl || user?.avatar || undefined;
+  const baseAvatar = user?.avatarUrl ?? user?.avatar ?? undefined;
   const avatarSrc = user && isJobSeeker ? jobSeekerProfile?.profilePicture || baseAvatar : baseAvatar;
-  const employerDisplayName = (user as any)?.fullName || displayName;
+  const employerDisplayName = user?.fullName || displayName;
 
   const handleLogout = () => {
     dispatch(logout());
@@ -309,7 +313,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
         <nav className="hidden md:flex items-center space-x-5 ml-4">
           {mainNavLinks.map((link) =>
-            (link as any).children ? (
+            link.children ? (
               isJobSeeker ? (
                 <div key={link.text} className="relative group">
                   <button className="flex items-center text-gray-600 hover:text-blue-600 text-sm font-medium">
@@ -318,7 +322,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                     <DownOutlined className="ml-1 text-[10px]" />
                   </button>
                   <div className="absolute left-0 mt-3 w-64 rounded-lg bg-white shadow-lg border border-gray-200 py-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition">
-                    {(link as any).children.map((child: any) => (
+                    {link.children.map((child: MainNavChild) => (
                       <NavLink
                         key={child.path}
                         to={child.path}
@@ -334,7 +338,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             ) : (
               <NavLink
                 key={link.path}
-                to={link.path}
+                to={link.path || "#"}
                 className="flex items-center text-gray-600 hover:text-blue-600 text-sm font-medium"
               >
                 {link.icon}

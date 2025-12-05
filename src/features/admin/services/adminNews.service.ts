@@ -1,3 +1,4 @@
+import type { AxiosRequestHeaders } from 'axios';
 import baseService from '../../../services/baseService';
 import type {
   AdminNews,
@@ -47,7 +48,7 @@ const adminNewsService = {
   async createNews(payload: AdminCreateNewsPayload): Promise<number> {
     const formData = buildNewsFormData(payload);
     const response = await baseService.post<{ id: number }>(`/admin/news`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' } as AxiosRequestHeaders
     });
     return response.id;
   },
@@ -55,7 +56,7 @@ const adminNewsService = {
   async updateNews(id: number, payload: AdminUpdateNewsPayload): Promise<void> {
     const formData = buildNewsFormData(payload);
     await baseService.put(`/admin/news/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' } as AxiosRequestHeaders
     });
   },
 

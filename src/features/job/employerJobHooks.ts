@@ -16,9 +16,12 @@ export const useEmployerJobPosting = () => {
   const jobData = useAppSelector(selectEmployerJobPostData);
   const status = useAppSelector(selectEmployerJobPostStatus);
 
-  const handleDataChange = useCallback((field: keyof JobPostData, value: any) => {
-    dispatch(updateJobField({ field, value }));
-  }, [dispatch]);
+  const handleDataChange = useCallback(
+    (field: keyof JobPostData, value: JobPostData[keyof JobPostData]) => {
+      dispatch(updateJobField({ field, value }));
+    },
+    [dispatch]
+  );
 
   const reset = useCallback(() => {
     dispatch(resetJobForm());

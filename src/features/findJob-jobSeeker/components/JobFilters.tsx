@@ -1,5 +1,6 @@
 import { Card, Typography, Select, Radio } from "antd";
 import { useCategories } from "../../category/hook";
+import type { Category } from "../../category/type";
 import type { JobSearchFilters } from "../types";
 import { salaryTypeOptions } from "../../../utils/salary";
 
@@ -40,11 +41,11 @@ export const JobFilters: React.FC<JobFiltersProps> = ({
 
   const handleCategoryChange = (categoryId: number | null) => {
     const selectedCat = categories.find(
-      (item: any) => item.categoryId === categoryId
+      (item: Category) => item.categoryId === categoryId
     );
     onChange({
       categoryId,
-      categoryName: selectedCat ? (selectedCat as any).name : null,
+      categoryName: selectedCat ? selectedCat.name : null,
     });
   };
 
@@ -130,7 +131,7 @@ export const JobFilters: React.FC<JobFiltersProps> = ({
               className="w-full"
               size="large"
             >
-              {categories.map((cat: any) => (
+              {categories.map((cat: Category) => (
                 <Select.Option key={cat.categoryId} value={cat.categoryId}>
                   {cat.name}
                 </Select.Option>

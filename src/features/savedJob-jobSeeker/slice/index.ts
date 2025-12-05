@@ -22,7 +22,7 @@ export const fetchSavedJobs = createAsyncThunk(
     try {
       const response = await getSavedJobs(jobSeekerId);
       return response;
-    } catch (error) {
+    } catch {
       return rejectWithValue('Failed to fetch saved jobs.');
     }
   }
@@ -34,7 +34,7 @@ export const addSavedJob = createAsyncThunk(
     try {
       await saveJob(jobSeekerId, jobId);
       return jobId;
-    } catch (error) {
+    } catch {
       return rejectWithValue('Failed to save job.');
     }
   }
@@ -46,7 +46,7 @@ export const removeSavedJob = createAsyncThunk(
     try {
       await unsaveJob(jobSeekerId, jobId);
       return jobId;
-    } catch (error) {
+    } catch {
       return rejectWithValue('Failed to unsave job.');
     }
   }

@@ -5,36 +5,8 @@ import { useAuth } from '../../auth/hooks';
 import { JobPostingForm } from '../components/employer/JobPostingForm';
 import JobPostingPreview from '../components/employer/JobPostingPreview';
 import { useEmployerJobPosting } from '../employerJobHooks';
-import type { JobPostData } from '../jobTypes';
 import { useNavigate } from 'react-router-dom';
-
-const stripHtml = (value?: string | null) =>
-  (value ?? '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-export const transformToEmployerPostDto = (data: JobPostData, userId: number) => ({
-  userID: userId,
-  title: data.jobTitle,
-  description: stripHtml(data.jobDescription),
-  salaryMin: data.salaryMin,
-  salaryMax: data.salaryMax,
-  salaryType: data.salaryType,
-  requirements: stripHtml(data.requirements),
-  workHourStart: data.workHourStart,
-  workHourEnd: data.workHourEnd,
-  provinceId: data.provinceId,
-  districtId: data.districtId,
-  wardId: data.wardId,
-  detailAddress: data.detailAddress,
-  categoryID: data.categoryID,
-  phoneContact: data.contactPhone,
-  expiredAt: data.expiredAt,
-  images: data.images,
-  deleteImageIds: data.deleteImageIds,
-});
+import { transformToEmployerPostDto } from '../utils';
 
 const PostJobPage: React.FC = () => {
   const { user } = useAuth();

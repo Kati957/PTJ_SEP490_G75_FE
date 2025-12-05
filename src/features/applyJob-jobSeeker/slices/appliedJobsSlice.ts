@@ -18,9 +18,13 @@ const initialState: AppliedJobsState = {
 }
 
 // Async thunk để lấy danh sách công việc đã ứng tuyển
-export const fetchAppliedJobs = createAsyncThunk(
+export const fetchAppliedJobs = createAsyncThunk<
+  JobApplicationResultDto[],
+  number,
+  { rejectValue: string }
+>(
   'appliedJobs/fetchAppliedJobs',
-  async (jobSeekerId: number, { rejectWithValue }) => {
+  async (jobSeekerId, { rejectWithValue }) => {
     try {
       const response = await applyJobService.getAppliedJobsBySeeker(jobSeekerId)
       const jobsWithLogos: JobApplicationResultDto[] = await Promise.all(
@@ -33,21 +37,27 @@ export const fetchAppliedJobs = createAsyncThunk(
         })
       )
       return jobsWithLogos
-    } catch (error: any) {
-      return rejectWithValue(error.response.data)
+    } catch (error: unknown) {
+      const errObj = error as { response?: { data?: { message?: string } }; message?: string };
+      return rejectWithValue(errObj?.response?.data?.message || errObj?.message || 'Failed to load applied jobs');
     }
   }
 )
 
 // Async thunk để rút đơn ứng tuyển
-export const withdrawApplication = createAsyncThunk(
+export const withdrawApplication = createAsyncThunk<
+  number,
+  { jobSeekerId: number; employerPostId: number },
+  { rejectValue: string }
+>(
   'appliedJobs/withdrawApplication',
-  async ({ jobSeekerId, employerPostId }: { jobSeekerId: number; employerPostId: number }, { rejectWithValue }) => {
+  async ({ jobSeekerId, employerPostId }, { rejectWithValue }) => {
     try {
       await applyJobService.withdrawApplication(jobSeekerId, employerPostId)
       return employerPostId
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Unknown error')
+    } catch (error: unknown) {
+      const errObj = error as { response?: { data?: { message?: string } }; message?: string };
+      return rejectWithValue(errObj?.response?.data?.message || errObj?.message || 'Unknown error')
     }
   }
 )

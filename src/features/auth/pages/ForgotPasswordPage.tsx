@@ -6,17 +6,20 @@ import { requestPasswordReset } from '../services';
 
 const { Title, Paragraph } = Typography;
 
+type ForgotPasswordForm = { email: string };
+
 const ForgotPasswordPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (values: { email: string }) => {
+  const handleSubmit = async (values: ForgotPasswordForm) => {
     setLoading(true);
     try {
       await requestPasswordReset({ email: values.email });
       setSuccess(true);
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || 'Không thể gửi yêu cầu. Vui lòng thử lại.');
+    } catch (error: unknown) {
+      const errObj = error as { response?: { data?: { message?: string } }; message?: string };
+      message.error(errObj?.response?.data?.message || 'Không thể gửi yêu cầu. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -67,7 +70,7 @@ const ForgotPasswordPage: React.FC = () => {
             </Form.Item>
 
             <div className="text-center text-sm text-slate-500">
-              <span>Bạn nhớ mật khẩu? </span>
+              <span>Đã nhớ mật khẩu? </span>
               <Link to="/login" className="text-blue-600 font-semibold">
                 Đăng nhập
               </Link>

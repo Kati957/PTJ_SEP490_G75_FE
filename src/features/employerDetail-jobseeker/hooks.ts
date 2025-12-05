@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../app/hooks'; 
+import type { RootState } from '../../app/store';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { fetchEmployerDetailById, clearEmployerDetail } from './slice';
 
 export const useEmployerDetail = () => {
@@ -8,7 +9,9 @@ export const useEmployerDetail = () => {
     const { id } = useParams<{ id: string }>();
     
 
-    const { profile, jobs, loading, error } = useAppSelector((state: any) => state.employerDetail);
+    const { profile, jobs, loading, error } = useAppSelector(
+        (state: RootState) => state.employerDetail
+    );
 
     useEffect(() => {
         if (id && id !== 'undefined') {

@@ -1,9 +1,12 @@
 import React from 'react';
 import type { JobPostData } from '../../jobTypes';
 import { JobInfoFormSection } from './JobInfoFormSection';
+
+type OnDataChange = <K extends keyof JobPostData>(field: K, value: JobPostData[K]) => void;
+
 interface Props {
   data: JobPostData;
-  onDataChange: (field: keyof JobPostData, value: any) => void;
+  onDataChange: OnDataChange;
 }
 
 

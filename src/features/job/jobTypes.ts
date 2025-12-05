@@ -118,7 +118,7 @@ export interface PaginatedJobResponse {
 export interface JobPostResponse {
   success: boolean;
   message: string;
-  data: any;
+  data: JobPostView | null;
 }
 
 export interface UpdateJobResponse {

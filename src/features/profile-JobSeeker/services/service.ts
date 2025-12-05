@@ -1,3 +1,4 @@
+import type { AxiosRequestHeaders } from "axios";
 import baseService from "../../../services/baseService";
 import type { JobSeekerProfileDto, JobSeekerProfileUpdateDto } from "../types";
 
@@ -6,20 +7,32 @@ const API_URL_UPDATE = "/JobSeekerProfile/update";
 const API_URL_PICTURE = "/JobSeekerProfile/picture";
 const API_URL_PUBLIC = "/JobSeekerProfile/public";
 
-const normalizeProfile = (p: any): JobSeekerProfileDto => ({
-  profileId: p.profileId ?? p.ProfileId ?? 0,
-  userId: p.userId ?? p.UserId ?? 0,
-  fullName: p.fullName ?? p.FullName ?? null,
-  gender: p.gender ?? p.Gender ?? null,
-  birthYear: p.birthYear ?? p.BirthYear ?? null,
-  profilePicture: p.profilePicture ?? p.ProfilePicture ?? null,
-  contactPhone: p.contactPhone ?? p.ContactPhone ?? null,
-  location: p.location ?? p.Location ?? p.fullLocation ?? p.FullLocation ?? null,
-  fullLocation: p.fullLocation ?? p.FullLocation ?? null,
-  provinceId: p.provinceId ?? p.ProvinceId ?? null,
-  districtId: p.districtId ?? p.DistrictId ?? null,
-  wardId: p.wardId ?? p.WardId ?? null,
-});
+const pickValue = <T>(source: Record<string, unknown>, keys: string[], fallback: T): T => {
+  for (const key of keys) {
+    if (key in source && source[key] !== undefined && source[key] !== null) {
+      return source[key] as T;
+    }
+  }
+  return fallback;
+};
+
+const normalizeProfile = (p: unknown): JobSeekerProfileDto => {
+  const source = (p ?? {}) as Record<string, unknown>;
+  return {
+    profileId: pickValue<number>(source, ['profileId', 'ProfileId'], 0),
+    userId: pickValue<number>(source, ['userId', 'UserId'], 0),
+  fullName: pickValue<string | null>(source, ['fullName', 'FullName'], null),
+  gender: pickValue<string | null>(source, ['gender', 'Gender'], null),
+  birthYear: pickValue<number | null>(source, ['birthYear', 'BirthYear'], null),
+  profilePicture: pickValue<string | null>(source, ['profilePicture', 'ProfilePicture'], null),
+  contactPhone: pickValue<string | null>(source, ['contactPhone', 'ContactPhone'], null),
+  location: pickValue<string | null>(source, ['location', 'Location', 'fullLocation', 'FullLocation'], null),
+  fullLocation: pickValue<string | null>(source, ['fullLocation', 'FullLocation'], null),
+  provinceId: pickValue<number | null>(source, ['provinceId', 'ProvinceId'], null),
+  districtId: pickValue<number | null>(source, ['districtId', 'DistrictId'], null),
+  wardId: pickValue<number | null>(source, ['wardId', 'WardId'], null),
+  };
+};
 
 export const getJobSeekerProfile = async (): Promise<JobSeekerProfileDto> => {
   try {
@@ -72,7 +85,7 @@ export const updateJobSeekerProfile = async (
     return await baseService.put<string>(API_URL_UPDATE, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      } as AxiosRequestHeaders
     });
   } catch (error) {
     console.error("Loi khi cap nhat ho so Job Seeker:", error);

@@ -10,7 +10,7 @@ const EmailVerifyPage: React.FC = () => {
 
   useEffect(() => {
     if (!token) {
-      navigate('/verify-failed?error=Thiếu%20token%20xác%20thực', { replace: true });
+      navigate('/verify-failed?error=Thieu%20token%20xac%20thuc', { replace: true });
       return;
     }
 
@@ -18,9 +18,10 @@ const EmailVerifyPage: React.FC = () => {
       try {
         await verifyEmail(token);
         navigate('/verify-success', { replace: true });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errObj = error as { response?: { data?: { message?: string } }; message?: string };
         const message =
-          error?.response?.data?.message || 'Không thể xác thực email. Vui lòng thử lại.';
+          errObj?.response?.data?.message || errObj?.message || 'Không thể xác thực email. Vui lòng thử lại.';
         navigate(`/verify-failed?error=${encodeURIComponent(message)}`, { replace: true });
       }
     };

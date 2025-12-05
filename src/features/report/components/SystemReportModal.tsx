@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, message } from "antd";
+import { Form, Input, Modal, message } from "antd";
 import reportService from "../reportService";
 
 interface SystemReportModalProps {
@@ -21,8 +21,9 @@ const SystemReportModal: React.FC<SystemReportModalProps> = ({ open, onClose }) 
       message.success("Gửi báo cáo thành công. Cảm ơn bạn đã phản hồi!");
       form.resetFields();
       onClose();
-    } catch (error: any) {
-      const apiMessage: string | undefined = error?.response?.data?.message;
+    } catch (error) {
+      const apiMessage =
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message;
       message.error(apiMessage || "Gửi báo cáo thất bại. Vui lòng thử lại.");
     } finally {
       setSubmitting(false);
@@ -51,7 +52,7 @@ const SystemReportModal: React.FC<SystemReportModalProps> = ({ open, onClose }) 
           label="Tiêu đề"
           rules={[
             { required: true, message: "Vui lòng nhập tiêu đề" },
-            { min: 5, message: "Tiêu đề phải có ít nhất 5 ký tự" },
+            { min: 5, message: "Tiêu đề cần ít nhất 5 ký tự" },
           ]}
         >
           <Input maxLength={120} showCount placeholder="Ví dụ: Lỗi giao diện, lỗi đăng nhập..." />
@@ -62,14 +63,14 @@ const SystemReportModal: React.FC<SystemReportModalProps> = ({ open, onClose }) 
           label="Mô tả chi tiết"
           rules={[
             { required: true, message: "Vui lòng nhập mô tả" },
-            { min: 10, message: "Mô tả phải có ít nhất 10 ký tự" },
+            { min: 10, message: "Mô tả cần ít nhất 10 ký tự" },
           ]}
         >
           <Input.TextArea
             rows={4}
             maxLength={1000}
             showCount
-            placeholder="Mô tả lỗi bạn gặp phải, bước tái hiện, ảnh chụp màn hình (nếu có)..."
+            placeholder="Mô tả lỗi bạn gặp phải, bước tái hiện, đính kèm minh chứng (nếu có)..."
           />
         </Form.Item>
       </Form>

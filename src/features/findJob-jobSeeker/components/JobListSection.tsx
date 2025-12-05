@@ -148,6 +148,15 @@ const JobListSection: React.FC<JobListSectionProps> = ({
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const getApiMessage = (error: unknown): string | undefined => {
+    if (typeof error === "string") return error;
+    if (error && typeof error === "object" && "response" in error) {
+      const err = error as { response?: { data?: { message?: string } } };
+      return err.response?.data?.message;
+    }
+    return undefined;
+  };
+
   const {
     keyword,
     provinceId,
@@ -194,7 +203,7 @@ const JobListSection: React.FC<JobListSectionProps> = ({
         }
 
         const enriched = await Promise.all(
-          data.map(async (job) => {
+          data.map(async (job: JobPostView) => {
             let logo = job.companyLogo;
             if (!logo || !logo.trim()) {
               const detail = await getJobDetailCached(String(job.employerPostId));
@@ -204,9 +213,9 @@ const JobListSection: React.FC<JobListSectionProps> = ({
           })
         );
         setJobs(enriched);
-      } catch (err: any) {
+      } catch (err) {
         message.error(
-          err.response?.data?.message || "Không thể tải danh sách việc làm."
+          getApiMessage(err) || "Không thể tải danh sách việc làm."
         );
       } finally {
         setLoading(false);

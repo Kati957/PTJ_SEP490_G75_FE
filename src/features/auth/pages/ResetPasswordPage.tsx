@@ -6,6 +6,8 @@ import { resetPassword } from '../services';
 
 const { Title, Paragraph } = Typography;
 
+type ResetFormValues = { newPassword: string; confirmPassword: string };
+
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = useMemo(() => searchParams.get('token') ?? '', [searchParams]);
@@ -13,7 +15,7 @@ const ResetPasswordPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
-  const handleSubmit = async (values: { newPassword: string }) => {
+  const handleSubmit = async (values: ResetFormValues) => {
     if (!token) {
       message.error('Thiếu token xác thực. Vui lòng kiểm tra lại liên kết.');
       return;
@@ -25,8 +27,9 @@ const ResetPasswordPage: React.FC = () => {
       setDone(true);
       message.success('Đặt lại mật khẩu thành công.');
       setTimeout(() => navigate('/login'), 1500);
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || 'Không thể đặt lại mật khẩu.');
+    } catch (error: unknown) {
+      const errObj = error as { response?: { data?: { message?: string } }; message?: string };
+      message.error(errObj?.response?.data?.message || errObj?.message || 'Không thể đặt lại mật khẩu.');
     } finally {
       setLoading(false);
     }

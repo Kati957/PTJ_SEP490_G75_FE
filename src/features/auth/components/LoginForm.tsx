@@ -11,6 +11,18 @@ import { ROLES } from "../../../constants/roles";
 import { saveGoogleOnboardingData } from "../utils/googleOnboardingStorage";
 import type { User } from "../types";
 
+type LoginFormValues = {
+  email: string;
+  password: string;
+};
+
+type ApiError = { response?: { data?: { message?: string } }; message?: string };
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  const err = error as ApiError;
+  return err?.response?.data?.message || err?.message || fallback;
+};
+
 const LoginForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -54,7 +66,7 @@ const LoginForm: React.FC = () => {
     navigate("/");
   };
 
-  const onLoginFinish = async (values: any) => {
+  const onLoginFinish = async (values: LoginFormValues) => {
     setLoading(true);
     try {
       const response = await login(values);
@@ -63,17 +75,16 @@ const LoginForm: React.FC = () => {
         throw new Error("Thiếu access token từ server.");
       }
       handleLoginSuccess(user, accessToken);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Lỗi đăng nhập:", error);
-      const errorMessage =
-        error.response?.data?.message || "Đã có lỗi xảy ra. Vui lòng thử lại.";
+      const errorMessage = getErrorMessage(error, "Đã có lỗi xảy ra. Vui lòng thử lại.");
       message.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const onFinishFailed = (errorInfo: any) => {
+  const onFinishFailed = (errorInfo: unknown) => {
     console.log("Lỗi:", errorInfo);
     message.error("Vui lòng kiểm tra lại thông tin!");
   };
@@ -103,8 +114,8 @@ const LoginForm: React.FC = () => {
       }
 
       message.error("Phản hồi không hợp lệ từ server.");
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Không thể kết nối Google.";
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error, "Không thể kết nối Google.");
       message.error(errorMessage);
     } finally {
       setGoogleLoading(false);

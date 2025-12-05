@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Card,
@@ -36,6 +36,9 @@ import { formatSalaryText } from "../../utils/jobPostHelpers";
 
 const { Option } = Select;
 
+const getApiMessage = (error: unknown) =>
+  (error as { response?: { data?: { message?: string } } }).response?.data?.message;
+
 type DetailFieldProps = {
   label: string;
   value?: React.ReactNode;
@@ -46,7 +49,7 @@ const DetailField: React.FC<DetailFieldProps> = ({ label, value, span = 1 }) => 
   <div className={`flex flex-col gap-1 ${span === 2 ? "md:col-span-2" : ""}`}>
     <span className="text-sm font-semibold text-gray-600">{label}</span>
     <div className="min-h-[42px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">
-      {value ?? <span className="text-gray-400 italic">Chưa cập nhật</span>}
+      {value ?? <span className="text-gray-400 italic">Chưa có dữ liệu</span>}
     </div>
   </div>
 );
@@ -210,7 +213,7 @@ const AdminJobPostManagementPage: React.FC = () => {
     : "bài đăng";
 
   const fetchEmployerPosts = useCallback(
-    async (page = employerPagination.current ?? 1, pageSize = employerPagination.pageSize ?? 10) => {
+    async (page: number, pageSize: number) => {
       setEmployerLoading(true);
       try {
         const response = await adminJobPostService.getEmployerPosts({
@@ -220,12 +223,12 @@ const AdminJobPostManagementPage: React.FC = () => {
         });
         const total = typeof response.total === "number" ? response.total : response.items.length;
         setEmployerPosts(response.items);
-        setEmployerPagination((prev) => ({
-          ...prev,
-          current: page,
-          pageSize,
-          total
-        }));
+        setEmployerPagination((prev) => {
+          const next = { ...prev, current: page, pageSize, total };
+          const unchanged =
+            prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
+          return unchanged ? prev : next;
+        });
       } catch (error) {
         console.error("Failed to fetch employer posts", error);
         message.error("Không thể tải danh sách bài đăng nhà tuyển dụng");
@@ -233,11 +236,11 @@ const AdminJobPostManagementPage: React.FC = () => {
         setEmployerLoading(false);
       }
     },
-    [employerFilterParams, employerPagination.current, employerPagination.pageSize]
+    [employerFilterParams]
   );
 
   const fetchJobSeekerPosts = useCallback(
-    async (page = jobSeekerPagination.current ?? 1, pageSize = jobSeekerPagination.pageSize ?? 10) => {
+    async (page: number, pageSize: number) => {
       setJobSeekerLoading(true);
       try {
         const response = await adminJobPostService.getJobSeekerPosts({
@@ -247,12 +250,12 @@ const AdminJobPostManagementPage: React.FC = () => {
         });
         const total = typeof response.total === "number" ? response.total : response.items.length;
         setJobSeekerPosts(response.items);
-        setJobSeekerPagination((prev) => ({
-          ...prev,
-          current: page,
-          pageSize,
-          total
-        }));
+        setJobSeekerPagination((prev) => {
+          const next = { ...prev, current: page, pageSize, total };
+          const unchanged =
+            prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
+          return unchanged ? prev : next;
+        });
       } catch (error) {
         console.error("Failed to fetch job seeker posts", error);
         message.error("Không thể tải danh sách bài đăng ứng viên");
@@ -260,16 +263,21 @@ const AdminJobPostManagementPage: React.FC = () => {
         setJobSeekerLoading(false);
       }
     },
-    [jobSeekerFilterParams, jobSeekerPagination.current, jobSeekerPagination.pageSize]
+    [jobSeekerFilterParams]
   );
 
-  useEffect(() => {
-    void fetchEmployerPosts();
-  }, [fetchEmployerPosts]);
+  const employerPage = employerPagination.current ?? 1;
+  const employerPageSize = employerPagination.pageSize ?? 10;
+  const jobSeekerPage = jobSeekerPagination.current ?? 1;
+  const jobSeekerPageSize = jobSeekerPagination.pageSize ?? 10;
 
   useEffect(() => {
-    void fetchJobSeekerPosts();
-  }, [fetchJobSeekerPosts]);
+    void fetchEmployerPosts(employerPage, employerPageSize);
+  }, [fetchEmployerPosts, employerPage, employerPageSize]);
+
+  useEffect(() => {
+    void fetchJobSeekerPosts(jobSeekerPage, jobSeekerPageSize);
+  }, [fetchJobSeekerPosts, jobSeekerPage, jobSeekerPageSize]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -317,15 +325,13 @@ const AdminJobPostManagementPage: React.FC = () => {
 
   const handleEmployerTableChange = (pagination: TablePaginationConfig) => {
     setEmployerPagination(pagination);
-    void fetchEmployerPosts(pagination.current, pagination.pageSize);
   };
 
   const handleJobSeekerTableChange = (pagination: TablePaginationConfig) => {
     setJobSeekerPagination(pagination);
-    void fetchJobSeekerPosts(pagination.current, pagination.pageSize);
   };
 
-  const openDetail = async (type: "employer" | "jobseeker", id: number) => {
+  const openDetail = useCallback(async (type: "employer" | "jobseeker", id: number) => {
     setDetailOpen(true);
     setDetailLoading(true);
     try {
@@ -384,14 +390,14 @@ const AdminJobPostManagementPage: React.FC = () => {
           });
         }
       }
-    } catch (error) {
-      console.error("Failed to load post detail", error);
-      message.error("Không thể tải chi tiết bài đăng");
+      } catch (error) {
+        console.error("Failed to load post detail", error);
+        message.error("Không thể tải chi tiết bài đăng");
       setDetailOpen(false);
     } finally {
       setDetailLoading(false);
     }
-  };
+  }, [highlightTarget]);
 
   useEffect(() => {
     if (!highlightTarget || highlightOpened) return;
@@ -399,7 +405,7 @@ const AdminJobPostManagementPage: React.FC = () => {
       void openDetail(highlightTarget.type, highlightTarget.id);
       setHighlightOpened(true);
     }
-  }, [activeTab, highlightOpened, highlightTarget]);
+  }, [activeTab, highlightOpened, highlightTarget, openDetail]);
 
   useEffect(() => {
     if (!highlightTarget || highlightScrolled) return;
@@ -430,9 +436,9 @@ const AdminJobPostManagementPage: React.FC = () => {
       message.success(
         post.status === "Blocked" ? "Đã mở khóa bài đăng nhà tuyển dụng" : "Đã khóa bài đăng nhà tuyển dụng"
       );
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to toggle employer post", error);
-      const apiMessage: string | undefined = error?.response?.data?.message;
+      const apiMessage = getApiMessage(error);
       if (apiMessage?.includes("PostHidden")) {
         message.warning("Trạng thái bài đã cập nhật, nhưng server thiếu template PostHidden.");
       } else {
@@ -441,7 +447,7 @@ const AdminJobPostManagementPage: React.FC = () => {
       }
     } finally {
       if (shouldRefresh) {
-        await fetchEmployerPosts();
+        await fetchEmployerPosts(employerPage, employerPageSize);
       }
       setToggleLoadingId(null);
       setToggleType(null);
@@ -457,9 +463,9 @@ const AdminJobPostManagementPage: React.FC = () => {
       message.success(
         post.status === "Archived" ? "Đã mở khóa bài đăng ứng viên" : "Đã khóa bài đăng ứng viên"
       );
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to toggle job seeker post", error);
-      const apiMessage: string | undefined = error?.response?.data?.message;
+      const apiMessage = getApiMessage(error);
       if (apiMessage?.includes("PostHidden")) {
         message.warning("Trạng thái bài đã cập nhật, nhưng server thiếu template PostHidden.");
       } else {
@@ -468,7 +474,7 @@ const AdminJobPostManagementPage: React.FC = () => {
       }
     } finally {
       if (shouldRefresh) {
-        await fetchJobSeekerPosts();
+        await fetchJobSeekerPosts(jobSeekerPage, jobSeekerPageSize);
       }
       setToggleLoadingId(null);
       setToggleType(null);
@@ -767,7 +773,12 @@ const AdminJobPostManagementPage: React.FC = () => {
         extra={
           <Button
             icon={<ReloadOutlined />}
-            onClick={() => (activeTab === "employer" ? fetchEmployerPosts() : fetchJobSeekerPosts())}
+            onClick={() =>
+              activeTab === "employer"
+                ? fetchEmployerPosts(employerPage, employerPageSize)
+                : fetchJobSeekerPosts(jobSeekerPage, jobSeekerPageSize)
+            }
+            loading={activeTab === "employer" ? employerLoading : jobSeekerLoading}
           >
             Tải lại
           </Button>

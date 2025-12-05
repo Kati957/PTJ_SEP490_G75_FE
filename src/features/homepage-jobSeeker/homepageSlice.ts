@@ -9,7 +9,7 @@ export const fetchFeaturedJobs = createAsyncThunk(
     try {
       const jobs = await getFeaturedJobs();
       return jobs;
-    } catch (error) {
+    } catch {
       return rejectWithValue('Failed to fetch featured jobs.');
     }
   }

@@ -7,7 +7,7 @@ import bannerImageUrl from "../../../assets/employer-banner.png";
 import defaultLogo from "../../../assets/no-logo.png";
 import { useAuth } from "../../auth/hooks";
 import { ROLES } from "../../../constants/roles";
-import followService from "../../follow/followService";
+import followService, { type EmployerFollowDto } from "../../follow/followService";
 
 type RankedEmployerView = ListingEmployer & { applyCount?: number };
 
@@ -49,8 +49,8 @@ const TopEmployersSlider: React.FC = () => {
       try {
         const data = await followService.getFollowedEmployers(user.id);
         const setIds = new Set<number>();
-        data?.forEach((item: any) => {
-          const id = item.employerId ?? item.EmployerID ?? item.employerID ?? item.id;
+        data?.forEach((item: EmployerFollowDto) => {
+          const id = item.employerId;
           if (id) setIds.add(Number(id));
         });
         setFollowedIds(setIds);

@@ -5,6 +5,8 @@ export interface User {
   roles: string[];
   verified: boolean;
   avatar?: string | null;
+  avatarUrl?: string | null;
+  fullName?: string | null;
 }
 
 export interface LoginResponse {
