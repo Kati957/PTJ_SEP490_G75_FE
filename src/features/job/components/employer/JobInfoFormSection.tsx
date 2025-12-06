@@ -476,9 +476,6 @@ export const JobInfoFormSection: React.FC<{
     if (start && end) {
       if (!end.isAfter(start)) {
         setValidation((prev) => ({ ...prev, workHours: true }));
-        handleChange("workHourStart", null);
-        handleChange("workHourEnd", null);
-        handleChange("workHours", "");
         return;
       }
       const formatted = `${start.format("HH:mm")} - ${end.format("HH:mm")}`;
@@ -489,9 +486,7 @@ export const JobInfoFormSection: React.FC<{
       return;
     }
 
-    handleChange("workHourStart", null);
-    handleChange("workHourEnd", null);
-    handleChange("workHours", "");
+    // Chưa đủ 2 mốc giờ: cho phép người dùng chọn tiếp, không xóa giá trị cũ.
     setValidation((prev) => ({ ...prev, workHours: true }));
   };
 
