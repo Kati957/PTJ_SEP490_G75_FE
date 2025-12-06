@@ -47,11 +47,11 @@ const PremiumEmployersCarousel: React.FC = () => {
     const fetchPremium = async () => {
       setLoading(true);
       try {
-        const res = await baseService.get<{ success?: boolean; data?: ActiveSubscription[] }>(
+        const res = await baseService.get<{ success?: boolean; data?: ActiveSubscription[] } | ActiveSubscription[]>(
           "/payment/public/active-subscriptions"
         );
         if (!mounted) return;
-        const data = (res as any)?.data ?? res ?? [];
+        const data = (res as { data?: ActiveSubscription[] })?.data ?? res ?? [];
         const list: ActiveSubscription[] = Array.isArray(data) ? data : [];
         const enriched = await Promise.all(
           list.map(async (item) => {
@@ -111,12 +111,13 @@ const PremiumEmployersCarousel: React.FC = () => {
     };
   }, [isJobSeeker, user?.id]);
 
-  const handleFollowToggle = async (employerId?: number, isFollowed?: boolean) => {
-    if (!employerId) return;
-    if (!isJobSeeker || !user?.id) {
-      message.info("Vui long dang nhap tai khoan ung vien de theo doi.");
-      return;
-    }
+  const handleFollowToggle = React.useCallback(
+    async (employerId?: number, isFollowed?: boolean) => {
+      if (!employerId) return;
+      if (!isJobSeeker || !user?.id) {
+        message.info("Vui long dang nhap tai khoan ung vien de theo doi.");
+        return;
+      }
     setActionLoadingId(employerId);
     try {
       if (isFollowed) {
@@ -138,10 +139,12 @@ const PremiumEmployersCarousel: React.FC = () => {
       }
     } catch {
       message.error("Thao tac theo doi/huy theo doi that bai, vui long thu lai.");
-    } finally {
-      setActionLoadingId(null);
-    }
-  };
+      } finally {
+        setActionLoadingId(null);
+      }
+    },
+    [isJobSeeker, user?.id]
+  );
 
   const cards = useMemo(
     () =>
@@ -203,7 +206,7 @@ const PremiumEmployersCarousel: React.FC = () => {
           </div>
         );
       }),
-    [items, followedIds, actionLoadingId]
+    [items, followedIds, actionLoadingId, handleFollowToggle]
   );
 
   const scroll = (dir: "left" | "right") => {

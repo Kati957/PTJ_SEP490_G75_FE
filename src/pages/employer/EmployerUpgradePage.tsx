@@ -115,23 +115,24 @@ const EmployerUpgradePage: React.FC = () => {
     if (!userId) return;
     try {
       const res = await baseService.get(`/EmployerPost/remaining-posts/${userId}`);
-      const data = (res as any)?.data ?? res;
-
+      const data = (res as { data?: unknown })?.data ?? res;
+      const obj = typeof data === "object" && data !== null ? (data as Record<string, unknown>) : undefined;
       const remaining =
         typeof data === "number"
           ? data
-          : data?.remainingPosts ?? data?.remaining ?? data?.remainingPost ?? null;
+          : (obj?.remainingPosts as number | null | undefined) ??
+            (obj?.remaining as number | null | undefined) ??
+            (obj?.remainingPost as number | null | undefined) ??
+            null;
       const planRaw =
-        (typeof data === "object" && data
-          ? data.planName ||
-            data.plan ||
-            data.planLevel ||
-            data.tier ||
-            data.name ||
-            (typeof data.planId === "number" ? `Plan #${data.planId}` : undefined)
-          : undefined) || undefined;
-      const planLabel = typeof planRaw === "string" ? planRaw.trim() : planRaw;
-      const planIdRaw = typeof data === "object" && data ? data.planId ?? data.planID ?? undefined : undefined;
+        obj?.planName ??
+        obj?.plan ??
+        obj?.planLevel ??
+        obj?.tier ??
+        obj?.name ??
+        (typeof obj?.planId === "number" ? `Plan #${obj?.planId}` : undefined);
+      const planLabel = typeof planRaw === "string" ? planRaw.trim() : undefined;
+      const planIdRaw = obj?.planId ?? obj?.planID ?? undefined;
       const planId = typeof planIdRaw === "string" ? Number(planIdRaw) : planIdRaw;
       const planLower = typeof planLabel === "string" ? planLabel.toLowerCase() : "";
       const isPremium =
@@ -147,7 +148,7 @@ const EmployerUpgradePage: React.FC = () => {
       console.error("remaining-posts error", error);
       setPlanStatus({ isPremium: false, remainingPosts: null });
     }
-  }, [user?.userId]);
+  }, [user?.id]);
 
   useEffect(() => {
     void fetchPlanStatus();

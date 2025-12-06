@@ -325,7 +325,7 @@ const AdminAccountManagementPage: React.FC = () => {
     if (activeTab === 'registrations' && regRequests.length === 0) {
       void fetchRegistrations(regPagination.current ?? 1, regPagination.pageSize ?? 10);
     }
-  }, [activeTab, fetchRegistrations, regRequests.length]);
+  }, [activeTab, fetchRegistrations, regRequests.length, regPagination]);
 
   useEffect(() => {
     if (activeTab === 'accounts') {

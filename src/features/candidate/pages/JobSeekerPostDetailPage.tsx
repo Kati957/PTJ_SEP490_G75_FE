@@ -227,7 +227,7 @@ const JobSeekerPostDetailPage: React.FC = () => {
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2 text-sm">
                   <Tag color="geekblue" icon={<CalendarOutlined />}>
-                    ÄÄƒng ngÃ y {formatDate(post.createdAt)}
+                  Dang ngay {formatDate(post.createdAt)}
                   </Tag>
                   {post.categoryName && <Tag color="blue">{post.categoryName}</Tag>}
                 </div>
@@ -262,7 +262,7 @@ const JobSeekerPostDetailPage: React.FC = () => {
               styles={{ body: { padding: 16 } }}
             >
               <div className="flex items-center gap-2 text-slate-600 mb-1">
-                <ClockCircleOutlined /> Giá» lÃ m mong muá»‘n
+                <ClockCircleOutlined /> Gio lam mong muon
               </div>
               <div className="font-semibold text-slate-900">{workHours || "ChÆ°a rÃµ"}</div>
             </Card>
@@ -287,7 +287,7 @@ const JobSeekerPostDetailPage: React.FC = () => {
             <Title level={4}>ThÃ´ng tin thÃªm</Title>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-700">
               <div>
-                <Text type="secondary">NgÃ nh nghá»</Text>
+                <Text type="secondary">Nganh nghe</Text>
                 <div className="font-semibold">{post.categoryName || "ChÆ°a chá»n"}</div>
               </div>
               <div>
@@ -306,7 +306,7 @@ const JobSeekerPostDetailPage: React.FC = () => {
           </Card>
 
           <Card className="rounded-2xl shadow-sm border border-slate-100">
-            <Title level={4}>Tá»•ng quan bÃ i Ä‘Äƒng</Title>
+            <Title level={4}>Tong quan bai dang</Title>
             <Paragraph className="text-slate-700 leading-relaxed whitespace-pre-wrap">
               {post.description || "ChÆ°a cÃ³ mÃ´ táº£ chi tiáº¿t."}
             </Paragraph>
@@ -319,7 +319,7 @@ const JobSeekerPostDetailPage: React.FC = () => {
               <Avatar size={48} src={avatarSrc} icon={<UserOutlined />} />
               <div>
                 <div className="font-semibold text-slate-900">{seekerName}</div>
-                <div className="text-xs text-slate-500">á»¨ng viÃªn Ä‘Äƒng bÃ i</div>
+                <div className="text-xs text-slate-500">Ung vien dang bai</div>
               </div>
             </div>
             <Space direction="vertical" className="w-full text-sm text-slate-700">
@@ -418,7 +418,7 @@ const JobSeekerPostDetailPage: React.FC = () => {
       </div>
 
       <Modal
-        title={`BÃ¡o cÃ¡o bÃ i Ä‘Äƒng${post.title ? `: ${post.title}` : ""}`}
+        title={`Bao cao bai dang${post.title ? `: ${post.title}` : ""}`}
         open={reportModal.open}
         onCancel={() =>
           setReportModal({ open: false, submitting: false, reportType: "", reason: "" })
@@ -429,7 +429,7 @@ const JobSeekerPostDetailPage: React.FC = () => {
         cancelText="Há»§y"
       >
         <p className="text-sm text-gray-600 mb-3">
-          Vui lÃ²ng mÃ´ táº£ lÃ½ do báº¡n muá»‘n bÃ¡o cÃ¡o bÃ i Ä‘Äƒng tÃ¬m viá»‡c nÃ y. ThÃ´ng tin sáº½ Ä‘Æ°á»£c gá»­i tá»›i quáº£n
+          Vui long mo ta ly do ban muon bao cao bai dang tim viec nay. Thong tin se duoc gui toi quan
           trá»‹ viÃªn.
         </p>
         <div className="mb-3">

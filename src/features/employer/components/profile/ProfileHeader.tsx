@@ -28,6 +28,37 @@ type ProfileExtras = Profile & {
 };
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, loading, isVerified, locationLabel }) => {
+  const { user } = useAuth();
+  const [planLabel, setPlanLabel] = useState<string | undefined>(undefined);
+  const [planPremium, setPlanPremium] = useState(false);
+
+  useEffect(() => {
+    const fetchPlan = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await baseService.get(`/EmployerPost/remaining-posts/${user.id}`);
+        const data = (res as { data?: unknown })?.data ?? res;
+        const obj = typeof data === "object" && data !== null ? (data as Record<string, unknown>) : undefined;
+        const label = obj?.planName || obj?.plan || obj?.planLevel || obj?.tier || obj?.name || undefined;
+        const planIdRaw = obj?.planId ?? obj?.planID ?? undefined;
+        const planId = typeof planIdRaw === "string" ? Number(planIdRaw) : planIdRaw;
+        const lower = typeof label === "string" ? label.toLowerCase() : "";
+        const premium =
+          planId === 3 ||
+          (typeof planIdRaw === "string" && planIdRaw === "3") ||
+          (lower && (lower.includes("premium") || lower.startsWith("pre")));
+        setPlanLabel(label ? String(label) : undefined);
+        setPlanPremium(Boolean(premium));
+      } catch (error) {
+        console.error("remaining-posts error", error);
+        setPlanPremium(false);
+        setPlanLabel(undefined);
+      }
+    };
+
+    void fetchPlan();
+  }, [user?.id]);
+
   if (loading) {
     return (
       <Card className="mb-4">
@@ -52,49 +83,14 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, loading, isVerif
         ? profileExtras.subscriptionName
         : undefined;
   const isPremiumFlag = profileExtras.isPremium === true;
-  const [planLabel, setPlanLabel] = useState<string | undefined>(undefined);
-  const [planPremium, setPlanPremium] = useState(false);
-
-  const { user } = useAuth();
-
-  useEffect(() => {
-    const fetchPlan = async () => {
-      if (!user?.id) return;
-      try {
-        const res = await baseService.get(`/EmployerPost/remaining-posts/${user.id}`);
-        const data = (res as any)?.data ?? res;
-        const label =
-          (typeof data === "object" && data
-            ? data.planName || data.plan || data.planLevel || data.tier || data.name
-            : undefined) || undefined;
-        const planIdRaw = typeof data === "object" && data ? data.planId ?? data.planID ?? undefined : undefined;
-        const planId = typeof planIdRaw === "string" ? Number(planIdRaw) : planIdRaw;
-        const lower = typeof label === "string" ? label.toLowerCase() : "";
-        const premium =
-          planId === 3 ||
-          (typeof planIdRaw === "string" && planIdRaw === "3") ||
-          (lower && (lower.includes("premium") || lower.startsWith("pre")));
-        setPlanLabel(label ? String(label) : undefined);
-        setPlanPremium(Boolean(premium));
-      } catch (error) {
-        console.error("remaining-posts error", error);
-        setPlanPremium(false);
-        setPlanLabel(undefined);
-      }
-    };
-
-    void fetchPlan();
-  }, [user]);
-
-  const initial = profile.displayName?.charAt(0).toUpperCase() ?? "E";
   const locationText = locationLabel || profile.location || profile.address;
-  const roleText = profile.role || "Nhà tuyển dụng";
+  const initial = profile.displayName?.charAt(0).toUpperCase() ?? "E";
   const isPremium =
     planPremium ||
     isPremiumFlag ||
     (planName && planName.toLowerCase().includes("premium")) ||
-    roleText.toLowerCase().includes("premium") ||
-    roleText.toLowerCase().includes("vip");
+    (profile.role && profile.role.toLowerCase().includes("premium")) ||
+    (profile.role && profile.role.toLowerCase().includes("vip"));
 
   const contactDetails: Array<{ key: string; icon: ReactNode; label: string; value: ReactNode }> = [
     {

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Card, Col, Form, Input, InputNumber, Modal, Row, Space, Table, Tag, Typography, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, ReloadOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
@@ -24,7 +24,7 @@ const AdminPlanManagementPage: React.FC = () => {
   const [transHistory, setTransHistory] = useState<AdminTransactionHistory[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     setLoading(true);
     try {
       const data = await adminPlanService.getPlans();
@@ -35,11 +35,11 @@ const AdminPlanManagementPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void fetchPlans();
-  }, []);
+  }, [fetchPlans]);
 
   const openCreate = () => {
     setEditingPlan(null);
@@ -47,7 +47,7 @@ const AdminPlanManagementPage: React.FC = () => {
     setModalOpen(true);
   };
 
-  const openEdit = (plan: AdminPlan) => {
+  const openEdit = useCallback((plan: AdminPlan) => {
     setEditingPlan(plan);
     form.setFieldsValue({
       planName: plan.planName,
@@ -56,7 +56,7 @@ const AdminPlanManagementPage: React.FC = () => {
       durationDays: plan.durationDays ?? undefined
     });
     setModalOpen(true);
-  };
+  }, [form]);
 
   const handleSave = async () => {
     try {
@@ -80,7 +80,7 @@ const AdminPlanManagementPage: React.FC = () => {
     }
   };
 
-  const handleDelete = (plan: AdminPlan) => {
+  const handleDelete = useCallback((plan: AdminPlan) => {
     Modal.confirm({
       title: 'Xóa gói?',
       content: `Bạn chắc chắn muốn xóa gói "${plan.planName}"?`,
@@ -98,7 +98,7 @@ const AdminPlanManagementPage: React.FC = () => {
         }
       }
     });
-  };
+  }, [fetchPlans]);
 
   const planColumns: ColumnsType<AdminPlan> = useMemo(
     () => [
@@ -132,7 +132,7 @@ const AdminPlanManagementPage: React.FC = () => {
         )
       }
     ],
-    []
+    [handleDelete, openEdit]
   );
 
   const subscriptionColumns: ColumnsType<AdminSubscriptionHistory> = useMemo(

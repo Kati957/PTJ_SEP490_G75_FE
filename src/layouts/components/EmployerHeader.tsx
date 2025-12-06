@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../features/auth/hooks";
 import { Button, Dropdown, Avatar, message, Tag } from "antd";
@@ -130,21 +130,21 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
       : [
           {
             key: "profile",
-            label: <NavLink to="/nha-tuyen-dung/ho-so">H? so c?a t�i</NavLink>,
+            label: <NavLink to="/nha-tuyen-dung/ho-so">Hồ sơ của tôi</NavLink>,
           },
         ]),
     {
       key: "system-report",
-      label: <span onClick={() => setReportModalOpen(true)}>D?ch v? h? tr? h? th?ng</span>,
+      label: <span onClick={() => setReportModalOpen(true)}>Dịch vụ hỗ trợ của hệ thống</span>,
       icon: <CustomerServiceOutlined />,
     },
     {
       key: "change-password",
-      label: <NavLink to="/nha-tuyen-dung/doi-mat-khau">�?i m?t kh?u</NavLink>,
+      label: <NavLink to="/nha-tuyen-dung/doi-mat-khau">Đổi mật khẩu</NavLink>,
     },
     {
       key: "logout",
-      label: "�ang xu?t",
+      label: "Đăng xuất",
       icon: <LogoutOutlined />,
       danger: true,
       onClick: handleLogout,
@@ -211,13 +211,13 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
               to="/login"
               className="text-white hover:text-gray-200 text-sm font-medium"
             >
-           �ang nh?p
+           �ang nh?p
             </NavLink>
             <NavLink
               to="/nha-tuyen-dung/register"
               className="text-white hover:text-gray-200 text-sm font-medium"
             >
-              �ang k�
+              �ang k�
             </NavLink>
           </div>
         )}
@@ -229,14 +229,14 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({
             to="/login"
             className="text-gray-200 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
           >
-            Cho ngu?i t?m vi?c
+            Cho người tìm việc
           </NavLink>
         ) : (
           <NavLink
             to="/nha-tuyen-dung"
             className="text-gray-200 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
           >
-            Nh? tuy?n d?ng
+            Nhà tuyển dụng
           </NavLink>
         )}
       </div>
