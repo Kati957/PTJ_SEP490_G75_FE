@@ -63,8 +63,8 @@ const DetailSection: React.FC<{ title: string; children: React.ReactNode }> = ({
   </section>
 );
 
-type EmployerStatusFilter = "all" | "Active" | "Blocked" | "Deleted";
-type JobSeekerStatusFilter = "all" | "Active" | "Archived";
+type EmployerStatusFilter = "all" | "Active" | "Blocked" | "Deleted" | "Expired";
+type JobSeekerStatusFilter = "all" | "Active" | "Archived" | "Expired";
 
 interface EmployerFilters {
   keyword: string;
@@ -522,8 +522,24 @@ const AdminJobPostManagementPage: React.FC = () => {
       key: "status",
       width: 130,
       render: (value: string) => (
-        <Tag color={value === "Blocked" ? "red" : value === "Deleted" ? "default" : "green"}>
-          {value === "Blocked" ? "Đã khóa" : value === "Deleted" ? "Đã xóa" : "Đang hoạt động"}
+        <Tag
+          color={
+            value === "Blocked"
+              ? "red"
+              : value === "Deleted"
+                ? "default"
+                : value === "Expired"
+                  ? "orange"
+                  : "green"
+          }
+        >
+          {value === "Blocked"
+            ? "Đã khóa"
+            : value === "Deleted"
+              ? "Đã xóa"
+              : value === "Expired"
+                ? "Hết hạn"
+                : "Đang hoạt động"}
         </Tag>
       )
     },
@@ -595,8 +611,8 @@ const AdminJobPostManagementPage: React.FC = () => {
       key: "status",
       width: 130,
       render: (value: string) => (
-        <Tag color={value === "Archived" ? "orange" : "green"}>
-          {value === "Archived" ? "Đã khóa" : "Đang hoạt động"}
+        <Tag color={value === "Archived" ? "orange" : value === "Expired" ? "default" : "green"}>
+          {value === "Archived" ? "Đã khóa" : value === "Expired" ? "Hết hạn" : "Đang hoạt động"}
         </Tag>
       )
     },
@@ -663,6 +679,7 @@ const AdminJobPostManagementPage: React.FC = () => {
               <Option value="Active">Đang hoạt động</Option>
               <Option value="Blocked">Đã khóa</Option>
               <Option value="Deleted">Đã xóa</Option>
+              <Option value="Expired">Hết hạn</Option>
             </Select>
             <Select
               allowClear
@@ -724,6 +741,7 @@ const AdminJobPostManagementPage: React.FC = () => {
               <Option value="all">Tất cả trạng thái</Option>
               <Option value="Active">Đang hoạt động</Option>
               <Option value="Archived">Đã khóa</Option>
+              <Option value="Expired">Hết hạn</Option>
             </Select>
             <Select
               allowClear

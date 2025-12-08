@@ -9,7 +9,10 @@ import {
   Descriptions,
   Typography,
   Empty,
-  Tag
+  Tag,
+  Rate,
+  List,
+  Avatar
 } from 'antd';
 import type { TabsProps } from 'antd';
 import type { AppDispatch, RootState } from '../../app/store';
@@ -145,6 +148,7 @@ const EmployerProfilePage: React.FC = () => {
           </Descriptions.Item>
         </Descriptions>
       </Card>
+
     </div>
   ) : (
     <Empty description="Chưa có thông tin hồ sơ" image={Empty.PRESENTED_IMAGE_SIMPLE} />
@@ -182,6 +186,55 @@ const EmployerProfilePage: React.FC = () => {
             isVerified={authUser?.verified}
             locationLabel={resolvedLocation}
           />
+          {profile && (
+            <Card
+              bordered={false}
+              className="shadow-md mt-4"
+              title={
+                <div className="flex items-center justify-between gap-2">
+                  <span>Đánh giá từ ứng viên</span>
+                  <Tag color="gold">{profile.ratings?.length ?? 0} đánh giá</Tag>
+                </div>
+              }
+            >
+              <div className="mb-4 flex items-center gap-4 rounded-lg bg-slate-50 p-4">
+                <div>
+                  <div className="text-3xl font-bold text-slate-900">{(profile.averageRating ?? 0).toFixed(1)}</div>
+                  <Rate allowHalf disabled value={profile.averageRating ?? 0} className="text-yellow-500" />
+                  <div className="text-xs text-slate-500">Trung bình</div>
+                </div>
+              </div>
+
+              <List
+                itemLayout="horizontal"
+                dataSource={profile.ratings ?? []}
+                locale={{ emptyText: 'Chưa có đánh giá nào' }}
+                renderItem={(item) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar style={{ backgroundColor: '#fde3cf', color: '#f56a00' }}>
+                          {item.raterName?.[0]?.toUpperCase() || 'U'}
+                        </Avatar>
+                      }
+                      title={
+                        <div className="flex flex-col">
+                          <span className="font-medium">{item.raterName || 'Người dùng ẩn danh'}</span>
+                          <Rate allowHalf disabled value={item.ratingValue} className="text-xs text-yellow-500" />
+                        </div>
+                      }
+                      description={
+                        <div className="mt-1">
+                          <div className="text-sm text-slate-700">{item.comment || 'Không có nhận xét'}</div>
+                          <div className="mt-1 text-xs text-slate-400">{new Date(item.createdAt).toLocaleDateString('vi-VN')}</div>
+                        </div>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            </Card>
+          )}
         </Col>
 
         <Col xs={24} lg={16}>
