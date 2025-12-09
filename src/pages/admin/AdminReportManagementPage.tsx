@@ -153,6 +153,27 @@ const AdminReportManagementPage: React.FC = () => {
     });
   }, []);
 
+  const normalizeText = useCallback(
+    (value: string) =>
+      value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'd')
+        .toLowerCase(),
+    []
+  );
+
+  const pendingKeywordNorm = useMemo(
+    () => normalizeText(pendingFilters.keyword.trim() || ''),
+    [pendingFilters.keyword, normalizeText]
+  );
+
+  const systemKeywordNorm = useMemo(
+    () => normalizeText(systemFilters.keyword.trim() || ''),
+    [systemFilters.keyword, normalizeText]
+  );
+
   const pendingFilterParams = useMemo(
     () => ({
       reportType: pendingFilters.reportType !== 'all' ? pendingFilters.reportType : undefined,
@@ -161,7 +182,7 @@ const AdminReportManagementPage: React.FC = () => {
     [pendingFilters]
   );
 
-const solvedFilterParams = useMemo(
+  const solvedFilterParams = useMemo(
     () => ({
       reportType: solvedFilters.reportType !== 'all' ? solvedFilters.reportType : undefined,
       adminEmail: solvedFilters.adminEmail.trim() || undefined
@@ -184,6 +205,24 @@ const systemFilterParams = useMemo(
     [systemFilters]
   );
   const sortedReportTypes = useMemo(() => [...reportTypes].sort(), [reportTypes]);
+
+  const pendingDisplayed = useMemo(() => {
+    if (!pendingKeywordNorm) return pendingReports;
+    return pendingReports.filter((item) => {
+      const haystack = normalizeText(
+        `${item.reportType || ''} ${item.reporterEmail || ''} ${item.targetUserEmail || ''} ${item.reason || ''}`
+      );
+      return haystack.includes(pendingKeywordNorm);
+    });
+  }, [pendingKeywordNorm, pendingReports, normalizeText]);
+
+  const systemDisplayed = useMemo(() => {
+    if (!systemKeywordNorm) return systemReports;
+    return systemReports.filter((item) => {
+      const haystack = normalizeText(`${item.title || ''} ${item.userEmail || ''} ${item.description || ''}`);
+      return haystack.includes(systemKeywordNorm);
+    });
+  }, [systemKeywordNorm, systemReports, normalizeText]);
 
   const fetchPendingReports = useCallback(
     async (page: number, pageSize: number) => {
@@ -864,7 +903,7 @@ const systemFilterParams = useMemo(
           rowKey="reportId"
           loading={pendingLoading}
           columns={pendingColumns}
-          dataSource={pendingReports}
+          dataSource={pendingDisplayed}
           pagination={pendingPagination}
           scroll={{ x: 1100 }}
           onChange={handlePendingTableChange}
@@ -941,7 +980,7 @@ const systemFilterParams = useMemo(
           rowKey="reportId"
           loading={systemLoading}
           columns={systemColumns}
-          dataSource={systemReports}
+          dataSource={systemDisplayed}
           pagination={systemPagination}
           scroll={{ x: 1100 }}
           onChange={handleSystemTableChange}

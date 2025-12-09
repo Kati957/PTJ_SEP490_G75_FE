@@ -93,18 +93,31 @@ const AdminNewsManagementPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const normalizedFilters = useMemo(() => {
-    const normalized: { isPublished?: boolean; keyword?: string } = {};
+    const normalized: { isPublished?: boolean } = {};
     if (filters.status === 'published') {
       normalized.isPublished = true;
     }
     if (filters.status === 'unpublished') {
       normalized.isPublished = false;
     }
-    if (filters.keyword.trim()) {
-      normalized.keyword = filters.keyword.trim();
-    }
     return normalized;
   }, [filters]);
+
+  const normalizeText = useCallback(
+    (value: string) =>
+      value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'd')
+        .toLowerCase(),
+    []
+  );
+
+  const keywordNormalized = useMemo(
+    () => normalizeText(filters.keyword.trim() || ''),
+    [filters.keyword, normalizeText]
+  );
 
   const fetchNews = useCallback(async () => {
     setLoading(true);
@@ -138,6 +151,16 @@ const AdminNewsManagementPage: React.FC = () => {
       fileInputRef.current.value = '';
     }
   };
+
+  const displayedNews = useMemo(() => {
+    if (!keywordNormalized) return news;
+    return news.filter((item) => {
+      const haystack = normalizeText(
+        `${item.title || ''} ${item.category || ''} ${item.content || ''}`
+      );
+      return haystack.includes(keywordNormalized);
+    });
+  }, [keywordNormalized, news, normalizeText]);
 
   const openDetail = async (newsId: number) => {
     setDetailOpen(true);
@@ -381,7 +404,7 @@ const AdminNewsManagementPage: React.FC = () => {
           rowKey="newsId"
           loading={loading}
           columns={columns}
-          dataSource={news}
+          dataSource={displayedNews}
           pagination={false}
           scroll={{ x: 960 }}
         />

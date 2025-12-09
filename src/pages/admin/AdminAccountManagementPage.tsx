@@ -136,6 +136,8 @@ const AdminAccountManagementPage: React.FC = () => {
   const [googleActionLoadingId, setGoogleActionLoadingId] = useState<number | null>(null);
   const [subHistory, setSubHistory] = useState<AdminSubscriptionHistory[]>([]);
   const [transactionHistory, setTransactionHistory] = useState<AdminTransactionHistory[]>([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [historyUser, setHistoryUser] = useState<{ id: number; name: string } | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [plans, setPlans] = useState<AdminPlan[]>([]);
   const [planListLoading, setPlanListLoading] = useState(false);
@@ -389,6 +391,22 @@ const AdminAccountManagementPage: React.FC = () => {
     }
   };
 
+  const openHistoryFromList = async (user: AdminUser) => {
+    const employerName = (user as AdminUserDetail)?.companyName || user.displayName || user.username;
+    setHistoryUser({
+      id: user.userId,
+      name: employerName
+    });
+    setHistoryModalOpen(true);
+    await fetchPlanAndTransactions(user.userId);
+  };
+
+  useEffect(() => {
+    if (!historyModalOpen) {
+      setHistoryUser(null);
+    }
+  }, [historyModalOpen]);
+
   const handleToggleActive = async (user: AdminUser) => {
     if (user.role === 'Admin') {
       message.warning('Admin không thể khóa/mở khóa tài khoản của mình.');
@@ -600,16 +618,27 @@ const AdminAccountManagementPage: React.FC = () => {
       title: 'Hành động',
       key: 'actions',
       fixed: 'right',
-      width: 180,
+      width: 220,
       render: (_, record) => (
-        <Space>
+        <Space style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Button
             icon={<EyeOutlined />}
             size="small"
             onClick={() => openDetail(record.userId)}
+            style={{ minWidth: 90 }}
           >
             Chi tiết
           </Button>
+          {record.role === 'Employer' && (
+            <Button
+              size="small"
+              onClick={() => void openHistoryFromList(record)}
+              loading={planLoading && historyModalOpen && historyUser?.id === record.userId}
+              style={{ minWidth: 120 }}
+            >
+              Lịch sử giao dịch
+            </Button>
+          )}
           {record.role !== 'Admin' && (
             <Button
               icon={<UserSwitchOutlined />}
@@ -617,6 +646,7 @@ const AdminAccountManagementPage: React.FC = () => {
               danger={record.isActive}
               loading={toggleLoadingId === record.userId}
               onClick={() => handleToggleActive(record)}
+              style={{ minWidth: 95 }}
             >
               {record.isActive ? 'Khóa' : 'Mở khóa'}
             </Button>
@@ -1046,7 +1076,7 @@ const AdminAccountManagementPage: React.FC = () => {
     },
     {
       key: 'google',
-      label: 'Duyệt NTD Google',
+      label: 'Duyệt Nhà tuyển dụng Google',
       children: googleTabContent,
     },
     {
@@ -1271,44 +1301,63 @@ const AdminAccountManagementPage: React.FC = () => {
             {selectedUser.role === 'Employer' && (
               <section className="space-y-3">
                 <Typography.Title level={5} className="!mb-1">
-                  Goi dang ky & thanh toan
+                  Lich su giao dich
                 </Typography.Title>
-
-                <Card size="small" className="border border-slate-200 shadow-sm">
-                  <Typography.Title level={5} className="!mb-3">
-                    Lich su goi (subscription)
-                  </Typography.Title>
-                  <Table
-                    size="small"
-                    rowKey={(record) => record.subscriptionId}
-                    dataSource={subHistory}
-                    columns={subscriptionColumns}
-                    pagination={false}
-                    loading={planLoading}
-                    locale={{ emptyText: 'Chua co goi' }}
-                  />
-                </Card>
-
-                <Card size="small" className="border border-slate-200 shadow-sm">
-                  <Typography.Title level={5} className="!mb-3">
-                    Lich su thanh toan
-                  </Typography.Title>
-                  <Table
-                    size="small"
-                    rowKey={(record) => record.transactionId}
-                    dataSource={transactionHistory}
-                    columns={transactionColumns}
-                    pagination={false}
-                    loading={planLoading}
-                    locale={{ emptyText: 'Chua co giao dich' }}
-                  />
-                </Card>
+                <Button
+                  type="primary"
+                  icon={<EyeOutlined />}
+                  onClick={() => void openHistoryFromList(selectedUser)}
+                  loading={planLoading}
+                >
+                  Xem lịch sử giao dịch
+                </Button>
               </section>
             )}
           </Space>
         ) : (
           <p>Không có dữ liệu.</p>
         )}
+      </Drawer>
+
+      <Drawer
+        title={`Lich su giao dich${historyUser?.name ? ` - ${historyUser.name}` : ''}`}
+        width={820}
+        placement="right"
+        open={historyModalOpen}
+        onClose={() => setHistoryModalOpen(false)}
+        destroyOnClose
+      >
+        <Space direction="vertical" className="w-full">
+          <Card size="small" className="border border-slate-200 shadow-sm">
+            <Typography.Title level={5} className="!mb-3">
+              Lich su goi (subscription)
+            </Typography.Title>
+            <Table
+              size="small"
+              rowKey={(record) => record.subscriptionId}
+              dataSource={subHistory}
+              columns={subscriptionColumns}
+              pagination={false}
+              loading={planLoading}
+              locale={{ emptyText: 'Chua co goi' }}
+            />
+          </Card>
+
+          <Card size="small" className="border border-slate-200 shadow-sm">
+            <Typography.Title level={5} className="!mb-3">
+              Lich su thanh toan
+            </Typography.Title>
+            <Table
+              size="small"
+              rowKey={(record) => record.transactionId}
+              dataSource={transactionHistory}
+              columns={transactionColumns}
+              pagination={false}
+              loading={planLoading}
+              locale={{ emptyText: 'Chua co giao dich' }}
+            />
+          </Card>
+        </Space>
       </Drawer>
     </>
   );

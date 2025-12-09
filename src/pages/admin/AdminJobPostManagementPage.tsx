@@ -178,22 +178,41 @@ const AdminJobPostManagementPage: React.FC = () => {
     return parts.length ? parts.join(", ") : undefined;
   };
 
+  const normalizeText = useCallback(
+    (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "d")
+        .toLowerCase(),
+    []
+  );
+
   const employerFilterParams = useMemo(
     () => ({
       status: employerFilters.status !== "all" ? employerFilters.status : undefined,
-      keyword: employerFilters.keyword.trim() || undefined,
       categoryId: employerFilters.categoryId ?? undefined
     }),
-    [employerFilters]
+    [employerFilters.categoryId, employerFilters.status]
   );
 
   const jobSeekerFilterParams = useMemo(
     () => ({
       status: jobSeekerFilters.status !== "all" ? jobSeekerFilters.status : undefined,
-      keyword: jobSeekerFilters.keyword.trim() || undefined,
       categoryId: jobSeekerFilters.categoryId ?? undefined
     }),
-    [jobSeekerFilters]
+    [jobSeekerFilters.categoryId, jobSeekerFilters.status]
+  );
+
+  const employerKeywordNorm = useMemo(
+    () => normalizeText(employerFilters.keyword.trim() || ""),
+    [employerFilters.keyword, normalizeText]
+  );
+
+  const jobSeekerKeywordNorm = useMemo(
+    () => normalizeText(jobSeekerFilters.keyword.trim() || ""),
+    [jobSeekerFilters.keyword, normalizeText]
   );
 
   const currentActionVerb = actionContext
@@ -481,21 +500,47 @@ const AdminJobPostManagementPage: React.FC = () => {
     }
   };
 
+  const employerFiltered = useMemo(() => {
+    if (!employerKeywordNorm) return employerPosts;
+    return employerPosts.filter((p) => {
+      const haystack = normalizeText(
+        `${p.title || ""} ${p.description || ""} ${p.employerName || ""} ${p.employerEmail || ""} ${
+          p.categoryName || ""
+        } ${formatLocation(p.provinceName, p.districtName, p.wardName) || ""}`
+      );
+      return haystack.includes(employerKeywordNorm);
+    });
+  }, [employerKeywordNorm, employerPosts, normalizeText]);
+
+  const jobSeekerFiltered = useMemo(() => {
+    if (!jobSeekerKeywordNorm) return jobSeekerPosts;
+    return jobSeekerPosts.filter((p) => {
+      const haystack = normalizeText(
+        `${p.title || ""} ${p.description || ""} ${p.fullName || ""} ${p.jobSeekerEmail || ""} ${
+          p.categoryName || ""
+        } ${formatLocation(p.provinceName, p.districtName, p.wardName) || ""}`
+      );
+      return haystack.includes(jobSeekerKeywordNorm);
+    });
+  }, [jobSeekerKeywordNorm, jobSeekerPosts, normalizeText]);
+
   const employerDisplayData = useMemo(() => {
+    const base = employerFiltered;
     if (highlightRow?.type === "employer") {
-      const filtered = employerPosts.filter((p) => p.employerPostId !== highlightRow.data.employerPostId);
+      const filtered = base.filter((p) => p.employerPostId !== highlightRow.data.employerPostId);
       return [highlightRow.data, ...filtered];
     }
-    return employerPosts;
-  }, [employerPosts, highlightRow]);
+    return base;
+  }, [employerFiltered, highlightRow]);
 
   const jobSeekerDisplayData = useMemo(() => {
+    const base = jobSeekerFiltered;
     if (highlightRow?.type === "jobseeker") {
-      const filtered = jobSeekerPosts.filter((p) => p.jobSeekerPostId !== highlightRow.data.jobSeekerPostId);
+      const filtered = base.filter((p) => p.jobSeekerPostId !== highlightRow.data.jobSeekerPostId);
       return [highlightRow.data, ...filtered];
     }
-    return jobSeekerPosts;
-  }, [jobSeekerPosts, highlightRow]);
+    return base;
+  }, [jobSeekerFiltered, highlightRow]);
   const employerColumns: ColumnsType<AdminEmployerPost> = [
     {
       title: "Tiêu đề",

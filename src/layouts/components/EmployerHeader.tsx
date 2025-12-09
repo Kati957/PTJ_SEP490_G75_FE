@@ -7,6 +7,8 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   CustomerServiceOutlined,
+  FileTextOutlined,
+  LockOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../features/auth/hooks";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
@@ -20,8 +22,9 @@ import {
 } from "../../features/employer/slice/profileSlice";
 import SystemReportModal from "../../features/report/components/SystemReportModal";
 import type { User } from "../../features/auth/types";
+import LogoImage from "../../assets/logo.png";
 
-const LogoWhite = "/vite.svg";
+const LogoWhite = LogoImage;
 
 interface EmployerHeaderProps {
   onToggleSidebar?: () => void;
@@ -151,21 +154,24 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({ onToggleSidebar 
       : [
           {
             key: "profile",
+            icon: <UserOutlined />,
             label: <NavLink to="/nha-tuyen-dung/ho-so">Hồ sơ của tôi</NavLink>,
           },
           {
             key: "billing-history",
+            icon: <FileTextOutlined />,
             label: <NavLink to="/nha-tuyen-dung/lich-su-giao-dich">Lịch sử gói & giao dịch</NavLink>,
           },
         ]),
     {
+      key: "change-password",
+      icon: <LockOutlined />,
+      label: <NavLink to="/nha-tuyen-dung/doi-mat-khau">Đổi mật khẩu</NavLink>,
+    },
+    {
       key: "system-report",
       label: <span onClick={() => setReportModalOpen(true)}>Dịch vụ hỗ trợ của hệ thống</span>,
       icon: <CustomerServiceOutlined />,
-    },
-    {
-      key: "change-password",
-      label: <NavLink to="/nha-tuyen-dung/doi-mat-khau">Đổi mật khẩu</NavLink>,
     },
     {
       key: "logout",
@@ -179,7 +185,7 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({ onToggleSidebar 
   return (
     <>
       <header
-        className="bg-blue-900 text-white shadow-md py-4 px-6 flex items-center justify-between sticky top-0 z-10"
+        className="bg-gradient-to-r from-sky-600 via-indigo-600 to-blue-900 text-white shadow-lg py-4 px-6 flex items-center justify-between sticky top-0 z-20"
         style={{ height: "68px" }}
       >
         <div className="flex items-center gap-3">
@@ -191,10 +197,15 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({ onToggleSidebar 
             />
           )}
 
-          <img src={LogoWhite} alt="Logo" className="h-8 mr-2" />
-          <NavLink to="/nha-tuyen-dung/dashboard" className="text-white hover:text-gray-200 text-sm font-medium">
-            Trang chủ
+          <NavLink to="/nha-tuyen-dung/dashboard" className="flex items-center">
+            <img src={LogoWhite} alt="Logo" className="h-8 mr-2" />
           </NavLink>
+            <NavLink
+              to={location.pathname.startsWith("/admin") ? "/admin/dashboard" : "/nha-tuyen-dung/dashboard"}
+              className="text-white hover:text-gray-200 text-sm font-medium"
+            >
+              Trang chủ
+            </NavLink>
         </div>
 
         <div className="flex items-center space-x-5">
@@ -216,11 +227,6 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({ onToggleSidebar 
                       {planStatus.label ? planStatus.label.toUpperCase() : "PREMIUM"}
                     </Tag>
                   )}
-                  {typeof planStatus.remaining === "number" && (
-                    <Tag color="blue" className="m-0">
-                      Còn: {planStatus.remaining}
-                    </Tag>
-                  )}
                 </span>
                 <DownOutlined style={{ fontSize: "10px" }} />
               </a>
@@ -238,15 +244,6 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({ onToggleSidebar 
 
           <div className="border-l border-blue-700 h-6" />
 
-          {location.pathname.startsWith("/nha-tuyen-dung") ? (
-            <NavLink to="/login" className="text-gray-200 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-              Cho người tìm việc
-            </NavLink>
-          ) : (
-            <NavLink to="/nha-tuyen-dung" className="text-gray-200 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-              Nhà tuyển dụng
-            </NavLink>
-          )}
         </div>
       </header>
       <SystemReportModal open={reportModalOpen} onClose={() => setReportModalOpen(false)} />

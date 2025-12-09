@@ -576,7 +576,7 @@ type ShortlistResponse = Awaited<
         if (normalized === "expired") {
           return (
             <Tag color="red" style={{ fontSize: 12, padding: "2px 8px" }}>
-              H?t h?n
+              Hết hạn
             </Tag>
           );
         }

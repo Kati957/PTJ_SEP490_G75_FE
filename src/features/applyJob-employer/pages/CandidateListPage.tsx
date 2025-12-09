@@ -211,13 +211,13 @@ const CandidateListPage: React.FC = () => {
       if (isSaved) {
         const res = await jobSeekerPostService.unsaveCandidate(dto);
         if (res?.success || res) {
-          message.success('?? b? l?u ?ng vi?n.');
+          message.success('Đã bỏ lưu hồ sơ ứng viên.');
           setSavedList((prev) => prev.filter((s) => s.jobSeekerId !== record.jobSeekerId));
         }
       } else {
         const res = await jobSeekerPostService.saveCandidate(dto);
         if (res?.success || res) {
-          message.success('?? l?u h? s? ?ng vi?n.');
+          message.success('Đã lưu hồ sơ ứng viên.');
           setSavedList((prev) => [
             ...prev,
             {
@@ -231,7 +231,7 @@ const CandidateListPage: React.FC = () => {
         }
       }
     } catch {
-      message.error('Thao t?c th?t b?i.');
+      message.error('Thao tác thất bại.');
     }
   };
   const openStatusModal = (

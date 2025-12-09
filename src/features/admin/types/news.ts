@@ -7,6 +7,7 @@ export interface AdminNews {
   updatedAt?: string | null;
   isFeatured?: boolean;
   priority?: number;
+  content?: string | null;
 }
 
 export interface AdminNewsDetail extends AdminNews {

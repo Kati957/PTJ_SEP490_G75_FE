@@ -34,6 +34,14 @@ const getErrorMessage = (error: unknown, fallback: string) =>
   (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
   (error instanceof Error ? error.message : fallback);
 
+const splitSkills = (raw?: string | null) => {
+  if (!raw) return [];
+  const normalized = raw.replace(/\r?\n+/g, " ").replace(/\s+/g, " ").trim();
+  const parts = normalized.split(/\s*-\s+/).filter((p) => p.length > 0);
+  if (parts.length > 0) return parts;
+  return normalized ? normalized.split(",").map((s) => s.trim()).filter((s) => s.length > 0) : [];
+};
+
 const JobSeekerCvPage: React.FC = () => {
   const [form] = Form.useForm();
   const [cvs, setCvs] = useState<JobSeekerCv[]>([]);
@@ -79,8 +87,10 @@ const JobSeekerCvPage: React.FC = () => {
     loadProvinces();
   }, []);
 
-  const handleProvinceChange = async (provinceId?: number) => {
-    form.setFieldsValue({ districtId: undefined, wardId: undefined });
+  const handleProvinceChange = async (provinceId?: number, _option?: unknown, preserveSelection = false) => {
+    if (!preserveSelection) {
+      form.setFieldsValue({ districtId: undefined, wardId: undefined });
+    }
     setDistricts([]);
     setWards([]);
     if (!provinceId) return;
@@ -95,8 +105,10 @@ const JobSeekerCvPage: React.FC = () => {
     }
   };
 
-  const handleDistrictChange = async (districtId?: number) => {
-    form.setFieldsValue({ wardId: undefined });
+  const handleDistrictChange = async (districtId?: number, _option?: unknown, preserveWard = false) => {
+    if (!preserveWard) {
+      form.setFieldsValue({ wardId: undefined });
+    }
     setWards([]);
     if (!districtId) return;
     setLocationLoading((prev) => ({ ...prev, wards: true }));
@@ -173,10 +185,10 @@ const JobSeekerCvPage: React.FC = () => {
       wardId: cv.wardId ?? undefined,
     });
     if (cv.provinceId) {
-      await handleProvinceChange(cv.provinceId);
+      await handleProvinceChange(cv.provinceId, undefined, true);
     }
     if (cv.districtId) {
-      await handleDistrictChange(cv.districtId);
+      await handleDistrictChange(cv.districtId, undefined, true);
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -265,13 +277,13 @@ const JobSeekerCvPage: React.FC = () => {
                   {cv.preferredJobType && (
                     <Tag color="blue">{cv.preferredJobType}</Tag>
                   )}
-                  {cv.skills &&
-                    cv.skills
-                      .split(",")
-                      .slice(0, 3)
-                      .map((skill) => (
-                        <Tag key={skill.trim()}>{skill.trim()}</Tag>
-                      ))}
+                  {splitSkills(cv.skills)
+                    .slice(0, 3)
+                    .map((skill) => (
+                      <Tag key={skill} className="max-w-full break-words whitespace-normal">
+                        {skill}
+                      </Tag>
+                    ))}
                 </div>
               </div>
             </Card>

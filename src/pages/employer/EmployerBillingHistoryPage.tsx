@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Card, Tabs, Table, Tag, Typography, message } from "antd";
+import React, { useEffect, useMemo, useState } from "react";
+import { Card, Tabs, Table, Tag, Typography, message, Statistic, Space, Divider } from "antd";
 import baseService from "../../services/baseService";
 
 type TransactionItem = {
@@ -73,6 +73,16 @@ const EmployerBillingHistoryPage: React.FC = () => {
     void fetchSubscriptions();
   }, []);
 
+  const totalPaid = useMemo(
+    () => transactions.reduce((sum, t) => sum + (t.status === "Paid" && t.amount ? t.amount : 0), 0),
+    [transactions],
+  );
+  const paidCount = useMemo(() => transactions.filter((t) => t.status === "Paid").length, [transactions]);
+  const pendingCount = useMemo(() => transactions.filter((t) => t.status === "Pending").length, [transactions]);
+
+  const activeSubs = useMemo(() => subscriptions.filter((s) => s.status === "Active").length, [subscriptions]);
+  const expiredSubs = useMemo(() => subscriptions.filter((s) => s.status === "Expired").length, [subscriptions]);
+
   const txnColumns = [
     { title: "Mã GD", dataIndex: "transactionId", key: "transactionId", width: 100 },
     { title: "Gói", dataIndex: "planId", key: "planId", width: 80 },
@@ -86,7 +96,11 @@ const EmployerBillingHistoryPage: React.FC = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (v: string) => <Tag color={v === "Paid" ? "green" : v === "Pending" ? "orange" : "default"}>{v}</Tag>,
+      render: (v: string) => (
+        <Tag color={v === "Paid" ? "green" : v === "Pending" ? "orange" : "default"}>
+          {v === "Paid" ? "Đã thanh toán" : v === "Pending" ? "Đang chờ" : v || "-"}
+        </Tag>
+      ),
     },
     { title: "Mã order", dataIndex: "payOsorderCode", key: "payOsorderCode" },
     { title: "Ngày tạo", dataIndex: "createdAt", key: "createdAt", render: formatDateTime },
@@ -96,27 +110,60 @@ const EmployerBillingHistoryPage: React.FC = () => {
   const subColumns = [
     { title: "Gói", dataIndex: "planName", key: "planName" },
     { title: "Giá", dataIndex: "price", key: "price", render: numberText },
-    { title: "Bài còn", dataIndex: "remainingPosts", key: "remainingPosts", render: numberText },
+    { title: "Bài còn lại", dataIndex: "remainingPosts", key: "remainingPosts", render: numberText },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (v: string) => <Tag color={v === "Active" ? "green" : v === "Expired" ? "red" : "default"}>{v}</Tag>,
+      render: (v: string) => (
+        <Tag color={v === "Active" ? "green" : v === "Expired" ? "red" : "default"}>
+          {v === "Active" ? "Đang hiệu lực" : v === "Expired" ? "Hết hạn" : v || "-"}
+        </Tag>
+      ),
     },
     { title: "Bắt đầu", dataIndex: "startDate", key: "startDate", render: formatDateTime },
     { title: "Kết thúc", dataIndex: "endDate", key: "endDate", render: formatDateTime },
   ];
 
   return (
-    <div className="p-4 space-y-4">
-      <Typography.Title level={3} className="!mb-2">
-        Lịch sử gói & giao dịch
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" className="!mb-4">
-        Theo dõi gói đã mua và các giao dịch thanh toán.
-      </Typography.Paragraph>
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+      <Card
+        className="bg-gradient-to-r from-sky-500 via-indigo-600 to-purple-600 text-white shadow-lg border-none"
+        styles={{ body: { padding: 20 } }}
+      >
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <Typography.Title level={3} className="!text-white !mb-1">
+              Lịch sử gói & giao dịch
+            </Typography.Title>
+            <Typography.Paragraph className="!text-white/80 !mb-0">
+              Theo dõi gói đã mua, giao dịch thanh toán và số bài còn lại.
+            </Typography.Paragraph>
+          </div>
+          <Space size="large" className="text-white">
+            <Statistic
+              title={<span className="text-white/80">Tổng đã thanh toán</span>}
+              value={totalPaid}
+              valueStyle={{ color: "#fff", fontSize: 20 }}
+              formatter={(v) => `${Number(v).toLocaleString("vi-VN")} đ`}
+            />
+            <Divider type="vertical" className="!border-white/40" />
+            <div className="text-right">
+              <div className="text-sm text-white/80">Giao dịch</div>
+              <div className="text-lg font-semibold">{paidCount} đã thanh toán</div>
+              <div className="text-xs text-white/70">{pendingCount} đang chờ</div>
+            </div>
+            <Divider type="vertical" className="!border-white/40" />
+            <div className="text-right">
+              <div className="text-sm text-white/80">Gói</div>
+              <div className="text-lg font-semibold">{activeSubs} đang hiệu lực</div>
+              <div className="text-xs text-white/70">{expiredSubs} đã hết hạn</div>
+            </div>
+          </Space>
+        </div>
+      </Card>
 
-      <Card>
+      <Card className="shadow-md">
         <Tabs
           items={[
             {
@@ -129,7 +176,8 @@ const EmployerBillingHistoryPage: React.FC = () => {
                   columns={txnColumns}
                   loading={loadingTxn}
                   pagination={false}
-                  scroll={{ x: 800 }}
+                  scroll={{ x: 900 }}
+                  locale={{ emptyText: "Chưa có giao dịch" }}
                 />
               ),
             },
@@ -143,7 +191,8 @@ const EmployerBillingHistoryPage: React.FC = () => {
                   columns={subColumns}
                   loading={loadingSub}
                   pagination={false}
-                  scroll={{ x: 800 }}
+                  scroll={{ x: 900 }}
+                  locale={{ emptyText: "Chưa có gói đã mua" }}
                 />
               ),
             },

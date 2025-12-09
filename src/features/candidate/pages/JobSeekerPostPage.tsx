@@ -74,7 +74,7 @@ const hasWorkHourData = (post: JobSeekerPostDtoOut): boolean => {
 const genderLabelMap: Record<string, string> = {
   male: "Nam",
   female: "Nữ",
-  "n?": "Nữ",
+  "nữ": "Nữ",
   other: "Khác",
 };
 

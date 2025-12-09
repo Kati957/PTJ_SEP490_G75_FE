@@ -9,6 +9,10 @@ export interface AdminEmployerPost {
   categoryName?: string | null;
   status: string;
   createdAt: string;
+  description?: string | null;
+  provinceName?: string | null;
+  districtName?: string | null;
+  wardName?: string | null;
 }
 
 export interface AdminEmployerPostDetail extends AdminEmployerPost {
@@ -34,6 +38,10 @@ export interface AdminJobSeekerPost {
   categoryName?: string | null;
   status: string;
   createdAt: string;
+  description?: string | null;
+  provinceName?: string | null;
+  districtName?: string | null;
+  wardName?: string | null;
 }
 
 export interface AdminJobSeekerPostDetail extends AdminJobSeekerPost {

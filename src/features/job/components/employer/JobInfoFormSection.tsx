@@ -363,6 +363,9 @@ export const JobInfoFormSection: React.FC<{
   );
 
   const handleBlur = <K extends keyof JobPostData>(field: K, value: JobPostData[K]) => {
+    if (field === "expiredAt") {
+      return;
+    }
     setTouched((prev) => ({ ...prev, [field]: true }));
     let isInvalid = false;
 
@@ -700,10 +703,6 @@ export const JobInfoFormSection: React.FC<{
             onChange={(value) =>
               handleSalaryNumberChange("salaryMin", value ?? null)
             }
-            formatter={(value) =>
-              `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-            }
-            parser={(value) => Number(value!.replace(/\$\s?|(,*)/g, ""))}
           />
           <InputNumber
             size="large"
@@ -715,10 +714,6 @@ export const JobInfoFormSection: React.FC<{
             onChange={(value) =>
               handleSalaryNumberChange("salaryMax", value ?? null)
             }
-            formatter={(value) =>
-              `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-            }
-            parser={(value) => Number(value!.replace(/\$\s?|(,*)/g, ""))}
           />
           <Select
             size="large"

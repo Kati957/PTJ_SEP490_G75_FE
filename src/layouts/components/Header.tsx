@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button, Dropdown, Avatar, message } from "antd";
 import {
   UserOutlined,
@@ -204,10 +204,13 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const { user } = useAuth();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const jobSeekerProfile = useAppSelector((state) => state.jobSeekerProfile.profile);
   const jobSeekerProfileLoading = useAppSelector((state) => state.jobSeekerProfile.loading);
   const isJobSeeker = !!user && user.roles.includes(ROLES.JOB_SEEKER);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+
+  const isLoginPage = location.pathname === "/login";
 
   useEffect(() => {
     if (isJobSeeker && !jobSeekerProfile && !jobSeekerProfileLoading) {
@@ -229,6 +232,23 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     navigate("/");
     message.success("Đăng xuất thành công!");
   };
+
+  if (isLoginPage) {
+    return (
+      <header
+        className="bg-white shadow-md py-4 px-6 flex items-center justify-between sticky top-0 z-30"
+        style={{ height: "68px" }}
+      >
+        <div className="flex items-center flex-1 min-w-0">
+          <div className="flex items-center space-x-3">
+            <NavLink to="/">
+              <img src={LogoColor} alt="Logo" className="h-10" />
+            </NavLink>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   if (user && (user.roles.includes(ROLES.EMPLOYER) || user.roles.includes(ROLES.ADMIN))) {
     const userDropdownItems = [
@@ -287,9 +307,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
           <div className="border-l border-blue-700 h-6" />
 
-          <NavLink to="/" className="text-white hover:text-gray-200 text-sm font-medium">
-            Cho người tìm việc
-          </NavLink>
+          
         </div>
       </header>
       <SystemReportModal open={reportModalOpen} onClose={() => setReportModalOpen(false)} />
