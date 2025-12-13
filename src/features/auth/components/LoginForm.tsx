@@ -16,11 +16,19 @@ type LoginFormValues = {
   password: string;
 };
 
-type ApiError = { response?: { data?: { message?: string } }; message?: string };
+type ApiError = { response?: { status?: number; data?: { message?: string; Message?: string } }; message?: string };
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   const err = error as ApiError;
-  return err?.response?.data?.message || err?.message || fallback;
+  const responseMessage = err?.response?.data?.message || err?.response?.data?.Message;
+  if (responseMessage) return responseMessage;
+
+  const status = err?.response?.status;
+  if (status === 400 || status === 401) {
+    return "Email hoặc mật khẩu không đúng.";
+  }
+
+  return err?.message || fallback;
 };
 
 const LoginForm: React.FC = () => {

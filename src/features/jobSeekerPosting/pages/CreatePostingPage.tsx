@@ -48,7 +48,6 @@ const { TextArea } = Input;
 const timeFormat = "HH:mm";
 
 type FormValues = (CreateJobSeekerPostPayload | UpdateJobSeekerPostPayload) & {
-  locationDetail?: string;
   preferredWorkHourStart?: Dayjs | string;
   preferredWorkHourEnd?: Dayjs | string;
 };
@@ -257,7 +256,6 @@ const CreatePostingPage: React.FC = () => {
         wardId: postDetail.wardId ?? undefined,
         preferredWorkHourStart: startTime || undefined,
         preferredWorkHourEnd: endTime || undefined,
-        locationDetail: postDetail.preferredLocation,
         selectedCvId: postDetail.selectedCvId ?? postDetail.cvId ?? undefined,
         gender: normalizeGenderValue(postDetail.gender),
       });
@@ -324,14 +322,7 @@ const CreatePostingPage: React.FC = () => {
       (d) => d.code === values.districtId
     )?.name;
     const wardName = wards.find((w) => w.code === values.wardId)?.name;
-    return [
-      values.locationDetail?.trim(),
-      wardName,
-      districtName,
-      provinceName,
-    ]
-      .filter((part) => part && part.length > 0)
-      .join(", ");
+    return [wardName, districtName, provinceName].filter((part) => part && part.length > 0).join(", ");
   };
 
   const onFinish = (values: FormValues) => {
@@ -340,18 +331,10 @@ const CreatePostingPage: React.FC = () => {
       return;
     }
 
-    const {
-      locationDetail,
-      provinceId,
-      districtId,
-      wardId,
-      preferredWorkHourStart,
-      preferredWorkHourEnd,
-      selectedCvId,
-      ...rest
-    } = values;
+    const { provinceId, districtId, wardId, preferredWorkHourStart, preferredWorkHourEnd, selectedCvId, ...rest } =
+      values;
 
-    const preferredLocation = buildPreferredLocation({ ...values, locationDetail }) || "";
+    const preferredLocation = buildPreferredLocation(values) || "";
 
     const formatTimeValue = (val?: Dayjs | string): string => {
       if (dayjs.isDayjs(val)) return val.format(timeFormat);
@@ -527,22 +510,6 @@ const CreatePostingPage: React.FC = () => {
                 </Select.Option>
               ))}
             </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="locationDetail"
-            label="Địa chỉ chi tiết"
-            rules={[
-              {
-                required: true,
-                message: "Vui lòng nhập địa chỉ chi tiết!",
-              },
-            ]}
-          >
-            <Input
-              placeholder="Ví dụ: Số 12, đường Láng"
-              readOnly={isReadOnly}
-            />
           </Form.Item>
 
           <Form.Item
@@ -723,7 +690,7 @@ const CreatePostingPage: React.FC = () => {
   );
 
   const summaryLocation =
-    postDetail?.preferredLocation || form.getFieldValue("locationDetail") || "Chưa cập nhật địa điểm";
+    postDetail?.preferredLocation || "Chưa cập nhật địa điểm";
   const summaryCategory = postDetail?.categoryName || "Chưa có ngành";
   const summaryPhone = postDetail?.phoneContact || "Chưa cập nhật";
   const summaryAge =
@@ -743,7 +710,7 @@ const CreatePostingPage: React.FC = () => {
         {!isViewMode && (
           <Card
             className="mb-6 border-none shadow-lg bg-gradient-to-r from-sky-600 via-indigo-600 to-blue-700 text-white"
-            bodyStyle={{ padding: "18px 24px" }}
+            styles={{ body: { padding: "18px 24px" } }}
           >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
@@ -871,5 +838,3 @@ const CreatePostingPage: React.FC = () => {
 };
 
 export default CreatePostingPage;
-
-

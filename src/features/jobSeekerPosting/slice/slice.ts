@@ -162,6 +162,8 @@ export const fetchPostSuggestions = createAsyncThunk<Job[], number, { rejectValu
               updatedAt: item.createdAt,
               companyLogo: logoSrc,
               isHot: item.matchPercent >= 90,
+              matchPercent: item.matchPercent ?? null,
+              rawScore: item.rawScore ?? null,
             };
           })
         );

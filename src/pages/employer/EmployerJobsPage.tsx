@@ -114,11 +114,11 @@ const EmployerJobsPage: React.FC = () => {
       if (res.success) {
         setAllJobs(res.data);
       } else {
-        message.error("Kh?ng th? t?i danh s?ch c?ng vi?c.");
+        message.error("Không thể tải danh sách công việc.");
       }
     } catch (err) {
       const apiMessage = getApiMessage(err);
-      message.error(apiMessage || "L?i khi t?i d? li?u.");
+      message.error(apiMessage || "Lỗi khi tải dữ liệu.");
     }
     setIsLoading(false);
   }, [user]);
@@ -132,7 +132,7 @@ const EmployerJobsPage: React.FC = () => {
         setApplicationSummary(res.data);
       }
     } catch {
-      message.error("Kh?ng th? t?i th?ng k? ?ng vi?n.");
+      message.error("Không thể tải thống kê ứng viên.");
     } finally {
       setIsSummaryLoading(false);
     }
@@ -1204,4 +1204,3 @@ type ShortlistResponse = Awaited<
 };
 
 export default EmployerJobsPage;
-

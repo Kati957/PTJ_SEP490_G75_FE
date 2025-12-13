@@ -67,6 +67,7 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({ onToggleSidebar 
 
   const isAdminRoute = location.pathname.startsWith("/admin");
   const shouldLoadEmployerProfile = !!user && user.roles.includes(ROLES.EMPLOYER) && !isAdminRoute;
+  const homeLink = isAdminRoute ? "/admin/dashboard" : "/nha-tuyen-dung/dashboard";
 
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [planStatus, setPlanStatus] = useState<{ label?: string; remaining?: number | null; isPremium: boolean }>({
@@ -149,7 +150,7 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({ onToggleSidebar 
   };
 
   const dropdownItems = [
-    ...(location.pathname.startsWith("/admin") || !user?.roles.includes(ROLES.EMPLOYER)
+    ...(isAdminRoute || !user?.roles.includes(ROLES.EMPLOYER)
       ? []
       : [
           {
@@ -163,16 +164,20 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({ onToggleSidebar 
             label: <NavLink to="/nha-tuyen-dung/lich-su-giao-dich">Lịch sử gói & giao dịch</NavLink>,
           },
         ]),
-    {
-      key: "change-password",
-      icon: <LockOutlined />,
-      label: <NavLink to="/nha-tuyen-dung/doi-mat-khau">Đổi mật khẩu</NavLink>,
-    },
-    {
-      key: "system-report",
-      label: <span onClick={() => setReportModalOpen(true)}>Dịch vụ hỗ trợ của hệ thống</span>,
-      icon: <CustomerServiceOutlined />,
-    },
+    ...(!isAdminRoute
+      ? [
+          {
+            key: "change-password",
+            icon: <LockOutlined />,
+            label: <NavLink to="/nha-tuyen-dung/doi-mat-khau">Đổi mật khẩu</NavLink>,
+          },
+          {
+            key: "system-report",
+            label: <span onClick={() => setReportModalOpen(true)}>Dịch vụ hỗ trợ của hệ thống</span>,
+            icon: <CustomerServiceOutlined />,
+          },
+        ]
+      : []),
     {
       key: "logout",
       label: "Đăng xuất",
@@ -197,11 +202,11 @@ export const EmployerHeader: React.FC<EmployerHeaderProps> = ({ onToggleSidebar 
             />
           )}
 
-          <NavLink to="/nha-tuyen-dung/dashboard" className="flex items-center">
+          <NavLink to={homeLink} className="flex items-center">
             <img src={LogoWhite} alt="Logo" className="h-8 mr-2" />
           </NavLink>
             <NavLink
-              to={location.pathname.startsWith("/admin") ? "/admin/dashboard" : "/nha-tuyen-dung/dashboard"}
+              to={homeLink}
               className="text-white hover:text-gray-200 text-sm font-medium"
             >
               Trang chủ

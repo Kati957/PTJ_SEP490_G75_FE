@@ -97,6 +97,7 @@ const CandidateListPage: React.FC = () => {
     targetStatus: "Accepted" as StatusAction,
     newNote: "",
   });
+  const [statusLoading, setStatusLoading] = useState(false);
 
   const [cvModal, setCvModal] = useState<{
     visible: boolean;
@@ -122,6 +123,31 @@ const CandidateListPage: React.FC = () => {
   });
 
   const savedIdSet = new Set(savedList.map((s) => s.jobSeekerId));
+
+  const normalizeStatus = (status?: string) => (status || "").toLowerCase();
+
+  const getStatusLabel = (status?: string) => {
+    const s = normalizeStatus(status);
+    if (s === "accepted") return "Đồng ý tuyển dụng";
+    if (s === "rejected") return "Từ chối tuyển dụng";
+    if (s === "interviewing") return "Mời phỏng vấn";
+    if (s === "pending") return "Chờ duyệt";
+    if (s === "withdrawn") return "Ứng viên đã rút đơn";
+    return "Chưa xem";
+  };
+
+  const canTransition = (current?: string, target?: StatusAction) => {
+    const cur = normalizeStatus(current);
+    const tgt = (target || "").toLowerCase();
+    if (!tgt) return false;
+
+    // Final states: Accepted/Rejected/Withdrawn -> không đổi được
+    if (["accepted", "rejected", "withdrawn"].includes(cur)) return false;
+
+    if (cur === "pending") return ["interviewing", "accepted", "rejected"].includes(tgt);
+    if (cur === "interviewing") return ["accepted", "rejected"].includes(tgt);
+    return false;
+  };
   const fetchAll = useCallback(async (postId: number) => {
     setIsLoading(true);
     try {
@@ -135,7 +161,7 @@ const CandidateListPage: React.FC = () => {
         const titleFromApplicants = applicationsRes.data?.[0]?.postTitle ?? '';
         setPostTitle((prev) => prev || titleFromApplicants);
       } else {
-        message.error('T?i danh s?ch ?ng vi?n th?t b?i.');
+        message.error('Tải danh sách ứng viên thất bại.');
       }
 
       if (savedRes.success) {
@@ -145,7 +171,7 @@ const CandidateListPage: React.FC = () => {
       }
     } catch (err) {
       const responseMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      const fallback = err instanceof Error ? err.message : 'L?i khi t?i d? li?u.';
+      const fallback = err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu.';
       message.error(responseMessage || fallback);
     }
     setIsLoading(false);
@@ -153,7 +179,7 @@ const CandidateListPage: React.FC = () => {
 
   useEffect(() => {
     if (!employerPostId) {
-      message.error('Kh?ng t?m th?y ID b?i ??ng.');
+      message.error('Không tìm thấy ID bài đăng.');
       setIsLoading(false);
       return;
     }
@@ -168,7 +194,7 @@ const CandidateListPage: React.FC = () => {
   };
 
   const formatDateOnly = (value?: string | null) => {
-    if (!value) return 'Ch?a c?p nh?t';
+    if (!value) return 'Chưa cập nhật';
     try {
       return new Date(value).toLocaleDateString('vi-VN');
     } catch {
@@ -178,7 +204,7 @@ const CandidateListPage: React.FC = () => {
 
   const handleViewCv = useCallback(async (cvId?: number | null) => {
     if (!cvId) {
-      message.info('?ng vi?n n?y ch?a ??nh k?m CV.');
+      message.info('Ứng viên này chưa đính kèm CV.');
       return;
     }
     setCvModal({ visible: true, loading: true, cv: null, error: null });
@@ -190,14 +216,14 @@ const CandidateListPage: React.FC = () => {
         visible: true,
         loading: false,
         cv: null,
-        error: 'Kh?ng th? t?i CV. Vui l?ng th? l?i sau.',
+        error: 'Không thể tải CV. Vui lòng thử lại sau.',
       });
     }
   }, []);
 
   const handleToggleSave = async (record: JobApplicationResultDto) => {
     if (!user || !employerPostId) {
-      message.warning('Vui l?ng ??ng nh?p ?? thao t?c.');
+      message.warning('Vui lòng đăng nhập để thao tác.');
       return;
     }
     const postId = parseInt(employerPostId, 10);
@@ -238,6 +264,10 @@ const CandidateListPage: React.FC = () => {
     record: JobApplicationResultDto,
     status: StatusAction
   ) => {
+    if (!canTransition(record.status, status)) {
+      message.warning(`Không thể chuyển từ "${getStatusLabel(record.status)}" sang "${STATUS_LABELS[status].label}".`);
+      return;
+    }
     setStatusModal({
       visible: true,
       id: record.candidateListId,
@@ -250,8 +280,10 @@ const CandidateListPage: React.FC = () => {
   const handleSubmitStatus = async () => {
     const { id, targetStatus, newNote, currentNote } = statusModal;
     if (!id) return;
+    if (statusLoading) return;
     const finalNote = newNote.trim() !== "" ? newNote : currentNote;
     try {
+      setStatusLoading(true);
       const res = await jobApplicationService.updateStatus(
         id,
         targetStatus,
@@ -266,6 +298,8 @@ const CandidateListPage: React.FC = () => {
       }
     } catch {
       message.error("Lỗi hệ thống.");
+    } finally {
+      setStatusLoading(false);
     }
   };
 
@@ -275,6 +309,7 @@ const CandidateListPage: React.FC = () => {
     if (s === "rejected") return <Tag color="error">Từ chối tuyển dụng</Tag>;
     if (s === "interviewing") return <Tag color="blue">Mời phỏng vấn</Tag>;
     if (s === "pending") return <Tag color="processing">Chờ duyệt</Tag>;
+    if (s === "withdrawn") return <Tag color="default">Ứng viên đã rút đơn</Tag>;
     return <Tag>Chưa xem</Tag>;
   };
 
@@ -400,8 +435,7 @@ const CandidateListPage: React.FC = () => {
                     {option.label}
                   </span>
                 ),
-                disabled:
-                  record.status?.toLowerCase() === option.key.toLowerCase(),
+                disabled: !canTransition(record.status, option.key),
               })),
               onClick: ({ key }) =>
                 openStatusModal(record, key as StatusAction),
@@ -570,7 +604,8 @@ const CandidateListPage: React.FC = () => {
         onCancel={() => setStatusModal({ ...statusModal, visible: false })}
         okText="Xác nhận"
         cancelText="Hủy"
-        okButtonProps={{ danger: statusModal.targetStatus === "Rejected" }}
+        okButtonProps={{ danger: statusModal.targetStatus === "Rejected", loading: statusLoading }}
+        confirmLoading={statusLoading}
       >
         <div className="space-y-4">
           <p>

@@ -25,14 +25,14 @@ const adminPlanService = {
   async createPlan(payload: AdminPlanPayload): Promise<AdminPlan> {
     const res = await baseService.post<ApiResponse<AdminPlan> | AdminPlan>('/AdminPlans/admin/plans', payload);
     const data = unwrap(res);
-    if (!data) throw new Error('Khong the tao goi');
+    if (!data) throw new Error('Không thể tạo gói');
     return data;
   },
 
   async updatePlan(id: number, payload: AdminPlanPayload): Promise<AdminPlan> {
     const res = await baseService.put<ApiResponse<AdminPlan> | AdminPlan>(`/AdminPlans/admin/plans/${id}`, payload);
     const data = unwrap(res);
-    if (!data) throw new Error('Khong the cap nhat goi');
+    if (!data) throw new Error('Không thể cập nhật gói');
     return data;
   },
 

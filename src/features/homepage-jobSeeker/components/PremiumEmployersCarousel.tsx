@@ -67,7 +67,7 @@ const PremiumEmployersCarousel: React.FC = () => {
                 avatarUrl: profile.avatarUrl || baseLogo,
               };
             } catch (error) {
-              console.warn("Khong the tai avatar nha tuyen dung Premium", item.userId, error);
+              console.warn("Không thể tải avatar nhà tuyển dụng Premium", item.userId, error);
               return { ...item, avatarUrl: baseLogo };
             }
           })

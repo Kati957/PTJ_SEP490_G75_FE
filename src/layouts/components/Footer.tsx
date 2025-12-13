@@ -1,36 +1,18 @@
-import React from 'react';
+import React from "react";
 
 const columns = [
   {
-    title: 'Khám phá',
-    links: [
-      { label: 'Trang chủ', href: '/' },
-      { label: 'Việc làm', href: '/viec-lam' },
-      { label: 'Danh mục nghề', href: '/danh-muc-nghe' },
-      { label: 'Nhà tuyển dụng', href: '/nha-tuyen-dung' },
-      { label: 'Liên hệ', href: '/lien-he' }
-    ]
+    title: "Khám phá",
+    links: ["Trang chủ", "Việc làm", "Danh mục nghề", "Nhà tuyển dụng", "Liên hệ"],
   },
   {
-    title: 'Về PTJ',
-    links: [
-      { label: 'Giới thiệu', href: '/about' },
-      { label: 'Đội ngũ', href: '/team' },
-      { label: 'Tuyển dụng', href: '/career' },
-      { label: 'Khách hàng', href: '/clients' },
-      { label: 'Blog', href: '/news' }
-    ]
+    title: "Về PTJ",
+    links: ["Giới thiệu", "Đội ngũ", "Tuyển dụng", "Khách hàng", "Blog"],
   },
   {
-    title: 'Hỗ trợ',
-    links: [
-      { label: 'FAQ', href: '/faq' },
-      { label: 'Chính sách bảo mật', href: '/privacy' },
-      { label: 'Điều khoản', href: '/terms' },
-      { label: 'Đối tác', href: '/partners' },
-      { label: 'Trợ giúp', href: '/support' }
-    ]
-  }
+    title: "Hỗ trợ",
+    links: ["FAQ", "Chính sách bảo mật", "Điều khoản", "Đối tác", "Trợ giúp"],
+  },
 ];
 
 export const Footer: React.FC = () => {
@@ -47,15 +29,11 @@ export const Footer: React.FC = () => {
 
           {columns.map((column) => (
             <div key={column.title} className="space-y-3">
-              <h4 className="text-sm font-semibold uppercase text-white tracking-widest">
-                {column.title}
-              </h4>
+              <h4 className="text-sm font-semibold uppercase text-white tracking-widest">{column.title}</h4>
               <ul className="space-y-2 text-sm text-slate-300">
-                {column.links.map((link) => (
-                  <li key={link.href}>
-                    <a href={link.href} className="transition hover:text-white">
-                      {link.label}
-                    </a>
+                {column.links.map((label) => (
+                  <li key={label}>
+                    <span className="transition hover:text-white cursor-default">{label}</span>
                   </li>
                 ))}
               </ul>

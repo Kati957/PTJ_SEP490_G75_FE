@@ -25,7 +25,6 @@ import {
   SearchOutlined,
   EyeOutlined,
   UserSwitchOutlined,
-  PlusOutlined,
   EditOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
@@ -152,7 +151,7 @@ const AdminAccountManagementPage: React.FC = () => {
       setPlans(data);
     } catch (error) {
       console.error('Failed to load plans', error);
-      message.error('Khong the tai danh sach goi');
+      message.error('Không thể tải danh sách gói');
     } finally {
       setPlanListLoading(false);
     }
@@ -167,7 +166,7 @@ const AdminAccountManagementPage: React.FC = () => {
         await fetchPlans();
       } catch (error) {
         console.error('Delete plan error', error);
-        message.error('Khong the xoa goi');
+        message.error('Không thể xóa gói');
       } finally {
         setPlanListLoading(false);
       }
@@ -207,12 +206,6 @@ const AdminAccountManagementPage: React.FC = () => {
     [regFilters, regPagination]
   );
 
-  const openCreatePlanModal = useCallback(() => {
-    setEditingPlan(null);
-    planForm.resetFields();
-    setPlanModalOpen(true);
-  }, [planForm]);
-
   const openEditPlanModal = useCallback(
     (plan: AdminPlan) => {
       setEditingPlan(plan);
@@ -228,21 +221,20 @@ const AdminAccountManagementPage: React.FC = () => {
   );
 
   const handleSubmitPlan = useCallback(async () => {
+    if (!editingPlan) {
+      message.warning('Chọn gói để cập nhật.');
+      return;
+    }
     const values = await planForm.validateFields();
     try {
       setPlanListLoading(true);
-      if (editingPlan) {
-        await adminPlanService.updatePlan(editingPlan.planId, values);
-        message.success('Cap nhat goi thanh cong');
-      } else {
-        await adminPlanService.createPlan(values);
-        message.success('Tao goi thanh cong');
-      }
+      await adminPlanService.updatePlan(editingPlan.planId, values);
+      message.success('Cập nhật gói thành công');
       setPlanModalOpen(false);
       await fetchPlans();
     } catch (error) {
       console.error('Plan submit error', error);
-      message.error('Khong the luu goi');
+      message.error('Không thể lưu gói');
     } finally {
       setPlanListLoading(false);
     }
@@ -362,7 +354,7 @@ const AdminAccountManagementPage: React.FC = () => {
         setTransactionHistory(trans);
       } catch (error) {
         console.error('Failed to load plan/transactions', error);
-        message.error('Khong the tai lich su goi/thanh toan.');
+        message.error('Không thể tải lịch sử gói/thanh toán.');
       } finally {
         setPlanLoading(false);
       }
@@ -754,7 +746,7 @@ const AdminAccountManagementPage: React.FC = () => {
         });
       } catch (error) {
         console.error('Failed to load admin users', error);
-        message.error('Khong the tai danh sach tai khoan');
+        message.error('Không thể tải danh sách tài khoản');
       } finally {
         setLoading(false);
       }
@@ -798,7 +790,7 @@ const AdminAccountManagementPage: React.FC = () => {
         });
       } catch (error) {
         console.error('Failed to load employer registrations', error);
-        message.error('Khong the tai danh sach ho so cho duyet');
+        message.error('Không thể tải danh sách hồ sơ chờ duyệt');
       } finally {
         setRegLoading(false);
       }
@@ -847,7 +839,7 @@ const AdminAccountManagementPage: React.FC = () => {
       setGoogleRegs(data);
     } catch (error) {
       console.error('Failed to load google employer registrations', error);
-      message.error('Khong the tai danh sach ho so Google NTD');
+      message.error('Không thể tải danh sách hồ sơ Google NTD');
     } finally {
       setGoogleLoading(false);
     }
@@ -1091,9 +1083,6 @@ const AdminAccountManagementPage: React.FC = () => {
                 <Button icon={<ReloadOutlined />} onClick={() => void fetchPlans()} loading={planListLoading}>
                   Làm mới
                 </Button>
-                <Button type="primary" icon={<PlusOutlined />} onClick={openCreatePlanModal}>
-                  Thêm gói
-                </Button>
               </Space>
             }
           >
@@ -1108,7 +1097,7 @@ const AdminAccountManagementPage: React.FC = () => {
           </Card>
 
           <Modal
-            title={editingPlan ? 'Cập nhật gói' : 'Thêm gói'}
+            title={editingPlan ? 'Cập nhật gói' : 'Chi tiết gói'}
             open={planModalOpen}
             onOk={handleSubmitPlan}
             onCancel={() => {
@@ -1116,7 +1105,7 @@ const AdminAccountManagementPage: React.FC = () => {
               setEditingPlan(null);
             }}
             confirmLoading={planListLoading}
-            destroyOnClose
+            destroyOnHidden
           >
             <Form layout="vertical" form={planForm} initialValues={{ price: 0, maxPosts: 0, durationDays: null }}>
               <Form.Item
@@ -1197,7 +1186,7 @@ const AdminAccountManagementPage: React.FC = () => {
         width={640}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         {detailLoading ? (
           <p>Đang tải...</p>
@@ -1325,7 +1314,7 @@ const AdminAccountManagementPage: React.FC = () => {
         placement="right"
         open={historyModalOpen}
         onClose={() => setHistoryModalOpen(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Space direction="vertical" className="w-full">
           <Card size="small" className="border border-slate-200 shadow-sm">

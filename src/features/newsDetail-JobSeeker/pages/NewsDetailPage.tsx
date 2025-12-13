@@ -1,5 +1,5 @@
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+﻿import React, { useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Typography, 
   Row, 
@@ -18,13 +18,14 @@ import {
 import dayjs from 'dayjs';
 
 import { useNewsDetail } from '../hooks';
-// Import Hooks từ feature ListView để lấy danh sách tin Hot
+// Import Hooks tá»« feature ListView Ä‘á»ƒ láº¥y danh sÃ¡ch tin Hot
 import { useNewsList } from '../../listNew-JobSeeker/hooks';
 import type { NewsItem } from '../../listNew-JobSeeker/types';
+import { useAuth } from '../../auth/hooks';
 
 const { Title, Paragraph } = Typography;
 
-// Component hiển thị thẻ tin gợi ý
+// Component hiá»ƒn thá»‹ tháº» tin gá»£i Ã½
 const HotNewsItem: React.FC<{ item: NewsItem; onClick: (id: number) => void }> = ({ item, onClick }) => (
   <div 
     className="group cursor-pointer mb-4 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-100"
@@ -54,18 +55,28 @@ const HotNewsItem: React.FC<{ item: NewsItem; onClick: (id: number) => void }> =
 const NewsDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  const isEmployerNews = location.pathname.startsWith('/nha-tuyen-dung');
   const newsId = Number(id);
 
   const { newsDetail, loading: loadingDetail } = useNewsDetail(newsId);
-  // Sử dụng hook từ listView để lấy danh sách tin tức làm tin gợi ý
+  // Sá» dá»¥ng hook tá»« listView Ä‘á»ƒ láº¥y danh sÃ¡ch tin tá»©c lÃ m tin gá»£i Ã½
   const { newsList, loading: loadingList } = useNewsList(); 
 
   const otherNews = newsList
     .filter(item => item.newsID !== newsId)
     .slice(0, 5); 
 
+  useEffect(() => {
+    if (user?.roles?.includes('Employer') && !isEmployerNews && Number.isFinite(newsId)) {
+      navigate(`/nha-tuyen-dung/bang-tin/${newsId}`, { replace: true });
+    }
+  }, [user?.roles, isEmployerNews, newsId, navigate]);
+
   const handleHotNewsClick = (clickedId: number) => {
-    navigate(`/newsDetail/${clickedId}`);
+    const target = isEmployerNews ? `/nha-tuyen-dung/bang-tin/${clickedId}` : `/newsDetail/${clickedId}`;
+    navigate(target);
     window.scrollTo(0, 0);
   };
 
@@ -87,13 +98,13 @@ const NewsDetailPage: React.FC = () => {
   if (loadingDetail) {
     return (
       <div className="min-h-screen flex justify-center items-center bg-gray-50">
-        <Spin size="large" tip="Đang tải nội dung..." />
+        <Spin size="large" tip="Äang táº£i ná»™i dung..." />
       </div>
     );
   }
 
   if (!newsDetail) {
-    return <div className="text-center mt-20">Không tìm thấy bài viết.</div>;
+    return <div className="text-center mt-20">KhÃ´ng tÃ¬m tháº¥y bÃ i viáº¿t.</div>;
   }
 
   return (
@@ -103,12 +114,12 @@ const NewsDetailPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Row gutter={[32, 32]}>
           
-          {/* --- LEFT SIDEBAR (Tin khác) --- */}
+          {/* --- LEFT SIDEBAR (Tin khÃ¡c) --- */}
           <Col xs={24} lg={7} className="order-2 lg:order-1">
             <div className="bg-white p-5 rounded-xl shadow-sm sticky top-6 border border-gray-100">
                 <div className="flex items-center mb-6 border-b-2 border-blue-100 pb-2">
                     <ReadOutlined className="text-blue-600 text-xl mr-2" />
-                    <Title level={4} className="!mb-0 text-gray-800">Tin khác</Title>
+                    <Title level={4} className="!mb-0 text-gray-800">Tin khÃ¡c</Title>
                 </div>
                 
                 <Spin spinning={loadingList}>
@@ -121,12 +132,15 @@ const NewsDetailPage: React.FC = () => {
                             />
                         ))
                     ) : (
-                        <Empty description="Không có tin khác" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                        <Empty description="KhÃ´ng cÃ³ tin khÃ¡c" image={Empty.PRESENTED_IMAGE_SIMPLE} />
                     )}
                 </Spin>
 
                 <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-                    <a onClick={() => navigate('/news')} className="text-indigo-600 font-medium hover:underline cursor-pointer">
+                    <a
+                      onClick={() => navigate(isEmployerNews ? '/nha-tuyen-dung/bang-tin' : '/news')}
+                      className="text-indigo-600 font-medium hover:underline cursor-pointer"
+                    >
                         Xem tất cả tin tức →
                     </a>
                 </div>
@@ -180,11 +194,11 @@ const NewsDetailPage: React.FC = () => {
                 <Divider />
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <Title level={4} className="!mb-0">Bình luận</Title>
-                    <Tag color="blue">Đang cập nhật</Tag>
+                    <Title level={4} className="!mb-0">BÃ¬nh luáºn</Title>
+                    <Tag color="blue">Äang cáºp nháºt</Tag>
                   </div>
                   <div className="mt-3 text-sm text-slate-500">
-                    Tính năng bình luận sẽ sớm được bổ sung.
+                    TÃnh nÄƒng bÃ¬nh luáºn sáº½ sá»›m Ä‘Æ°á»£c bá»• sung.
                   </div>
                 </div>
              </Card>

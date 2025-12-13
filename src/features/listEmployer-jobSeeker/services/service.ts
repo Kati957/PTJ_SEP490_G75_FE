@@ -39,7 +39,7 @@ const enrichWithProfile = async (employer: Employer): Promise<Employer> => {
       description: profile.description || employer.description || '',
     };
   } catch (error) {
-    console.warn(`Khong the tai profile cho nha tuyen dung ${employer.id}`, error);
+    console.warn(`Không thể tải profile cho nhà tuyển dụng ${employer.id}`, error);
     return { ...employer, logo: employer.logo || '' };
   }
 };

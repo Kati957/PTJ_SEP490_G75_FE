@@ -37,8 +37,6 @@ const ProfileOverview: React.FC<ProfileOverviewProps> = ({ profile, loading, ema
   const genderLabel = profile.gender
     ? genderLabelMap[profile.gender] ?? profile.gender
     : 'Chưa cập nhật';
-  const locationText =
-    profile.location && profile.location !== '0' ? profile.location : 'Chưa cập nhật';
   const birthYearText = profile.birthYear && profile.birthYear > 0 ? profile.birthYear : 'Chưa cập nhật';
 
   return (
@@ -71,9 +69,7 @@ const ProfileOverview: React.FC<ProfileOverviewProps> = ({ profile, loading, ema
               {profile.contactPhone || 'Chưa cập nhật'}
             </span>
           </Descriptions.Item>
-          <Descriptions.Item label="Địa chỉ chi tiết">
-            {locationText}
-          </Descriptions.Item>
+          {/* Địa chỉ chi tiết đã bỏ hiển thị */}
         </Descriptions>
       </Card>
     </div>

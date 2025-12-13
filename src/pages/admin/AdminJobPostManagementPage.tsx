@@ -240,13 +240,19 @@ const AdminJobPostManagementPage: React.FC = () => {
           page,
           pageSize
         });
-        const total = typeof response.total === "number" ? response.total : response.items.length;
-        setEmployerPosts(response.items);
-        setEmployerPagination((prev) => {
-          const next = { ...prev, current: page, pageSize, total };
-          const unchanged =
-            prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
-          return unchanged ? prev : next;
+          const total = typeof response.total === "number" ? response.total : response.items.length;
+          setEmployerPosts(response.items);
+          if (highlightTarget?.type === "employer") {
+            const matched = response.items.find((p) => p.employerPostId === highlightTarget.id);
+            if (matched) {
+              setHighlightRow({ type: "employer", data: matched });
+            }
+          }
+          setEmployerPagination((prev) => {
+            const next = { ...prev, current: page, pageSize, total };
+            const unchanged =
+              prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
+            return unchanged ? prev : next;
         });
       } catch (error) {
         console.error("Failed to fetch employer posts", error);
@@ -255,7 +261,7 @@ const AdminJobPostManagementPage: React.FC = () => {
         setEmployerLoading(false);
       }
     },
-    [employerFilterParams]
+    [employerFilterParams, highlightTarget?.id, highlightTarget?.type]
   );
 
   const fetchJobSeekerPosts = useCallback(
@@ -267,13 +273,19 @@ const AdminJobPostManagementPage: React.FC = () => {
           page,
           pageSize
         });
-        const total = typeof response.total === "number" ? response.total : response.items.length;
-        setJobSeekerPosts(response.items);
-        setJobSeekerPagination((prev) => {
-          const next = { ...prev, current: page, pageSize, total };
-          const unchanged =
-            prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
-          return unchanged ? prev : next;
+          const total = typeof response.total === "number" ? response.total : response.items.length;
+          setJobSeekerPosts(response.items);
+          if (highlightTarget?.type === "jobseeker") {
+            const matched = response.items.find((p) => p.jobSeekerPostId === highlightTarget.id);
+            if (matched) {
+              setHighlightRow({ type: "jobseeker", data: matched });
+            }
+          }
+          setJobSeekerPagination((prev) => {
+            const next = { ...prev, current: page, pageSize, total };
+            const unchanged =
+              prev.current === next.current && prev.pageSize === next.pageSize && prev.total === next.total;
+            return unchanged ? prev : next;
         });
       } catch (error) {
         console.error("Failed to fetch job seeker posts", error);
@@ -282,7 +294,7 @@ const AdminJobPostManagementPage: React.FC = () => {
         setJobSeekerLoading(false);
       }
     },
-    [jobSeekerFilterParams]
+    [jobSeekerFilterParams, highlightTarget?.id, highlightTarget?.type]
   );
 
   const employerPage = employerPagination.current ?? 1;
@@ -450,11 +462,19 @@ const AdminJobPostManagementPage: React.FC = () => {
     setToggleLoadingId(post.employerPostId);
     setToggleType("employer");
     let shouldRefresh = true;
+    const nextStatus = post.status === "Blocked" ? "Active" : "Blocked";
     try {
       await adminJobPostService.toggleEmployerPostBlocked(post.employerPostId, reason, { notify: false });
       message.success(
         post.status === "Blocked" ? "Đã mở khóa bài đăng nhà tuyển dụng" : "Đã khóa bài đăng nhà tuyển dụng"
       );
+      if (highlightTarget?.type === "employer" && highlightTarget.id === post.employerPostId) {
+        setHighlightRow((prev) =>
+          prev && prev.type === "employer" && prev.data.employerPostId === post.employerPostId
+            ? { ...prev, data: { ...prev.data, status: nextStatus } }
+            : prev
+        );
+      }
     } catch (error) {
       console.error("Failed to toggle employer post", error);
       const apiMessage = getApiMessage(error);
@@ -477,11 +497,19 @@ const AdminJobPostManagementPage: React.FC = () => {
     setToggleLoadingId(post.jobSeekerPostId);
     setToggleType("jobseeker");
     let shouldRefresh = true;
+    const nextStatus = post.status === "Archived" ? "Active" : "Archived";
     try {
       await adminJobPostService.toggleJobSeekerPostArchived(post.jobSeekerPostId, reason, { notify: false });
       message.success(
         post.status === "Archived" ? "Đã mở khóa bài đăng ứng viên" : "Đã khóa bài đăng ứng viên"
       );
+      if (highlightTarget?.type === "jobseeker" && highlightTarget.id === post.jobSeekerPostId) {
+        setHighlightRow((prev) =>
+          prev && prev.type === "jobseeker" && prev.data.jobSeekerPostId === post.jobSeekerPostId
+            ? { ...prev, data: { ...prev.data, status: nextStatus } }
+            : prev
+        );
+      }
     } catch (error) {
       console.error("Failed to toggle job seeker post", error);
       const apiMessage = getApiMessage(error);

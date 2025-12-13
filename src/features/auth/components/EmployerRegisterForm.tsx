@@ -85,22 +85,22 @@ const EmployerRegisterForm: React.FC = () => {
         name="employer_register_form"
       >
         <Form.Item
-          label="Tên công ty"
+          label="Tên nhà tuyển dụng"
           name="companyName"
-rules={[{ required: true, message: 'Vui lòng nhập tên công ty.' }]}
+rules={[{ required: true, message: 'Vui lòng nhập tên nhà tuyển dụng.' }]}
         >
           <Input
             size="large"
-            placeholder="VD: Công ty TNHH ABC"
+            placeholder="VD: Nhà tuyển dụng Nguyen van A"
             prefix={<UserOutlined className="text-slate-400" />}
           />
         </Form.Item>
 
-        <Form.Item label="Mô tả công ty" name="companyDescription">
+        <Form.Item label="Mô tả nhà tuyển dụng." name="companyDescription">
           <Input.TextArea
             rows={3}
             maxLength={2000}
-            placeholder="Giới thiệu ngắn gọn về công ty"
+            placeholder="Giới thiệu ngắn gọn về nhà tuyển dụng"
           />
         </Form.Item>
 

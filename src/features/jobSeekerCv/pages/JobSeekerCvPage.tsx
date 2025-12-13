@@ -65,7 +65,7 @@ const JobSeekerCvPage: React.FC = () => {
       const data = await jobSeekerCvService.fetchMyCvs();
       setCvs(data);
     } catch (error: unknown) {
-      message.error(getErrorMessage(error, "Kh?ng th? t?i CV."));
+      message.error(getErrorMessage(error, "Không thể tải CV."));
     } finally {
       setLoading(false);
     }
@@ -165,7 +165,7 @@ const JobSeekerCvPage: React.FC = () => {
       await fetchCvs();
       handleCancelForm();
     } catch (error: unknown) {
-      message.error(getErrorMessage(error, "Kh?ng th? l?u CV."));
+      message.error(getErrorMessage(error, "Không thể lưu CV."));
     } finally {
       setSubmitting(false);
     }
@@ -202,7 +202,7 @@ const JobSeekerCvPage: React.FC = () => {
         handleCancelForm();
       }
     } catch (error: unknown) {
-      message.error(getErrorMessage(error, "Kh?ng th? x?a CV."));
+      message.error(getErrorMessage(error, "Không thể xóa CV."));
     }
   };
 
@@ -273,14 +273,20 @@ const JobSeekerCvPage: React.FC = () => {
                   </Space>
                 </Space>
 
-                <div>
+                <div className="flex flex-wrap gap-2">
                   {cv.preferredJobType && (
-                    <Tag color="blue">{cv.preferredJobType}</Tag>
+                    <Tag color="blue" className="max-w-full break-words whitespace-normal" style={{ maxWidth: "100%" }}>
+                      {cv.preferredJobType}
+                    </Tag>
                   )}
                   {splitSkills(cv.skills)
                     .slice(0, 3)
                     .map((skill) => (
-                      <Tag key={skill} className="max-w-full break-words whitespace-normal">
+                      <Tag
+                        key={skill}
+                        className="max-w-full break-words whitespace-normal"
+                        style={{ maxWidth: "100%" }}
+                      >
                         {skill}
                       </Tag>
                     ))}
@@ -366,8 +372,15 @@ const JobSeekerCvPage: React.FC = () => {
               <Form.Item
                 name="preferredJobType"
                 label="Loại hình công việc mong muốn"
+                rules={[
+                  { max: 100, message: "Tối đa 100 ký tự" },
+                ]}
               >
-                <Input placeholder="VD: Fulltime, Part-time, Remote..." />
+                <Input.TextArea
+                  rows={2}
+                  placeholder="VD: Fulltime, Part-time, Remote..."
+                  autoSize={{ minRows: 2, maxRows: 3 }}
+                />
               </Form.Item>
 
               <Divider />

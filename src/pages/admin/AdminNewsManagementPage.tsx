@@ -424,7 +424,7 @@ const AdminNewsManagementPage: React.FC = () => {
           <div className="space-y-6">
             <DetailSection title="Thong tin chung">
               <DetailField label="Tiêu đề" value={selectedNews.title} span={2} />
-              <DetailField label="Chuyên mục" value={selectedNews.category || undefined} />
+              <DetailField label="Danh mục" value={selectedNews.category || undefined} />
               <DetailField
                 label="Trạng thái"
                 value={selectedNews.isPublished ? 'Đã đăng' : 'Bản nháp'}
@@ -510,7 +510,7 @@ const AdminNewsManagementPage: React.FC = () => {
             <Input placeholder="Nhập tiêu đề tin tức" />
           </Form.Item>
 
-          <Form.Item name="category" label="Chuyên mục">
+          <Form.Item name="category" label="Danh mục">
             <Input placeholder="Ví dụ: Thông báo, Sự kiện..." />
           </Form.Item>
 

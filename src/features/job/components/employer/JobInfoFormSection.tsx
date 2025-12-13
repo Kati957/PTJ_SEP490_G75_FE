@@ -369,8 +369,7 @@ export const JobInfoFormSection: React.FC<{
     setTouched((prev) => ({ ...prev, [field]: true }));
     let isInvalid = false;
 
-    const phoneRegex =
-      /^(?:\+84|0)(?:3[2-9]|5[6|8|9]|7[0|6-9]|8[1-5]|9[0-9])[0-9]{7}$/;
+    const phoneRegex = /^0[35789][0-9]{8}$/;
 
     if (
       ["jobTitle", "detailAddress", "requirements", "contactPhone"].includes(

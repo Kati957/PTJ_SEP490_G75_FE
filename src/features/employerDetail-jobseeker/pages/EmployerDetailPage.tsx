@@ -143,7 +143,7 @@ const EmployerDetailPage: React.FC = () => {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={16}>
             <div className="space-y-6">
-              <Card className="rounded-2xl shadow-sm" bodyStyle={{ padding: 24 }}>
+              <Card className="rounded-2xl shadow-sm" styles={{ body: { padding: 24 } }}>
                 <div className="flex items-center justify-between">
                   <Title level={4} className="!mb-0">
                     Giới thiệu công ty
@@ -155,7 +155,7 @@ const EmployerDetailPage: React.FC = () => {
                 </Paragraph>
               </Card>
 
-              <Card className="rounded-2xl shadow-sm" bodyStyle={{ padding: 24 }}>
+              <Card className="rounded-2xl shadow-sm" styles={{ body: { padding: 24 } }}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <Title level={4} className="!mb-0">
                     Tuyển dụng
@@ -195,7 +195,7 @@ const EmployerDetailPage: React.FC = () => {
           </Col>
 
           <Col xs={24} lg={8}>
-            <Card className="rounded-2xl shadow-sm" bodyStyle={{ padding: 24 }}>
+            <Card className="rounded-2xl shadow-sm" styles={{ body: { padding: 24 } }}>
               <Title level={4} className="!mb-4">
                 Thông tin liên hệ
               </Title>
@@ -247,7 +247,7 @@ const EmployerDetailPage: React.FC = () => {
 
             <Card
               className="mt-6 rounded-2xl shadow-sm"
-              bodyStyle={{ padding: 24 }}
+              styles={{ body: { padding: 24 } }}
             >
               <div className="mb-4 flex items-center justify-between">
                 <Title level={4} className="!mb-0">

@@ -8,6 +8,8 @@ export interface Job {
   updatedAt: string;
   companyLogo: string | null;
   isHot: boolean | null;
+  matchPercent?: number | null;
+  rawScore?: number | null;
 }
 
 export interface JobCategory {

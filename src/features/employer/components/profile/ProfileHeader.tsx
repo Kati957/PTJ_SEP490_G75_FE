@@ -158,7 +158,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, loading, isVerif
         className={`mb-4 overflow-hidden relative ${
           isPremium ? "border-2 border-amber-200 shadow-lg ring-2 ring-amber-100/80" : "border-none shadow-md"
         }`}
-        bodyStyle={{ padding: 0 }}
+        styles={{ body: { padding: 0 } }}
       >
         <div className="relative">
           <div

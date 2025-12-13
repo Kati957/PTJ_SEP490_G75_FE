@@ -84,7 +84,7 @@ const EmployerUpgradePage: React.FC = () => {
         name: "Medium",
         price: 30000,
         description: "Đủ tính năng cần thiết, đăng tối đa 6 bài/khóa và nhận CV đều đặn.",
-        features: ["Đăng tối đa 6 bài / khóa", "Tăng nổi bật bài đăng trong 3 ngày đầu"],
+        features: ["Đăng tối đa 6 bài / khóa"],
       },
       {
         planId: 3,
@@ -93,7 +93,7 @@ const EmployerUpgradePage: React.FC = () => {
         badge: "Đề xuất",
         highlight: true,
         description: "Tăng tốc tuyển dụng: 15 bài/khóa, ưu tiên hiển thị và hỗ trợ chuyên sâu.",
-        features: ["Đăng tối đa 15 bài / khóa", "Ưu tiên xuất bài viết lên danh sách", "Đẩy top trang chủ 7 ngày"],
+        features: ["Đăng tối đa 15 bài / khóa"],
       },
     ],
     []
@@ -265,7 +265,7 @@ const EmployerUpgradePage: React.FC = () => {
     void doCancel();
   };
 
-  // Xử lý khi quay lại từ PayOS (success / cancel)
+  // Xử lý khi quay lại từ thanh toán (success / cancel)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const status = params.get("status")?.toUpperCase();
@@ -293,7 +293,7 @@ const EmployerUpgradePage: React.FC = () => {
           message.success("Bạn đã nâng cấp gói thành công. Cảm ơn đã sử dụng dịch vụ!");
           void fetchPlanStatus();
         } else {
-          message.warning(res?.message || "Thanh toán chưa được PayOS xác nhận.");
+          message.warning(res?.message || "Thanh toán chưa được xác nhận.");
         }
       } catch {
         message.warning("Không kiểm tra được trạng thái thanh toán, vui lòng thử lại.");
@@ -354,7 +354,7 @@ const EmployerUpgradePage: React.FC = () => {
     void checkStored();
   }, [paymentData, fetchPlanStatus]);
 
-  // SignalR realtime khi PayOS webhook trả về
+  // SignalR realtime khi webhook thanh toán trả về
   useEffect(() => {
     const token = sessionStorage.getItem("accessToken") || "";
     const connection = new signalR.HubConnectionBuilder()
@@ -412,11 +412,11 @@ const EmployerUpgradePage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
             <Tag color="gold" className="bg-white/20 border-0 text-xs font-semibold px-3 py-1 rounded-full w-fit shadow">
-              Thanh toán an toàn qua PayOS
+              Thanh toán an toàn trực tuyến
             </Tag>
             <h1 className="text-3xl font-bold leading-tight">Nâng cấp tài khoản nhà tuyển dụng</h1>
             <p className="text-sm text-white/80">
-              Chọn gói phù hợp, xác nhận thanh toán, chúng tôi sẽ đưa bạn tới trang PayOS để hoàn tất giao dịch.
+              Chọn gói phù hợp, xác nhận thanh toán và hoàn tất ngay trên trang.
             </p>
             <div className="flex flex-wrap gap-3 text-xs text-white/80">
               <span className="flex items-center gap-1">
@@ -480,7 +480,7 @@ const EmployerUpgradePage: React.FC = () => {
                 ? "border-transparent bg-gradient-to-br from-amber-50 via-white to-indigo-50 shadow-[0_12px_45px_rgba(59,130,246,0.28)] ring-2 ring-offset-2 ring-amber-300"
                 : "bg-white border border-gray-100 shadow-sm hover:shadow-lg transition"
             }`}
-            bodyStyle={{ padding: "22px" }}
+            styles={{ body: { padding: "22px" } }}
           >
             {plan.badge && (
               <Tag color="gold" className="absolute top-4 right-4 text-xs font-semibold z-10">
@@ -555,7 +555,7 @@ const EmployerUpgradePage: React.FC = () => {
         <Card className="border-blue-100 shadow-lg">
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div>
-              <p className="text-xs text-gray-500">Thanh toán PayOS</p>
+              <p className="text-xs text-gray-500">Thanh toán trực tuyến</p>
               <p className="text-base font-semibold text-gray-900">QR thanh toán (quét hoặc bấm Thanh toán)</p>
             </div>
             <Tag color={!isExpired ? "green" : "red"} className="text-sm">
@@ -569,7 +569,7 @@ const EmployerUpgradePage: React.FC = () => {
                 <QRCodeCanvas value={paymentData.qrCodeUrl} size={220} />
               </div>
               <p className="text-sm text-gray-600 text-center">
-                Quét QR bằng app ngân hàng hoặc bấm "Thanh toán" để mở PayOS.
+                Quét QR bằng app ngân hàng hoặc bấm "Thanh toán" để hoàn tất trên trang.
               </p>
             </div>
 
@@ -636,12 +636,12 @@ const EmployerUpgradePage: React.FC = () => {
           </div>
           <div className="space-y-2">
             <p className="text-sm font-semibold text-gray-800">B2: Xác nhận</p>
-            <p className="text-sm text-gray-600">Hệ thống hỏi lại một lần trước khi tạo liên kết PayOS.</p>
+            <p className="text-sm text-gray-600">Hệ thống hỏi lại một lần trước khi tạo yêu cầu thanh toán.</p>
           </div>
           <div className="space-y-2">
             <p className="text-sm font-semibold text-gray-800">B3: Thanh toán</p>
             <p className="text-sm text-gray-600">
-              Chuyển sang PayOS để thanh toán, gói sẽ kích hoạt ngay sau khi thanh toán thành công.
+              Thanh toán trực tiếp trên trang, gói sẽ kích hoạt ngay khi thanh toán thành công.
             </p>
           </div>
         </div>
@@ -651,7 +651,7 @@ const EmployerUpgradePage: React.FC = () => {
         title="Xác nhận thanh toán"
         open={confirmOpen}
         onCancel={() => setConfirmOpen(false)}
-        okText="Tạo/Lấy QR PayOS"
+        okText="Tạo/Lấy QR thanh toán"
         cancelText="Hủy"
         confirmLoading={loadingPlanId === selectedPlan?.planId}
         onOk={handleConfirmPayment}
@@ -663,7 +663,7 @@ const EmployerUpgradePage: React.FC = () => {
               <span className="font-semibold">{formatCurrency(selectedPlan.price)}</span>.
             </p>
             <p className="text-sm text-gray-600">
-              Tiếp tục sẽ tạo/lấy QR PayOS. Không tự động mở PayOS cho đến khi bạn bấm "Thanh toán".
+              Tiếp tục sẽ tạo/lấy QR thanh toán. Không tự động mở trang khác cho đến khi bạn bấm "Thanh toán".
             </p>
           </div>
         ) : (

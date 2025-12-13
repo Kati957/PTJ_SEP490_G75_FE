@@ -74,7 +74,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         const data = await locationService.getProvinces();
         setProvinces(data);
       } catch {
-        message.error('Khong the tai danh sach tinh/thanh.');
+        message.error('Không thể tải danh sách tỉnh/thành.');
       } finally {
         setLocationLoading((prev) => ({ ...prev, provinces: false }));
       }
@@ -89,7 +89,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       const data = await locationService.getDistricts(provinceCode);
       setDistricts(data);
     } catch {
-      message.error('Khong the tai danh sach quan/huyen.');
+      message.error('Không thể tải danh sách quận/huyện.');
     } finally {
       setLocationLoading((prev) => ({ ...prev, districts: false }));
     }
@@ -101,7 +101,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       const data = await locationService.getWards(districtCode);
       setWards(data);
     } catch {
-      message.error('Khong the tai danh sach phuong/xa.');
+      message.error('Không thể tải danh sách phường/xã.');
     } finally {
       setLocationLoading((prev) => ({ ...prev, wards: false }));
     }

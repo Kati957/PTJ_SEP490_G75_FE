@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, Typography, Tag } from 'antd';
 import { ClockCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { NewsItem } from '../types';
 
 const { Title, Paragraph } = Typography;
@@ -13,13 +13,16 @@ interface NewsCardProps {
 
 const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEmployerNews = location.pathname.startsWith('/nha-tuyen-dung');
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     e.currentTarget.src = 'https://placehold.co/600x400?text=No+Image';
   };
 
   const handleClick = () => {
-    navigate(`/newsDetail/${item.newsID}`);
+    const target = isEmployerNews ? `/nha-tuyen-dung/bang-tin/${item.newsID}` : `/newsDetail/${item.newsID}`;
+    navigate(target);
     window.scrollTo(0, 0); // Cuộn lên đầu trang khi chuyển trang
   };
 
@@ -28,7 +31,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
       hoverable
       onClick={handleClick}
       className="group h-full flex flex-col overflow-hidden rounded-xl border border-slate-100 bg-white transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
-      bodyStyle={{ padding: 18, flex: 1, display: 'flex', flexDirection: 'column' }}
+      styles={{ body: { padding: 18, flex: 1, display: 'flex', flexDirection: 'column' } }}
       cover={
         <div className="h-48 overflow-hidden relative">
           <img

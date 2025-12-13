@@ -273,7 +273,7 @@ const adminDashboardService = {
       const obj = (item ?? {}) as Record<string, unknown>;
       return {
         categoryId: toNumber(pick(obj, ["categoryId", "CategoryId"])),
-        categoryName: String(pick(obj, ["categoryName", "CategoryName"]) ?? "Khong xac dinh"),
+        categoryName: String(pick(obj, ["categoryName", "CategoryName"]) ?? "Không xác định"),
         count: toNumber(pick(obj, ["count", "Count"])),
       };
     });

@@ -297,11 +297,6 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
                 </Form.Item>
               </Col>
               <Col span={24}>
-                <Form.Item name="fullLocation" label="Địa chỉ chi tiết">
-                  <Input placeholder="Số nhà, đường, khu vực" />
-                </Form.Item>
-              </Col>
-              <Col span={24}>
                 <Form.Item name="provinceId" label="Tỉnh / thành phố">
                   <Select
                     placeholder="Chọn tỉnh/thành"
