@@ -49,7 +49,7 @@ const fallbackSeries = (mode: TimeMode, points = 6) => {
   return result;
 };
 
-const formatNumber = (value: number, fallback = "0") => {
+const formatNumber = (value?: number | null, fallback = "0") => {
   if (typeof value !== "number" || Number.isNaN(value)) return fallback;
   return value.toLocaleString("vi-VN");
 };
@@ -321,8 +321,8 @@ const AdminDashboard: React.FC = () => {
             tickFormatter={(v: number) => (trendGroup === "revenue" ? formatCurrency(v) : formatNumber(v))}
           />
           <Tooltip
-            formatter={(value: number) =>
-              trendGroup === "revenue" ? formatCurrency(value) : formatNumber(value)
+            formatter={(value?: number) =>
+              trendGroup === "revenue" ? formatCurrency(value ?? 0) : formatNumber(value)
             }
           />
           <Legend />
@@ -365,9 +365,9 @@ const renderBarChart = <T extends Record<string, unknown>>(data: T[], bars: { ke
         <YAxis tickFormatter={(v: number) => formatNumber(v)} yAxisId="left" />
         {hasRevenue && hasTransactions && <YAxis yAxisId="right" orientation="right" tickFormatter={(v: number) => formatNumber(v)} />}
         <Tooltip
-          formatter={(value: number, name: string) => {
+          formatter={(value?: number, name?: string | number) => {
             if (name === "count" || name === "transactions") return formatNumber(value);
-            if (name === "revenue") return formatCurrency(value);
+            if (name === "revenue") return formatCurrency(value ?? 0);
             return formatNumber(value);
           }}
         />
@@ -553,7 +553,7 @@ const renderBarChart = <T extends Record<string, unknown>>(data: T[], bars: { ke
                     <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => formatNumber(value)} />
+                <Tooltip formatter={(value?: number) => formatNumber(value)} />
               </PieChart>
             </div>
             <Divider />
