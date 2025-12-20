@@ -7,7 +7,6 @@ import {
   Spin, 
   Card, 
   Tag, 
-  Divider,
   Empty
 } from 'antd';
 import { 

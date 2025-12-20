@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance, AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { message } from 'antd';
 
 // Cho phép override API base qua env; mặc định dùng HTTPS nội bộ.
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:7100/api';
@@ -73,6 +74,18 @@ const isExpiredTokenError = (error: AxiosError) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    // Account disabled handling: logout + notify + redirect
+    const status = error.response?.status;
+    const payload = error.response?.data as { code?: string; message?: string; Message?: string } | undefined;
+    if (status === 403 && payload?.code === 'ACCOUNT_DISABLED') {
+      removeAccessToken();
+      message.error(payload.message || payload.Message || 'Tài khoản của bạn đã bị khóa hoặc vô hiệu hóa.');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 500);
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     const shouldRefresh =
