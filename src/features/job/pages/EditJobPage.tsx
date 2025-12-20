@@ -134,8 +134,26 @@ const EditJobPage: React.FC = () => {
     }));
   };
 
+  const validateSalary = (): boolean => {
+    const hasMin = typeof jobData.salaryMin === "number" && jobData.salaryMin > 0;
+    const hasMax = typeof jobData.salaryMax === "number" && jobData.salaryMax > 0;
+    if (!hasMin || !hasMax) {
+      toast.error("Vui lòng nhập lương tối thiểu và tối đa");
+      return false;
+    }
+    if ((jobData.salaryMax ?? 0) <= (jobData.salaryMin ?? 0)) {
+      toast.error("Lương tối đa phải lớn hơn lương tối thiểu");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
     if (!user || !user.id || !jobId) return;
+
+    if (!validateSalary()) {
+      return;
+    }
 
     setStatus('submitting');
     const dto = transformToEmployerPostDto(jobData, user.id);

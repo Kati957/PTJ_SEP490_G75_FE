@@ -181,7 +181,7 @@ const EmployerUpgradePage: React.FC = () => {
         if (reason === "manual") {
           message.success("Đã tạo/lấy QR thanh toán. Quét mã hoặc bấm Thanh toán.");
         } else if (reason === "expire") {
-          message.warning("QR đã hết hạn, đang lấy mã mới.");
+          message.warning("QR này đã hết hạn hiển thị. Nếu bạn đã quét trước đó, vẫn có thể hoàn tất thanh toán trong app ngân hàng.");
         }
       } catch (error) {
         let errorMsg = "Không thể tạo liên kết thanh toán. Vui lòng thử lại.";
@@ -223,7 +223,7 @@ const EmployerUpgradePage: React.FC = () => {
     if (countdownMs !== null && countdownMs <= 0) {
       if (!expiredNotifiedRef.current) {
         expiredNotifiedRef.current = true;
-        message.warning("QR đã hết hạn. Vui lòng tạo QR mới để tiếp tục.");
+        message.warning("QR này đã hết hạn hiển thị. Nếu bạn đã quét trước đó, vẫn có thể hoàn tất thanh toán trong app ngân hàng.");
       }
     } else {
       expiredNotifiedRef.current = false;
@@ -368,7 +368,12 @@ const EmployerUpgradePage: React.FC = () => {
 
     connection.on("PaymentStatusChanged", (payload: { orderCode?: string; status?: string }) => {
       const storedOrderCode = sessionStorage.getItem(ORDER_CODE_KEY);
-      if (payload?.status === "Paid" && (!storedOrderCode || payload.orderCode === storedOrderCode)) {
+      const matchesOrder =
+        !storedOrderCode ||
+        !payload?.orderCode ||
+        payload.orderCode === storedOrderCode;
+
+      if (payload?.status === "Paid" && matchesOrder) {
         sessionStorage.removeItem(ORDER_CODE_KEY);
         setPaymentData(null);
         setCountdownMs(null);
@@ -376,7 +381,8 @@ const EmployerUpgradePage: React.FC = () => {
         message.success("Bạn đã nâng cấp gói thành công. Cảm ơn đã sử dụng dịch vụ!");
         void fetchPlanStatus();
       }
-      if (payload?.status === "Cancelled" && (!storedOrderCode || payload.orderCode === storedOrderCode)) {
+
+      if (payload?.status === "Cancelled" && matchesOrder) {
         sessionStorage.removeItem(ORDER_CODE_KEY);
         setPaymentData(null);
         setCountdownMs(null);
@@ -559,7 +565,7 @@ const EmployerUpgradePage: React.FC = () => {
               <p className="text-base font-semibold text-gray-900">QR thanh toán (quét hoặc bấm Thanh toán)</p>
             </div>
             <Tag color={!isExpired ? "green" : "red"} className="text-sm">
-              {!isExpired ? `Còn ${formatCountdown(countdownMs)}` : "QR hết hạn"}
+              {!isExpired ? `Còn ${formatCountdown(countdownMs)}` : "QR đã hết hạn hiển thị"}
             </Tag>
           </div>
 
@@ -592,9 +598,11 @@ const EmployerUpgradePage: React.FC = () => {
                   <ClockCircleOutlined />
                   {!isExpired
                     ? `QR hết hạn sau ${formatCountdown(countdownMs)}`
-                    : "QR đã hết hạn, lấy QR mới để tiếp tục"}
+                    : "QR này đã hết hạn hiển thị. Nếu bạn đã quét trước đó, vẫn có thể hoàn tất thanh toán trong app ngân hàng."}
                 </p>
-                <p className="text-xs text-gray-600 mt-1">Hết hạn vui lòng tạo QR mới để thanh toán.</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  QR này đã hết hạn hiển thị. Nếu bạn đã quét trước đó, vẫn có thể hoàn tất thanh toán trong app ngân hàng.
+                </p>
               </div>
 
               <Button
@@ -622,7 +630,7 @@ const EmployerUpgradePage: React.FC = () => {
             <h2 className="text-lg font-semibold text-red-600 mb-0">QR đã hết hạn</h2>
           </div>
           <p className="text-sm text-gray-700 mb-4">
-            QR thanh toán đã hết hạn. Vui lòng thực hiện lại giao dịch để tạo mã mới.
+            QR này đã hết hạn hiển thị. Nếu bạn đã quét trước đó, vẫn có thể hoàn tất thanh toán trong app ngân hàng.
           </p>
           <Button danger onClick={handleCancelPayment}>Đóng và hủy giao dịch</Button>
         </Card>

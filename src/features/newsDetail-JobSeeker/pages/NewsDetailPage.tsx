@@ -191,16 +191,6 @@ const NewsDetailPage: React.FC = () => {
                     {renderContent(newsDetail.content)}
                 </div>
 
-                <Divider />
-                <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <Title level={4} className="!mb-0">BÃ¬nh luáºn</Title>
-                    <Tag color="blue">Äang cáºp nháºt</Tag>
-                  </div>
-                  <div className="mt-3 text-sm text-slate-500">
-                    TÃnh nÄƒng bÃ¬nh luáºn sáº½ sá»›m Ä‘Æ°á»£c bá»• sung.
-                  </div>
-                </div>
              </Card>
           </Col>
 

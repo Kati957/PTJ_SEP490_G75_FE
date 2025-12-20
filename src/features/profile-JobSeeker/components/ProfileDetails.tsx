@@ -60,6 +60,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
   });
   const provinceValue = Form.useWatch('provinceId', form);
   const districtValue = Form.useWatch('districtId', form);
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     return () => {
@@ -90,8 +91,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
       return;
     }
 
-    const normalizeId = (value?: number | null) =>
-      value && value > 0 ? value : undefined;
+    const normalizeId = (value?: number | null) => (value && value > 0 ? value : undefined);
 
     form.setFieldsValue({
       fullName: profile.fullName ?? '',
@@ -281,25 +281,55 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
                 <Form.Item
                   name="fullName"
                   label="Họ và tên"
-                  rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}
+                  rules={[
+                    { required: true, whitespace: true, message: 'Vui lòng nhập họ và tên' },
+                    { max: 200, message: 'Họ và tên tối đa 200 ký tự' },
+                  ]}
                 >
                   <Input placeholder="Nguyễn Văn A" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="gender" label="Giới tính">
+                <Form.Item
+                  name="gender"
+                  label="Giới tính"
+                  rules={[{ required: true, message: 'Vui lòng chọn giới tính' }]}
+                >
                   <Select options={genderOptions} allowClear placeholder="Chọn giới tính" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="birthYear" label="Năm sinh">
-                  <InputNumber min={1950} max={new Date().getFullYear()} className="w-full" />
+                <Form.Item
+                  name="birthYear"
+                  label="Năm sinh"
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập năm sinh' },
+                    {
+                      validator: (_, value) => {
+                        if (value === undefined || value === null) {
+                          return Promise.resolve(); // đã có rule required xử lý
+                        }
+                        if (value >= 1950 && value <= currentYear) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error(`Năm sinh phải trong khoảng 1950 - ${currentYear}`)
+                        );
+                      },
+                    },
+                  ]}
+                >
+                  <InputNumber min={1950} max={currentYear} className="w-full" />
                 </Form.Item>
               </Col>
               <Col span={24}>
-                <Form.Item name="provinceId" label="Tỉnh / thành phố">
+                <Form.Item
+                  name="provinceId"
+                  label="Tỉnh / thành phố"
+                  rules={[{ required: true, message: 'Vui lòng chọn tỉnh/thành phố' }]}
+                >
                   <Select
-                    placeholder="Chọn tỉnh/thành"
+                    placeholder="Chọn tỉnh/thành phố"
                     allowClear
                     loading={locationLoading.provinces}
                     options={provinces.map((prov) => ({
@@ -313,7 +343,24 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
                 </Form.Item>
               </Col>
               <Col span={24}>
-                <Form.Item name="districtId" label="Quận / huyện">
+                <Form.Item
+                  name="districtId"
+                  label="Quận / huyện"
+                  dependencies={['provinceId']}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator: (_, value) => {
+                        if (!getFieldValue('provinceId')) {
+                          return Promise.resolve();
+                        }
+                        if (value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('Vui lòng chọn quận/huyện'));
+                      },
+                    }),
+                  ]}
+                >
                   <Select
                     placeholder="Chọn quận/huyện"
                     allowClear
@@ -330,7 +377,24 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
                 </Form.Item>
               </Col>
               <Col span={24}>
-                <Form.Item name="wardId" label="Phường / xã">
+                <Form.Item
+                  name="wardId"
+                  label="Phường / xã"
+                  dependencies={['districtId']}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator: (_, value) => {
+                        if (!getFieldValue('districtId')) {
+                          return Promise.resolve();
+                        }
+                        if (value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('Vui lòng chọn phường/xã'));
+                      },
+                    }),
+                  ]}
+                >
                   <Select
                     placeholder="Chọn phường/xã"
                     allowClear
@@ -355,9 +419,15 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
             <Form.Item
               name="contactPhone"
               label="Số điện thoại"
-              rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
+              rules={[
+                { required: true, message: 'Vui lòng nhập số điện thoại liên hệ' },
+                {
+                  pattern: /^0\d{9}$/,
+                  message: 'Số điện thoại gồm 10 chữ số và bắt đầu bằng 0.',
+                },
+              ]}
             >
-              <Input placeholder="0987xxxxxx" />
+              <Input placeholder="0xxxxxxxxx" inputMode="numeric" maxLength={10} />
             </Form.Item>
           </Col>
         </Row>

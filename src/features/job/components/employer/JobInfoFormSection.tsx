@@ -59,6 +59,7 @@ const MAX_REQUIREMENT_LENGTH = 3000;
 const MAX_TITLE_LENGTH = 120;
 const MAX_ADDRESS_LENGTH = 255;
 const MAX_PHONE_LENGTH = 10;
+const MIN_SALARY_VALUE = 1;
 const EXPIRED_DATE_REGEX = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
 
 export const JobInfoFormSection: React.FC<{
@@ -264,15 +265,16 @@ export const JobInfoFormSection: React.FC<{
     }
 
     const hasMin =
-      typeof data.salaryMin === "number" && data.salaryMin > 0;
+      typeof data.salaryMin === "number" && data.salaryMin >= MIN_SALARY_VALUE;
     const hasMax =
-      typeof data.salaryMax === "number" && data.salaryMax > 0;
+      typeof data.salaryMax === "number" && data.salaryMax >= MIN_SALARY_VALUE;
 
     const rangeInvalid =
-      (!hasMin && !hasMax) ||
+      !hasMin ||
+      !hasMax ||
       (hasMin &&
         hasMax &&
-        (data.salaryMax ?? 0) < (data.salaryMin ?? 0));
+        (data.salaryMax ?? 0) <= (data.salaryMin ?? 0));
 
     setValidation((prev) => ({
       ...prev,
@@ -557,12 +559,6 @@ export const JobInfoFormSection: React.FC<{
     }
 
     clearSalaryDisplayIfNeeded();
-
-    setValidation((prev) => ({
-      ...prev,
-      salaryRange: false,
-      salaryType: false,
-    }));
   };
 
   const handleSalaryNumberChange = (
@@ -817,7 +813,7 @@ export const JobInfoFormSection: React.FC<{
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <InputNumber
             size="large"
-            min={0}
+            min={MIN_SALARY_VALUE}
             className={`w-full ${validation.salaryRange ? "border-red-500" : ""}`}
             placeholder="Tối thiểu (VD: 15000000)"
             value={data.salaryMin ?? undefined}
@@ -828,7 +824,7 @@ export const JobInfoFormSection: React.FC<{
           />
           <InputNumber
             size="large"
-            min={0}
+            min={MIN_SALARY_VALUE}
             className={`w-full ${validation.salaryRange ? "border-red-500" : ""}`}
             placeholder="Tối đa"
             value={data.salaryMax ?? undefined}
@@ -862,7 +858,7 @@ export const JobInfoFormSection: React.FC<{
         </Checkbox>
         {validation.salaryRange && (
           <p className="text-red-500 text-sm mt-1">
-            Vui lòng nhập mức lương hợp lệ.
+            Vui lòng nhập cả lương tối thiểu và tối đa (tối đa phải lớn hơn tối thiểu).
           </p>
         )}
         {validation.salaryType && (

@@ -59,10 +59,22 @@ const PostJobPage: React.FC = () => {
       return "Danh mục công việc là bắt buộc";
     }
 
+    // Mức lương
+    const hasMinSalary =
+      typeof jobData.salaryMin === "number" && jobData.salaryMin > 0;
+    const hasMaxSalary =
+      typeof jobData.salaryMax === "number" && jobData.salaryMax > 0;
+    if (!hasMinSalary || !hasMaxSalary) {
+      return "Vui lòng nhập lương tối thiểu và tối đa";
+    }
+    if ((jobData.salaryMax ?? 0) <= (jobData.salaryMin ?? 0)) {
+      return "Lương tối đa phải lớn hơn lương tối thiểu";
+    }
+
     // Số điện thoại
-    const phoneRegex = /^0[35789][0-9]{8}$/;
+    const phoneRegex = /^0\d{9}$/;
     if (!jobData.contactPhone || !phoneRegex.test(jobData.contactPhone.trim())) {
-      return "Số điện thoại không đúng định dạng Việt Nam";
+      return "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0";
     }
 
     // Yêu cầu (nếu nhập thì 10-3000 ký tự)

@@ -421,9 +421,16 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
             <Form.Item
               name="contactPhone"
               label="Số điện thoại liên hệ"
-              rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
+              validateTrigger={['onBlur', 'onSubmit']}
+              rules={[
+                { required: true, message: 'Vui lòng nhập số điện thoại!' },
+                {
+                  pattern: /^0\d{9}$/,
+                  message: 'Số điện thoại gồm 10 chữ số và bắt đầu bằng 0.'
+                }
+              ]}
             >
-              <Input placeholder="+84 912 345 678" />
+              <Input placeholder="0xxxxxxxxx" inputMode="numeric" maxLength={10} />
             </Form.Item>
           </Col>
         </Row>
