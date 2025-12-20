@@ -60,15 +60,18 @@ const PostJobPage: React.FC = () => {
     }
 
     // Mức lương
-    const hasMinSalary =
-      typeof jobData.salaryMin === "number" && jobData.salaryMin > 0;
-    const hasMaxSalary =
-      typeof jobData.salaryMax === "number" && jobData.salaryMax > 0;
-    if (!hasMinSalary || !hasMaxSalary) {
-      return "Vui lòng nhập lương tối thiểu và tối đa";
-    }
-    if ((jobData.salaryMax ?? 0) <= (jobData.salaryMin ?? 0)) {
-      return "Lương tối đa phải lớn hơn lương tối thiểu";
+    const negotiable = jobData.salaryMin == null && jobData.salaryMax == null && jobData.salaryType == null;
+    if (!negotiable) {
+      const hasMinSalary =
+        typeof jobData.salaryMin === "number" && jobData.salaryMin > 0;
+      const hasMaxSalary =
+        typeof jobData.salaryMax === "number" && jobData.salaryMax > 0;
+      if (!hasMinSalary || !hasMaxSalary) {
+        return "Vui lòng nhập lương tối thiểu và tối đa hoặc chọn Thỏa thuận";
+      }
+      if ((jobData.salaryMax ?? 0) <= (jobData.salaryMin ?? 0)) {
+        return "Lương tối đa phải lớn hơn lương tối thiểu";
+      }
     }
 
     // Số điện thoại
@@ -110,6 +113,7 @@ const PostJobPage: React.FC = () => {
 
     const validationError = validateJobData();
     if (validationError) {
+      toast.error(validationError);
       return;
     }
 

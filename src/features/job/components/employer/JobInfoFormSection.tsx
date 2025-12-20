@@ -249,37 +249,23 @@ export const JobInfoFormSection: React.FC<{
   }, [locationDisplay, data.location, onDataChange]);
 
   useEffect(() => {
-    setIsNegotiable(
-      isNegotiableSalary(data.salaryMin, data.salaryMax, data.salaryType)
-    );
+    setIsNegotiable(isNegotiableSalary(data.salaryMin, data.salaryMax, data.salaryType));
   }, [data.salaryMin, data.salaryMax, data.salaryType]);
 
   const validateSalaryFields = useCallback(() => {
-    if (isNegotiable) {
-      setValidation((prev) => ({
-        ...prev,
-        salaryRange: false,
-        salaryType: false,
-      }));
-      return;
-    }
-
     const hasMin =
       typeof data.salaryMin === "number" && data.salaryMin >= MIN_SALARY_VALUE;
     const hasMax =
       typeof data.salaryMax === "number" && data.salaryMax >= MIN_SALARY_VALUE;
 
     const rangeInvalid =
-      !hasMin ||
-      !hasMax ||
-      (hasMin &&
-        hasMax &&
-        (data.salaryMax ?? 0) <= (data.salaryMin ?? 0));
+      (!isNegotiable && (!hasMin || !hasMax)) ||
+      (!isNegotiable && hasMin && hasMax && (data.salaryMax ?? 0) <= (data.salaryMin ?? 0));
 
     setValidation((prev) => ({
       ...prev,
       salaryRange: rangeInvalid,
-      salaryType: data.salaryType == null,
+      salaryType: isNegotiable ? false : data.salaryType == null,
     }));
   }, [data.salaryMin, data.salaryMax, data.salaryType, isNegotiable]);
 
@@ -858,7 +844,7 @@ export const JobInfoFormSection: React.FC<{
         </Checkbox>
         {validation.salaryRange && (
           <p className="text-red-500 text-sm mt-1">
-            Vui lòng nhập cả lương tối thiểu và tối đa (tối đa phải lớn hơn tối thiểu).
+            Vui lòng nhập lương tối thiểu và tối đa (tối đa phải lớn hơn tối thiểu) hoặc chọn Thỏa thuận.
           </p>
         )}
         {validation.salaryType && (
