@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Button, Card, Typography } from 'antd';
+import { Button, Card, Typography, message } from 'antd';
 import { toast } from 'sonner';
 import { useAuth } from '../../auth/hooks';
 import { JobPostingForm } from '../components/employer/JobPostingForm';
@@ -101,11 +101,13 @@ const PostJobPage: React.FC = () => {
   const handleSubmit = () => {
     if (!user || !user.id) {
       toast.error('Bạn phải đăng nhập để đăng bài.');
+      message.error('Bạn phải đăng nhập để đăng bài.');
       return;
     }
 
     if (!user.verified) {
       toast.error('Vui lòng xác thực tài khoản để thực hiện chức năng này.');
+      message.error('Vui lòng xác thực tài khoản để thực hiện chức năng này.');
       return;
     }
 
