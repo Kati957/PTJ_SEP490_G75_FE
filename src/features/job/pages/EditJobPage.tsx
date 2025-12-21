@@ -8,6 +8,7 @@ import JobPostingPreview from '../components/employer/JobPostingPreview';
 import jobPostService from '../jobPostService';
 import type { JobPostData, JobPostView } from '../jobTypes';
 import { transformToEmployerPostDto } from '../utils';
+import { isNegotiableSalary } from '../../../utils/salary';
 
 const normalizeTime = (value?: string | null): string | null => {
   if (!value) return null;
@@ -135,10 +136,19 @@ const EditJobPage: React.FC = () => {
   };
 
   const validateSalary = (): boolean => {
+    const negotiable = isNegotiableSalary(
+      jobData.salaryMin,
+      jobData.salaryMax,
+      jobData.salaryType
+    );
+    if (negotiable) {
+      return true;
+    }
+
     const hasMin = typeof jobData.salaryMin === "number" && jobData.salaryMin > 0;
     const hasMax = typeof jobData.salaryMax === "number" && jobData.salaryMax > 0;
     if (!hasMin || !hasMax) {
-      toast.error("Vui lòng nhập lương tối thiểu và tối đa");
+      toast.error("Vui lòng nhập lương tối thiểu và tối đa hoặc chọn Thỏa thuận");
       return false;
     }
     if ((jobData.salaryMax ?? 0) <= (jobData.salaryMin ?? 0)) {
@@ -148,7 +158,7 @@ const EditJobPage: React.FC = () => {
     return true;
   };
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
     if (!user || !user.id || !jobId) return;
 
     if (!validateSalary()) {
