@@ -251,10 +251,6 @@ type ShortlistResponse = Awaited<
     new Set()
   );
 
-  const handleViewSuggestedJobSeekerPost = (suggestion: JobSuggestionDto) => {
-    setSelectedSuggestedCandidate(suggestion);
-  };
-
   const getCvIdFromSuggestion = (suggestion?: JobSuggestionDto | null) => {
     return suggestion?.selectedCvId ?? suggestion?.cvId ?? null;
   };
