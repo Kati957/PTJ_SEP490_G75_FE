@@ -20,9 +20,33 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   onSubmit,
   onDeleteAvatar
 }) => {
+  const stripDiacritics = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const sanitizeFileName = (file: File) => {
+    const extMatch = file.name.match(/\.([^.]+)$/);
+    const ext = extMatch ? `.${extMatch[1].toLowerCase()}` : '';
+    const baseName =
+      stripDiacritics(file.name.replace(/\.[^.]+$/, ''))
+        .replace(/[^a-zA-Z0-9_-]/g, '-')
+        .replace(/-+/g, '-')
+        .trim() || 'image';
+    return `${baseName}-${Date.now()}${ext}`;
+  };
+  const normalizeFileName = (file: File) => {
+    const safeName = sanitizeFileName(file);
+    return safeName === file.name ? file : new File([file], safeName, { type: file.type, lastModified: file.lastModified });
+  };
+  const toSafeSrc = (src?: string | null) => {
+    if (!src) return undefined;
+    if (src.startsWith('blob:') || src.startsWith('data:')) return src;
+    try {
+      return encodeURI(src);
+    } catch {
+      return src;
+    }
+  };
   const [form] = Form.useForm<ProfileUpdateRequest>();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | undefined>(profile?.avatarUrl ?? undefined);
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>(toSafeSrc(profile?.avatarUrl) ?? undefined);
   const [provinces, setProvinces] = useState<LocationOption[]>([]);
   const [districts, setDistricts] = useState<LocationOption[]>([]);
   const [wards, setWards] = useState<LocationOption[]>([]);
@@ -53,7 +77,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       contactPhone: profile?.contactPhone ?? ''
     });
     autoLocationRef.current = profile?.location ?? '';
-    setPreviewUrl(profile?.avatarUrl ?? undefined);
+    setPreviewUrl(toSafeSrc(profile?.avatarUrl) ?? undefined);
     setAvatarFile(null);
   }, [form, profile]);
 
@@ -207,7 +231,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   };
 
   const handleAvatarChange = ({ fileList }: UploadChangeParam<UploadFile>) => {
-    const file = (fileList.at(-1)?.originFileObj as File | undefined) ?? null;
+    const original = (fileList.at(-1)?.originFileObj as File | undefined) ?? null;
+    const file = original ? normalizeFileName(original) : null;
     setAvatarFile(file);
     if (previewUrl && previewUrl.startsWith('blob:')) {
       URL.revokeObjectURL(previewUrl);
@@ -216,7 +241,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrl(objectUrl);
     } else {
-      setPreviewUrl(profile?.avatarUrl ?? undefined);
+      setPreviewUrl(toSafeSrc(profile?.avatarUrl) ?? undefined);
     }
   };
 

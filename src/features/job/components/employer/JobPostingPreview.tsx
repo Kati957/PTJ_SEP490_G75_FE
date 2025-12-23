@@ -18,6 +18,9 @@ const JobPostingPreview: React.FC<JobPostingPreviewProps> = ({ data }) => {
     return foundCategory ? foundCategory.name : null;
   }, [data.categoryID, categories, isCategoriesLoading]);
 
+  const encodeImageSrc = (src: string) =>
+    src && !src.startsWith("data:") ? encodeURI(src) : src;
+
   const previewImages = [
     ...data.existingImages.map((img) => img.url),
     ...data.imagePreviews,
@@ -58,7 +61,7 @@ const JobPostingPreview: React.FC<JobPostingPreviewProps> = ({ data }) => {
                 className="w-full h-32 border border-gray-200 rounded-lg overflow-hidden bg-gray-50"
               >
                 <img
-                  src={src}
+                  src={encodeImageSrc(src)}
                   alt={`preview-${index}`}
                   className="w-full h-full object-cover"
                 />

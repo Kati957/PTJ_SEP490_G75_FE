@@ -643,7 +643,7 @@ const CreatePostingPage: React.FC = () => {
 
           <Form.Item
             name="description"
-            label="Mô tả chi tiết về bản thân và kinh nghiệm"
+            label="Mô tả vị trí công việc mong muốn"
             rules={[
               { required: true, message: "Vui lòng nhập mô tả!" },
               {
@@ -653,7 +653,7 @@ const CreatePostingPage: React.FC = () => {
                     ? Promise.resolve()
                     : Promise.reject(
                         new Error(
-                          "Mô tả phải có ít nhất 20 ký tự để nhà tuyển dụng hiểu rõ về bạn"
+                          "Mô tả phải có ít nhất 20 ký tự để nhà tuyển dụng hiểu rõ về công việc của bạn"
                         )
                       );
                 },

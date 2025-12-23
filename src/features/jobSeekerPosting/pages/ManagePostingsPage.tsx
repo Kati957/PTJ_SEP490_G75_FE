@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Button, Typography, List, Spin, Alert, Popconfirm, message } from 'antd';
+import { Button, Typography, List, Spin, Alert, Popconfirm, message, Tag, Empty } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -38,18 +38,23 @@ const ManagePostingsPage: React.FC = () => {
   }, [deleteSuccess, deleteError, dispatch, user]);
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <Title level={2}>Quản lý bài đăng tìm việc</Title>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 py-10">
+      <div className="max-w-5xl mx-auto px-4">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-8">
+          <div>
+            <Title level={2} className="!mb-1">Quản lý bài đăng tìm việc</Title>
+            <Typography.Paragraph className="!mb-0 text-gray-600">
+              Theo dõi, cập nhật và kiểm soát trạng thái các bài đăng của bạn.
+            </Typography.Paragraph>
+          </div>
           <Link to="/tao-bai-dang-tim-viec">
-            <Button type="primary" icon={<PlusOutlined />}>
+            <Button type="primary" icon={<PlusOutlined />} size="large">
               Tạo bài đăng mới
             </Button>
           </Link>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white/90 backdrop-blur border border-slate-100 rounded-2xl shadow-lg p-6">
           {loading || isDeleting ? (
             <div className="text-center">
               <Spin size="large" />
@@ -58,43 +63,51 @@ const ManagePostingsPage: React.FC = () => {
             <Alert message="Lỗi" description={error} type="error" showIcon />
           ) : (
             <List
-              itemLayout="horizontal"
+              itemLayout="vertical"
               dataSource={posts}
+              split={false}
+              rowKey={(item) => item.jobSeekerPostId}
+              locale={{
+                emptyText: <Empty description="Chưa có bài đăng nào" />,
+              }}
               renderItem={(item, index) => (
-                <List.Item
-                  actions={[
-                    <Link
-                      key="detail"
-                      to={`/xem-bai-dang-tim-viec/${item.jobSeekerPostId}`}
-                    >
-                      <Button type="link">Chi tiết</Button>
-                    </Link>,
-                    <Link
-                      key="edit"
-                      to={`/sua-bai-dang-tim-viec/${item.jobSeekerPostId}`}
-                    >
-                      <Button type="link">Sửa</Button>
-                    </Link>,
-                    <Popconfirm
-                      key="delete"
-                      title="Xóa bài đăng"
-                      description="Bạn có chắc chắn muốn xóa bài đăng này không?"
-                      onConfirm={() => dispatch(deletePosting(item.jobSeekerPostId))}
-                      okText="Xóa"
-                      cancelText="Hủy">
-                      <Button type="link" danger>Xóa</Button>
-                    </Popconfirm>,
-                  ]}
-                >
-                  <div className="mr-4 text-gray-500 font-medium">{index + 1}.</div>
-                  <List.Item.Meta
-                    title={<span className="font-medium text-gray-900">{item.title}</span>}
-                    description={`Ngày tạo: ${format(new Date(item.createdAt), 'dd/MM/yyyy HH:mm')}`}
-                  />
-                  <div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${item.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {item.status === 'Active' ? 'Đang hoạt động' : 'Hết hạn'}
-                    </span>
+                <List.Item className="mb-4 last:mb-0 border border-slate-200 rounded-xl px-6 py-5 shadow-sm hover:shadow-md hover:border-blue-200 transition-all">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-100 w-10 h-10 flex items-center justify-center rounded-full">
+                        {index + 1}
+                      </div>
+                      <div className="space-y-2">
+                        <span className="font-semibold text-gray-900 text-base block">{item.title}</span>
+                        <Typography.Text type="secondary">
+                          {`Ngày tạo: ${format(new Date(item.createdAt), 'dd/MM/yyyy HH:mm')}`}
+                        </Typography.Text>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-start md:items-end gap-2 md:min-w-[220px]">
+                      <Tag
+                        color={item.status === 'Active' ? 'green' : 'red'}
+                        className="rounded-full px-4 py-1 text-sm min-w-[150px] text-center flex items-center justify-center"
+                      >
+                        {item.status === 'Active' ? 'Đang hoạt động' : 'Hết hạn'}
+                      </Tag>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link to={`/xem-bai-dang-tim-viec/${item.jobSeekerPostId}`}>
+                          <Button type="default">Chi tiết</Button>
+                        </Link>
+                        <Link to={`/sua-bai-dang-tim-viec/${item.jobSeekerPostId}`}>
+                          <Button type="primary" ghost>Sửa</Button>
+                        </Link>
+                        <Popconfirm
+                          title="Xóa bài đăng"
+                          description="Bạn có chắc chắn muốn xóa bài đăng này không?"
+                          onConfirm={() => dispatch(deletePosting(item.jobSeekerPostId))}
+                          okText="Xóa"
+                          cancelText="Hủy">
+                          <Button danger ghost>Xóa</Button>
+                        </Popconfirm>
+                      </div>
+                    </div>
                   </div>
                 </List.Item>
               )}

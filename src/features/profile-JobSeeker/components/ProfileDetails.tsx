@@ -46,10 +46,34 @@ const genderOptions = [
 ];
 
 const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error }) => {
+  const stripDiacritics = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const sanitizeFileName = (file: File) => {
+    const extMatch = file.name.match(/\.([^.]+)$/);
+    const ext = extMatch ? `.${extMatch[1].toLowerCase()}` : '';
+    const baseName =
+      stripDiacritics(file.name.replace(/\.[^.]+$/, ''))
+        .replace(/[^a-zA-Z0-9_-]/g, '-')
+        .replace(/-+/g, '-')
+        .trim() || 'image';
+    return `${baseName}-${Date.now()}${ext}`;
+  };
+  const normalizeFileName = (file: File) => {
+    const safeName = sanitizeFileName(file);
+    return safeName === file.name ? file : new File([file], safeName, { type: file.type, lastModified: file.lastModified });
+  };
+  const toSafeSrc = (src?: string | null) => {
+    if (!src) return undefined;
+    if (src.startsWith('blob:') || src.startsWith('data:')) return src;
+    try {
+      return encodeURI(src);
+    } catch {
+      return src;
+    }
+  };
   const dispatch: AppDispatch = useDispatch();
   const [form] = Form.useForm<FormValues>();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | undefined>(profile?.profilePicture ?? undefined);
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>(toSafeSrc(profile?.profilePicture) ?? undefined);
   const [provinces, setProvinces] = useState<LocationOption[]>([]);
   const [districts, setDistricts] = useState<LocationOption[]>([]);
   const [wards, setWards] = useState<LocationOption[]>([]);
@@ -103,7 +127,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
       districtId: normalizeId(profile.districtId),
       wardId: normalizeId(profile.wardId),
     });
-    setPreviewUrl(profile.profilePicture ?? undefined);
+    setPreviewUrl(toSafeSrc(profile.profilePicture) ?? undefined);
     setAvatarFile(null);
 
     const primeLocations = async () => {
@@ -151,7 +175,8 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
   };
 
   const handleAvatarChange = ({ fileList }: UploadChangeParam<UploadFile>) => {
-    const file = (fileList.at(-1)?.originFileObj as File | undefined) ?? null;
+    const original = (fileList.at(-1)?.originFileObj as File | undefined) ?? null;
+    const file = original ? normalizeFileName(original) : null;
     setAvatarFile(file);
     if (previewUrl && previewUrl.startsWith('blob:')) {
       URL.revokeObjectURL(previewUrl);
@@ -159,7 +184,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, loading, error
     if (file) {
       setPreviewUrl(URL.createObjectURL(file));
     } else {
-      setPreviewUrl(profile?.profilePicture ?? undefined);
+      setPreviewUrl(toSafeSrc(profile?.profilePicture) ?? undefined);
     }
   };
 

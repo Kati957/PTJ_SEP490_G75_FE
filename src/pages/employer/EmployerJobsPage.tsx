@@ -1088,7 +1088,7 @@ type ShortlistResponse = Awaited<
                           </span>
                         </div>
                         <div className="text-xs text-gray-400 mt-2">
-                          Đăng bởi: {item.employerName}{" "}
+                          Cập nhật: {item.employerName}{" "}
                           {item.createdAt
                             ? new Date(item.createdAt).toLocaleDateString(
                                 "vi-VN"
@@ -1188,7 +1188,7 @@ type ShortlistResponse = Awaited<
               )}
 
               <div className="text-xs text-gray-500 text-right">
-                C?p nh?t:{" "}
+                Cập nhật:{" "}
                 {cvModal.cv.updatedAt
                   ? new Date(cvModal.cv.updatedAt).toLocaleDateString("vi-VN")
                   : "N/A"}

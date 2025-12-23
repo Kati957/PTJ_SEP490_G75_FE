@@ -61,6 +61,29 @@ const MAX_ADDRESS_LENGTH = 255;
 const MAX_PHONE_LENGTH = 10;
 const MIN_SALARY_VALUE = 1;
 const EXPIRED_DATE_REGEX = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+const stripDiacritics = (value: string) =>
+  value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const sanitizeFileName = (file: File) => {
+  const extMatch = file.name.match(/\.([^.]+)$/);
+  const ext = extMatch ? `.${extMatch[1].toLowerCase()}` : "";
+  const baseName =
+    stripDiacritics(file.name.replace(/\.[^.]+$/, ""))
+      .replace(/[^a-zA-Z0-9_-]/g, "-")
+      .replace(/-+/g, "-")
+      .trim() || "image";
+  return `${baseName}-${Date.now()}${ext}`;
+};
+const normalizeFileName = (file: File) => {
+  const safeName = sanitizeFileName(file);
+  return safeName === file.name
+    ? file
+    : new File([file], safeName, {
+        type: file.type,
+        lastModified: file.lastModified,
+      });
+};
+const toSafeImageSrc = (src: string) =>
+  src && !src.startsWith("data:") ? encodeURI(src) : src;
 
 export const JobInfoFormSection: React.FC<{
   data: JobPostData;
@@ -642,6 +665,7 @@ export const JobInfoFormSection: React.FC<{
     const validFiles: File[] = [];
 
     filesToProcess.forEach((file) => {
+      const safeFile = normalizeFileName(file);
       if (!file.type.startsWith("image/")) {
         message.warning(`${file.name} không phải là hình ảnh hợp lệ.`);
         return;
@@ -652,7 +676,7 @@ export const JobInfoFormSection: React.FC<{
         );
         return;
       }
-      validFiles.push(file);
+      validFiles.push(safeFile);
     });
 
     if (!validFiles.length) {
@@ -911,7 +935,7 @@ export const JobInfoFormSection: React.FC<{
                     className="relative rounded-lg overflow-hidden border border-gray-200 group"
                   >
                     <img
-                      src={img.url}
+                      src={toSafeImageSrc(img.url)}
                       alt={`existing-${img.imageId}`}
                       className="w-full h-32 object-cover"
                     />
@@ -954,7 +978,7 @@ export const JobInfoFormSection: React.FC<{
                     className="relative group rounded-lg overflow-hidden border border-gray-200"
                   >
                     <img
-                      src={src}
+                      src={toSafeImageSrc(src)}
                       alt={`preview-${index}`}
                       className="w-full h-32 object-cover"
                     />
