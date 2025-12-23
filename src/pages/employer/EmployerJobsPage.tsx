@@ -1066,7 +1066,11 @@ type ShortlistResponse = Awaited<
                       className="text-base font-semibold text-blue-700 hover:underline"
                       onClick={(event) => {
                         event.preventDefault();
-                        handleViewSuggestedJobSeekerPost(item);
+                        if (item.jobSeekerPostId) {
+                          navigate(`/nha-tuyen-dung/tim-kiem/ung-vien/${item.jobSeekerPostId}`);
+                        } else {
+                          message.info("Không tìm thấy bài đăng ứng viên để mở.");
+                        }
                       }}
                     >
                       {item.title}
@@ -1076,7 +1080,9 @@ type ShortlistResponse = Awaited<
                       <div className="space-y-1 mt-1">
                         <div className="flex items-center gap-2 text-gray-700 text-sm">
                           <UserOutlined />
-                          <span>{item.seekerName || "Ứng viên ẩn danh"}</span>
+                          <span className="font-semibold text-base">
+                            {item.seekerName || "Ứng viên ẩn danh"}
+                          </span>
                         </div>
                         <div className="flex items-start gap-2 text-gray-600 text-sm">
                           <EnvironmentOutlined className="mt-1 shrink-0" />
