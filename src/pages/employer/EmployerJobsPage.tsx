@@ -1074,6 +1074,10 @@ type ShortlistResponse = Awaited<
                     }
                     description={
                       <div className="space-y-1 mt-1">
+                        <div className="flex items-center gap-2 text-gray-700 text-sm">
+                          <UserOutlined />
+                          <span>{item.seekerName || "Ứng viên ẩn danh"}</span>
+                        </div>
                         <div className="flex items-start gap-2 text-gray-600 text-sm">
                           <EnvironmentOutlined className="mt-1 shrink-0" />
                           <span>{locationLabel}</span>
@@ -1088,11 +1092,9 @@ type ShortlistResponse = Awaited<
                           </span>
                         </div>
                         <div className="text-xs text-gray-400 mt-2">
-                          Cập nhật: {item.employerName}{" "}
+                          Cập nhật:{" "}
                           {item.createdAt
-                            ? new Date(item.createdAt).toLocaleDateString(
-                                "vi-VN"
-                              )
+                            ? new Date(item.createdAt).toLocaleDateString("vi-VN")
                             : ""}
                         </div>
                       </div>
