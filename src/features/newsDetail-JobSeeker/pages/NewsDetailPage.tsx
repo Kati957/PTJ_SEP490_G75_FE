@@ -118,7 +118,7 @@ const NewsDetailPage: React.FC = () => {
             <div className="bg-white p-5 rounded-xl shadow-sm sticky top-6 border border-gray-100">
                 <div className="flex items-center mb-6 border-b-2 border-blue-100 pb-2">
                     <ReadOutlined className="text-blue-600 text-xl mr-2" />
-                    <Title level={4} className="!mb-0 text-gray-800">Tin khÃ¡c</Title>
+                    <Title level={4} className="!mb-0 text-gray-800">Tin khác</Title>
                 </div>
                 
                 <Spin spinning={loadingList}>
